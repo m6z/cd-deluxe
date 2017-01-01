@@ -322,7 +322,7 @@ bool Cdd::process_path_spec(string& path_found, vector<string>& path_extra, stri
     if (is_regular_file(opt_path))
     {
         fs::path path(opt_path);
-        path_found = path.parent_path().file_string();
+        path_found = path.parent_path().string();
         return true;
     }
     if (vec_dir_stack.empty())
@@ -735,7 +735,7 @@ void validate(boost::any& v, const std::vector<std::string>& values, OptionDirec
         throw po::validation_error(po::validation_error::invalid_option_value);
 }
 
-bool Cdd::options(int ac, char *av[], const string& env_options)
+bool Cdd::options(int ac, const char *av[], const string& env_options)
 {
     if (ac > 0 && av[ac-1] == string("--"))
     {

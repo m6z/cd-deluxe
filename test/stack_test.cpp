@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(garbage_collect)
     cdd.opt_gc = true;
     cdd.process();
     vector<string> act = splitlines(cdd.strm_out);
-    char *exp[] = {
+    const char *exp[] = {
 #ifdef WIN32
         "for /l %%i in (1,1,4) do popd",
         "chdir/d aa 2>nul",
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(delete_one)
     cdd.opt_path = "1";
     cdd.process();
     vector<string> act = splitlines(cdd.strm_out);
-    char *exp[] = {
+    const char *exp[] = {
 #ifdef WIN32
         "for /l %%i in (1,1,4) do popd",
         "chdir/d aa 2>nul",
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(reset)
     cdd.opt_reset = true;
     cdd.process();
     vector<string> act = splitlines(cdd.strm_out);
-    char *exp[] = {
+    const char *exp[] = {
 #ifdef WIN32
         "for /l %%i in (1,1,4) do popd",
         "chdir/d dd",
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(command_generator_1)
     vec_dir.assign(vec_test_dirs.rbegin(), vec_test_dirs.rend());
     cdd.command_generator(vec_dir);
     vector<string> act = splitlines(cdd.strm_out);
-    char *exp[] = {
+    const char *exp[] = {
 #ifdef WIN32
         "for /l %%i in (1,1,2) do popd",
         "chdir/d abc 2>nul",
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(command_generator_2)
     vec_dir.assign(vec_test_dirs.rbegin(), vec_test_dirs.rend());
     cdd.command_generator(vec_dir, "def");
     vector<string> act = splitlines(cdd.strm_out);
-    char *exp[] = {
+    const char *exp[] = {
 #ifdef WIN32
         "for /l %%i in (1,1,2) do popd",
         "chdir/d abc 2>nul",
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(command_generator_3)
     vector<string> vec_dir;
     cdd.command_generator(vec_dir, "def");
     vector<string> act = splitlines(cdd.strm_out);
-    char *exp[] = {
+    const char *exp[] = {
 #ifdef WIN32
         "for /l %%i in (1,1,2) do popd",
         "chdir/d ghi",

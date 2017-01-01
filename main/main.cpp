@@ -24,7 +24,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace fs = boost::filesystem;
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     if (isatty(fileno(stdin)))
     {
@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        Cdd cdd(vec_pushd, fs::current_path().file_string());
-        char *env_options = getenv(Cdd::env_options_name.c_str());
+        Cdd cdd(vec_pushd, fs::current_path().string());
+        const char *env_options = getenv(Cdd::env_options_name.c_str());
         if (cdd.options(argc, argv, env_options ? env_options : string()))
             cdd.process();
         cout << cdd.strm_out.str();
