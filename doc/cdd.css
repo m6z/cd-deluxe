@@ -1,0 +1,105 @@
+body {
+    font-family: "Palatino Linotype","Book Antiqua",Palatino,serif;
+}
+
+.title {
+    font-size: 150%;
+    font-style: italic;
+    text-align: center;
+}
+
+.trailer {
+    font-size: 80%;
+}
+
+h1 {
+    font-size: 120%;
+}
+
+h2 {
+    font-size: 100%;
+}
+
+pre.literal-block {
+    margin-left: 5em;
+    margin-right: 7em;
+    border-style: solid;
+    border-width: 0.5px;
+    padding: 0.5em;
+    background: #3366ff;
+    color: #fefefe;
+    font-family: "Lucida Console", "Courier New";
+    font-size: 0.8em;
+    width: 600px;
+    white-space: pre-wrap; /* css-3 */
+    white-space: -moz-pre-wrap !important; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+#installing pre.literal-block {
+    width: auto;
+}
+
+pre.literal-block strong {
+    font-size: 1.1em;
+    color: white;
+}
+
+table.options {
+    border-collapse: collapse;
+    border: solid 2px;
+    border-color: black;
+}
+
+table.options th {
+    border: solid 2px;
+    border-color: black;
+}
+
+table.options td {
+    padding-left: 0.5em;
+    border: solid 1px;
+    border-color: black;
+}
+
+.trailer {
+    font-size: 80%;
+}
+
+#sidebar_main {
+    border: solid 1px #cccccc;
+    float: right;
+    height: 920px;
+    background: white;
+    margin: 1em;
+    padding: 0 1em 1em 1em;
+}
+
+#sidebar {
+    margin: 1em;
+}
+
+#advert {
+    font-style: italic;
+    font-size: 80%;
+    color: #999999;
+}
+
+#mmm {
+    border: solid 1px #333333;
+    padding: 0.5em;
+    font-family: "Times New Roman",serif;
+    font-family: "Times New Roman",serif;
+}
+
+#mmm img {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    font-size: 85%;
+}
+
+.tac {
+    text-align: center;
+}

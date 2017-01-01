@@ -1,0 +1,33 @@
+env = Environment(CPPPATH='..')
+
+def boost_lib(s):
+    return 'boost_%s-mt' % s
+
+lst_boost_lib = [
+    boost_lib('regex'),
+    boost_lib('program_options'),
+    boost_lib('filesystem'),
+    boost_lib('system'),
+    boost_lib('unit_test_framework'),
+]
+
+lst_src = [
+    'testmain.cpp',
+    'cdd_test.cpp',
+    'history_test.cpp',
+    'match_test.cpp',
+    'options_test.cpp',
+    'stack_test.cpp',
+    'util_test.cpp',
+]
+
+env.Program(
+    target      = 'testmain',
+    source      = lst_src,
+    LIBS        = ['cdd', ] + lst_boost_lib,
+    LIBPATH     = '../cdd',
+    # LINKFLAGS   = '--shared',
+)
+
+env.Append(CPPFLAGS=['-Wno-write-strings'])
+

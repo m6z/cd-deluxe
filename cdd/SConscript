@@ -1,0 +1,1 @@
+StaticLibrary('cdd', ['cdd.cpp'])
