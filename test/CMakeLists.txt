@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 
 find_package (Boost COMPONENTS system regex program_options filesystem unit_test_framework REQUIRED)
 
