@@ -22,7 +22,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
@@ -35,74 +35,75 @@ static string arr_test_dirs[] = {
     "/aa/bb",   // first visited
 };
 
-BOOST_AUTO_TEST_SUITE(match_test)
+TEST_CASE("match_test")
+{
 
-BOOST_AUTO_TEST_CASE(simple_match)
+SECTION("simple_match")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_path = "ee";
     cdd.process();
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("pushd /bb/ee\n", cdd.strm_out.str());
+    REQUIRE("pushd /bb/ee\n" == cdd.strm_out.str());
 #else
-    BOOST_REQUIRE_EQUAL("pushd '/bb/ee'\n", cdd.strm_out.str());
+    REQUIRE("pushd '/bb/ee'\n" == cdd.strm_out.str());
 #endif
-    BOOST_REQUIRE_EQUAL("cdd: /bb/ee\n", cdd.strm_err.str());
+    REQUIRE("cdd: /bb/ee\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(multi_match_backwards)
+SECTION("multi_match_backwards")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_path = "bb";
     cdd.direction.assign("-");
     cdd.process();
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("pushd /bb/ee\n", cdd.strm_out.str());
+    REQUIRE("pushd /bb/ee\n" == cdd.strm_out.str());
 #else
-    BOOST_REQUIRE_EQUAL("pushd '/bb/ee'\n", cdd.strm_out.str());
+    REQUIRE("pushd '/bb/ee'\n" == cdd.strm_out.str());
 #endif
-    BOOST_REQUIRE_EQUAL("cdd: /bb/ee\n -3: /aa/bb\n -4: /bb/cc\n", cdd.strm_err.str());
+    REQUIRE("cdd: /bb/ee\n -3: /aa/bb\n -4: /bb/cc\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(multi_match_default_backwards)
+SECTION("multi_match_default_backwards")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_path = "cc";
     cdd.process();
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("pushd /cc/dd\n", cdd.strm_out.str());
+    REQUIRE("pushd /cc/dd\n" == cdd.strm_out.str());
 #else
-    BOOST_REQUIRE_EQUAL("pushd '/cc/dd'\n", cdd.strm_out.str());
+    REQUIRE("pushd '/cc/dd'\n" == cdd.strm_out.str());
 #endif
-    BOOST_REQUIRE_EQUAL("cdd: /cc/dd\n -4: /bb/cc\n", cdd.strm_err.str());
+    REQUIRE("cdd: /cc/dd\n -4: /bb/cc\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(multi_match_forwards)
+SECTION("multi_match_forwards")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_path = "bb";
     cdd.direction.assign("+");
     cdd.process();
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("pushd /aa/bb\n", cdd.strm_out.str());
+    REQUIRE("pushd /aa/bb\n" == cdd.strm_out.str());
 #else
-    BOOST_REQUIRE_EQUAL("pushd '/aa/bb'\n", cdd.strm_out.str());
+    REQUIRE("pushd '/aa/bb'\n" == cdd.strm_out.str());
 #endif
-    BOOST_REQUIRE_EQUAL("cdd: /aa/bb\n  1: /bb/cc\n  3: /bb/ee\n", cdd.strm_err.str());
+    REQUIRE("cdd: /aa/bb\n  1: /bb/cc\n  3: /bb/ee\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(multi_match_common)
+SECTION("multi_match_common")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_path = "cc";
     cdd.direction.assign(",");
     cdd.process();
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("pushd /cc/dd\n", cdd.strm_out.str());
+    REQUIRE("pushd /cc/dd\n" == cdd.strm_out.str());
 #else
-    BOOST_REQUIRE_EQUAL("pushd '/cc/dd'\n", cdd.strm_out.str());
+    REQUIRE("pushd '/cc/dd'\n" == cdd.strm_out.str());
 #endif
-    BOOST_REQUIRE_EQUAL("cdd: /cc/dd\n ,3: ( 1) /bb/cc\n", cdd.strm_err.str());
+    REQUIRE("cdd: /cc/dd\n ,3: ( 1) /bb/cc\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

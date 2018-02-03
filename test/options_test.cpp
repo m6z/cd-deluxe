@@ -22,611 +22,612 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
-BOOST_AUTO_TEST_SUITE(options_test)
+TEST_CASE("options_test")
+{
 
-BOOST_AUTO_TEST_CASE(options_default)
+SECTION("options_default")
 {
     Cdd cdd;
     const char *av[] = {"_cdd"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(false, cdd.direction.is_assigned());
-    BOOST_REQUIRE_EQUAL("-", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE(false == cdd.direction.is_assigned());
+    REQUIRE("-" == cdd.direction._direction);
 }
 
 //----------------------------------------------------------------------
 // Explicit named options
 
-BOOST_AUTO_TEST_CASE(options_help)
+SECTION("options_help")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--help"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_help);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_help);
 }
 
-BOOST_AUTO_TEST_CASE(options_version)
+SECTION("options_version")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--version"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_version);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_version);
 }
 
-BOOST_AUTO_TEST_CASE(options_path)
+SECTION("options_path")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--path=abc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("abc", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("abc" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(options_direction_plus)
+SECTION("options_direction_plus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history", "--direction=+"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE("+" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(options_direction_minus)
+SECTION("options_direction_minus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history", "--direction", "-"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE("-" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(options_direction_error)
+SECTION("options_direction_error")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--direction", "z"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(false, rc);
-    BOOST_REQUIRE_EQUAL(
-        "** Options error: in option 'direction': invalid option value\n"
-        "Use --help to see possible options\n",
+    REQUIRE(false == rc);
+    REQUIRE(
+        "** Options error: the argument for option '--direction' is invalid\n"
+        "Use --help to see possible options\n" ==
         cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(options_direction_minus_and_qmark)
+SECTION("options_direction_minus_and_qmark")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--direction", "-", "?"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("-", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("-" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(options_direction_minus_and_double_qmark)
+SECTION("options_direction_minus_and_double_qmark")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--direction", "-", "??"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(",", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("," == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(options_history)
+SECTION("options_history")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
 }
 
-BOOST_AUTO_TEST_CASE(options_limit_backwards)
+SECTION("options_limit_backwards")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history", "--limit-backwards=3"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(3, cdd.opt_limit_backwards);
+    REQUIRE(true == rc);
+    REQUIRE(3 == cdd.opt_limit_backwards);
 }
 
-BOOST_AUTO_TEST_CASE(options_limit_forwards)
+SECTION("options_limit_forwards")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--limit-forwards", "7", "--history"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(7, cdd.opt_limit_forwards);
+    REQUIRE(true == rc);
+    REQUIRE(7 == cdd.opt_limit_forwards);
 }
 
-BOOST_AUTO_TEST_CASE(options_limit_common)
+SECTION("options_limit_common")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--limit-common", "5", "--history"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(5, cdd.opt_limit_common);
+    REQUIRE(true == rc);
+    REQUIRE(5 == cdd.opt_limit_common);
 }
 
-BOOST_AUTO_TEST_CASE(options_limit_all)
+SECTION("options_limit_all")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history", "--all"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_all);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_all);
 }
 
-BOOST_AUTO_TEST_CASE(options_limit_all_override)
+SECTION("options_limit_all_override")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--all", ",?", "5"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(5, cdd.opt_limit_common);
-    BOOST_REQUIRE_EQUAL(false, cdd.opt_all);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE(5 == cdd.opt_limit_common);
+    REQUIRE(false == cdd.opt_all);
 }
 
-BOOST_AUTO_TEST_CASE(options_path_equals_1)
+SECTION("options_path_equals_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--path=1"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("1", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("1" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(options_path_equals_minus_1)
+SECTION("options_path_equals_minus_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--path=-1"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-1", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("-1" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(options_path_equals_plus_1)
+SECTION("options_path_equals_plus_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--path=+1"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+1", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+1" == cdd.opt_path);
 }
 
 //----------------------------------------------------------------------
 // Freeform (positional) options
 
-BOOST_AUTO_TEST_CASE(freeform_path_1)
+SECTION("freeform_path_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "abc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("abc", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("abc" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_zero)
+SECTION("freeform_zero")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "0"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("0", cdd.opt_path);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE("0" == cdd.opt_path);
+    REQUIRE("+" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_1_dash)
+SECTION("freeform_path_1_dash")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("-" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_minus_1)
+SECTION("freeform_path_minus_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-1"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-1", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("-1" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_1_plus)
+SECTION("freeform_path_1_plus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_plus_1)
+SECTION("freeform_path_plus_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+1"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+1", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+1" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_2_dash)
+SECTION("freeform_path_2_dash")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("--", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("--" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_minus_2)
+SECTION("freeform_path_minus_2")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-2"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-2", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("-2" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_2_plus)
+SECTION("freeform_path_2_plus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "++"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("++", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("++" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_plus_2)
+SECTION("freeform_path_plus_2")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+2"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+2", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+2" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_3_dash)
+SECTION("freeform_path_3_dash")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "---"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("---", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("---" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_minus_3)
+SECTION("freeform_path_minus_3")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-3"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-3", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("-3" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_3_plus)
+SECTION("freeform_path_3_plus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+++"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+++", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+++" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_path_plus_3)
+SECTION("freeform_path_plus_3")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+3"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+3", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+3" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_direction_and_path_1)
+SECTION("freeform_direction_and_path_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+", "abc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL("abc", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE("abc" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_direction_and_path_2)
+SECTION("freeform_direction_and_path_2")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-", "abc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("-", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL("abc", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("-" == cdd.direction._direction);
+    REQUIRE("abc" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history)
+SECTION("freeform_history")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "?"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("+" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_limit)
+SECTION("freeform_history_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "?", "4"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL(4, cdd.opt_limit_forwards);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE(4 == cdd.opt_limit_forwards);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_plus)
+SECTION("freeform_history_plus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+?"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("+" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_plus_limit)
+SECTION("freeform_history_plus_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "+?", "6"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL(6, cdd.opt_limit_forwards);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE(6 == cdd.opt_limit_forwards);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_minus)
+SECTION("freeform_history_minus")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-?"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("-", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("-" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_minus_limit)
+SECTION("freeform_history_minus_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-?", "8"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("-", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL(8, cdd.opt_limit_backwards);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("-" == cdd.direction._direction);
+    REQUIRE(8 == cdd.opt_limit_backwards);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_comma)
+SECTION("freeform_history_comma")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", ",?"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(",", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("," == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_comma_limit)
+SECTION("freeform_history_comma_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", ",?", "4"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(",", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL(4, cdd.opt_limit_common);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("," == cdd.direction._direction);
+    REQUIRE(4 == cdd.opt_limit_common);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_double_qmark)
+SECTION("freeform_history_double_qmark")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "??"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(",", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("," == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_double_qmark_limit)
+SECTION("freeform_history_double_qmark_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "??", "5"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(",", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL(5, cdd.opt_limit_common);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("," == cdd.direction._direction);
+    REQUIRE(5 == cdd.opt_limit_common);
 }
 
-BOOST_AUTO_TEST_CASE(freeform_history_error)
+SECTION("freeform_history_error")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "-?", "abc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(false, rc);
-    BOOST_REQUIRE_EQUAL(
+    REQUIRE(false == rc);
+    REQUIRE(
         "** Options error: expecting number for second option: -? abc\n"
-        "Use --help to see possible options\n",
+        "Use --help to see possible options\n" ==
         cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(freeform_error_2)
+SECTION("freeform_error_2")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "a", "b"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(false, rc);
-    BOOST_REQUIRE_EQUAL(
+    REQUIRE(false == rc);
+    REQUIRE(
         "** Options error: unable to interpret options\n"
-        "Use --help to see possible options\n",
+        "Use --help to see possible options\n" ==
         cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(freeform_error_3)
+SECTION("freeform_error_3")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "a", "b", "c"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(false, rc);
-    BOOST_REQUIRE_EQUAL(
+    REQUIRE(false == rc);
+    REQUIRE(
         "** Options error: too many options specified\n"
-        "Use --help to see possible options\n",
+        "Use --help to see possible options\n" ==
         cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(freeform_error_4)
+SECTION("freeform_error_4")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "a", "b", "c", "d"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(false, rc);
-    BOOST_REQUIRE_EQUAL(
+    REQUIRE(false == rc);
+    REQUIRE(
         "** Options error: too many options specified\n"
-        "Use --help to see possible options\n",
+        "Use --help to see possible options\n" ==
         cdd.strm_err.str());
 }
 
 //----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(action_history)
+SECTION("action_history")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--action", ",?"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL(",", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("," == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(action_history_limit)
+SECTION("action_history_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--action", "? 4"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL(4, cdd.opt_limit_forwards);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
+    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE(4 == cdd.opt_limit_forwards);
 }
 
-BOOST_AUTO_TEST_CASE(action_direction_and_path)
+SECTION("action_direction_and_path")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--action=+ abc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL("abc", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE("abc" == cdd.opt_path);
 }
 
 //----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(env_limit)
+SECTION("env_limit")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", };
     int rc = cdd.options(countof(av), av, "--limit-backwards=2 --limit-forwards 3");
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(2, cdd.opt_limit_backwards);
-    BOOST_REQUIRE_EQUAL(3, cdd.opt_limit_forwards);
+    REQUIRE(true == rc);
+    REQUIRE(2 == cdd.opt_limit_backwards);
+    REQUIRE(3 == cdd.opt_limit_forwards);
 }
 
-BOOST_AUTO_TEST_CASE(env_all)
+SECTION("env_all")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", };
     int rc = cdd.options(countof(av), av, "--all");
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_all);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_all);
 }
 
-BOOST_AUTO_TEST_CASE(env_direction)
+SECTION("env_direction")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", };
     int rc = cdd.options(countof(av), av, "--direction=+");
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
+    REQUIRE(true == rc);
+    REQUIRE("+" == cdd.direction._direction);
 }
 
-BOOST_AUTO_TEST_CASE(env_action)
+SECTION("env_action")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", };
     int rc = cdd.options(countof(av), av, "--action=0");
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("0", cdd.opt_path);
-    BOOST_REQUIRE_EQUAL(false, cdd.opt_history);
+    REQUIRE(true == rc);
+    REQUIRE("0" == cdd.opt_path);
+    REQUIRE(false == cdd.opt_history);
 }
 
-BOOST_AUTO_TEST_CASE(env_action_override_1)
+SECTION("env_action_override_1")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history"};
     int rc = cdd.options(countof(av), av, "--action=0");
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_history);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_history);
 }
 
-BOOST_AUTO_TEST_CASE(env_action_override_2)
+SECTION("env_action_override_2")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--history", "+", "abc"};
     int rc = cdd.options(countof(av), av, "--action=0");
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL("+", cdd.direction._direction);
-    BOOST_REQUIRE_EQUAL("abc", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE("abc" == cdd.opt_path);
 }
 
 //----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(garbage_collect)
+SECTION("garbage_collect")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--gc"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_gc);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_gc);
 }
 
-BOOST_AUTO_TEST_CASE(delete_one)
+SECTION("delete_one")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--delete", "--path", "5"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_delete);
-    BOOST_REQUIRE_EQUAL("5", cdd.opt_path);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_delete);
+    REQUIRE("5" == cdd.opt_path);
 }
 
-BOOST_AUTO_TEST_CASE(reset)
+SECTION("reset")
 {
     Cdd cdd;
     const char *av[] = {"_cdd", "--reset"};
     int rc = cdd.options(countof(av), av);
-    BOOST_REQUIRE_EQUAL(true, rc);
-    BOOST_REQUIRE_EQUAL(true, cdd.opt_reset);
+    REQUIRE(true == rc);
+    REQUIRE(true == cdd.opt_reset);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+}
 
 // vim:ff=unix

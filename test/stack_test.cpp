@@ -22,8 +22,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#include <boost/test/unit_test.hpp>
-#include <boost/algorithm/string.hpp>
+#include "catch.hpp"
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
@@ -34,25 +33,25 @@ static string arr_test_dirs[] = {
     "aa",   // first visited,    0
 };
 
-BOOST_AUTO_TEST_SUITE(stack_test)
-
 vector<string> splitlines(stringstream& strm)
 {
-    string input = strm.str();
     vector<string> result;
-    boost::split(result, input, boost::is_any_of("\n"));
-    if (result.size())
-        result.pop_back();
+    std::string line;
+    while (std::getline(strm, line))
+        result.push_back(line);
     return result;
 }
 
-BOOST_AUTO_TEST_CASE(garbage_collect)
+TEST_CASE("stack_test")
+{
+
+SECTION("garbage_collect")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
     cdd.opt_gc = true;
     cdd.process();
     vector<string> act = splitlines(cdd.strm_out);
-    const char *exp[] = {
+    vector<string> exp = {
 #ifdef WIN32
         "for /l %%i in (1,1,4) do popd",
         "chdir/d aa 2>nul",
@@ -67,11 +66,11 @@ BOOST_AUTO_TEST_CASE(garbage_collect)
         "pushd 'cc'",
 #endif
     };
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(exp, exp+countof(exp), act.begin(), act.end());
-    BOOST_REQUIRE_EQUAL("cdd gc\n", cdd.strm_err.str());
+    REQUIRE( exp == act );
+    REQUIRE("cdd gc\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(delete_one)
+SECTION("delete_one")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
     cdd.opt_delete = true;
@@ -79,7 +78,7 @@ BOOST_AUTO_TEST_CASE(delete_one)
     cdd.opt_path = "1";
     cdd.process();
     vector<string> act = splitlines(cdd.strm_out);
-    const char *exp[] = {
+    vector<string> exp = {
 #ifdef WIN32
         "for /l %%i in (1,1,4) do popd",
         "chdir/d aa 2>nul",
@@ -94,17 +93,17 @@ BOOST_AUTO_TEST_CASE(delete_one)
         "pushd 'aa'",
 #endif
     };
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(exp, exp+countof(exp), act.begin(), act.end());
-    BOOST_REQUIRE_EQUAL("cdd del: bb\n", cdd.strm_err.str());
+    REQUIRE( exp == act );
+    REQUIRE("cdd del: bb\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(reset)
+SECTION("reset")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
     cdd.opt_reset = true;
     cdd.process();
     vector<string> act = splitlines(cdd.strm_out);
-    const char *exp[] = {
+    vector<string> exp = {
 #ifdef WIN32
         "for /l %%i in (1,1,4) do popd",
         "chdir/d dd",
@@ -112,11 +111,11 @@ BOOST_AUTO_TEST_CASE(reset)
         "dirs -c",
 #endif
     };
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(exp, exp+countof(exp), act.begin(), act.end());
-    BOOST_REQUIRE_EQUAL("cdd reset\n", cdd.strm_err.str());
+    REQUIRE( exp == act );
+    REQUIRE("cdd reset\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(command_generator_1)
+SECTION("command_generator_1")
 {
     string arr_dir[] = {
         "def",   // second visited
@@ -128,7 +127,7 @@ BOOST_AUTO_TEST_CASE(command_generator_1)
     vec_dir.assign(vec_test_dirs.rbegin(), vec_test_dirs.rend());
     cdd.command_generator(vec_dir);
     vector<string> act = splitlines(cdd.strm_out);
-    const char *exp[] = {
+    vector<string> exp = {
 #ifdef WIN32
         "for /l %%i in (1,1,2) do popd",
         "chdir/d abc 2>nul",
@@ -140,10 +139,10 @@ BOOST_AUTO_TEST_CASE(command_generator_1)
         "pushd 'def'",
 #endif
     };
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(exp, exp+countof(exp), act.begin(), act.end());
+    REQUIRE( exp == act );
 }
 
-BOOST_AUTO_TEST_CASE(command_generator_2)
+SECTION("command_generator_2")
 {
     string arr_dir[] = {
         "def",   // second visited
@@ -155,7 +154,7 @@ BOOST_AUTO_TEST_CASE(command_generator_2)
     vec_dir.assign(vec_test_dirs.rbegin(), vec_test_dirs.rend());
     cdd.command_generator(vec_dir, "def");
     vector<string> act = splitlines(cdd.strm_out);
-    const char *exp[] = {
+    vector<string> exp = {
 #ifdef WIN32
         "for /l %%i in (1,1,2) do popd",
         "chdir/d abc 2>nul",
@@ -165,10 +164,10 @@ BOOST_AUTO_TEST_CASE(command_generator_2)
         "\\cd 'abc'",
 #endif
     };
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(exp, exp+countof(exp), act.begin(), act.end());
+    REQUIRE( exp == act );
 }
 
-BOOST_AUTO_TEST_CASE(command_generator_3)
+SECTION("command_generator_3")
 {
     string arr_dir[] = {
         "def",   // second visited
@@ -179,7 +178,7 @@ BOOST_AUTO_TEST_CASE(command_generator_3)
     vector<string> vec_dir;
     cdd.command_generator(vec_dir, "def");
     vector<string> act = splitlines(cdd.strm_out);
-    const char *exp[] = {
+    vector<string> exp = {
 #ifdef WIN32
         "for /l %%i in (1,1,2) do popd",
         "chdir/d ghi",
@@ -187,9 +186,9 @@ BOOST_AUTO_TEST_CASE(command_generator_3)
         "dirs -c",
 #endif
     };
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(exp, exp+countof(exp), act.begin(), act.end());
+    REQUIRE( exp == act );
 }
 
 //----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE_END()
+}

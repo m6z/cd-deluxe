@@ -22,7 +22,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
@@ -33,31 +33,32 @@ static string arr_test_dirs[] = {
     "/opt/a",  // first visited
 };
 
-BOOST_AUTO_TEST_SUITE(history_test)
+TEST_CASE("history_test")
+{
 
-BOOST_AUTO_TEST_CASE(history_forward)
+SECTION("history_forward")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_history = true;
     cdd.direction.assign("+");
     cdd.opt_limit_backwards = 2;  // will be ignored
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL("  0: /opt/a\n  1: /opt/b\n  2: /opt/c\n  3: /opt/d\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE("  0: /opt/a\n  1: /opt/b\n  2: /opt/c\n  3: /opt/d\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_forward_limit)
+SECTION("history_forward_limit")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_history = true;
     cdd.direction.assign("+");
     cdd.opt_limit_forwards = 2;
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL("  0: /opt/a\n  1: /opt/b\n ... showing first 2 of 4\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE("  0: /opt/a\n  1: /opt/b\n ... showing first 2 of 4\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_forward_limit_all)
+SECTION("history_forward_limit_all")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_history = true;
@@ -65,33 +66,33 @@ BOOST_AUTO_TEST_CASE(history_forward_limit_all)
     cdd.opt_limit_forwards = 2;
     cdd.opt_all = true;
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL("  0: /opt/a\n  1: /opt/b\n  2: /opt/c\n  3: /opt/d\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE("  0: /opt/a\n  1: /opt/b\n  2: /opt/c\n  3: /opt/d\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_backwards)
+SECTION("history_backwards")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_history = true;
     cdd.direction.assign("-");
     cdd.opt_limit_forwards = 2;  // will be ignored
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL(" -1: /opt/d\n -2: /opt/c\n -3: /opt/b\n -4: /opt/a\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE(" -1: /opt/d\n -2: /opt/c\n -3: /opt/b\n -4: /opt/a\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_backwards_limit)
+SECTION("history_backwards_limit")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_history = true;
     cdd.direction.assign("-");
     cdd.opt_limit_backwards = 2;
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL(" -1: /opt/d\n -2: /opt/c\n ... showing last 2 of 4\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE(" -1: /opt/d\n -2: /opt/c\n ... showing last 2 of 4\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_backwards_limit_all)
+SECTION("history_backwards_limit_all")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
     cdd.opt_history = true;
@@ -99,8 +100,8 @@ BOOST_AUTO_TEST_CASE(history_backwards_limit_all)
     cdd.opt_limit_backwards = 2;
     cdd.opt_all = true;
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL(" -1: /opt/d\n -2: /opt/c\n -3: /opt/b\n -4: /opt/a\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE(" -1: /opt/d\n -2: /opt/c\n -3: /opt/b\n -4: /opt/a\n" == cdd.strm_err.str());
 }
 
 //----------------------------------------------------------------------
@@ -115,28 +116,28 @@ static string arr_common_dirs[] = {
     "/var/a",  // first visited
 };
 
-BOOST_AUTO_TEST_CASE(history_common)
+SECTION("history_common")
 {
     Cdd cdd(arr_common_dirs, countof(arr_common_dirs));
     cdd.opt_history = true;
     cdd.direction.assign(",");
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL(" ,0: ( 3) /var/a\n ,1: ( 2) /var/c\n ,2: ( 2) /var/b\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE(" ,0: ( 3) /var/a\n ,1: ( 2) /var/c\n ,2: ( 2) /var/b\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_common_limit)
+SECTION("history_common_limit")
 {
     Cdd cdd(arr_common_dirs, countof(arr_common_dirs));
     cdd.opt_history = true;
     cdd.direction.assign(",");
     cdd.opt_limit_common = 2;
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL(" ,0: ( 3) /var/a\n ,1: ( 2) /var/c\n ... showing top 2 of 3\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE(" ,0: ( 3) /var/a\n ,1: ( 2) /var/c\n ... showing top 2 of 3\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_CASE(history_common_limit_all)
+SECTION("history_common_limit_all")
 {
     Cdd cdd(arr_common_dirs, countof(arr_common_dirs));
     cdd.opt_history = true;
@@ -144,8 +145,8 @@ BOOST_AUTO_TEST_CASE(history_common_limit_all)
     cdd.opt_limit_common = 2;
     cdd.opt_all = true;
     cdd.process();
-    BOOST_REQUIRE_EQUAL("", cdd.strm_out.str());
-    BOOST_REQUIRE_EQUAL(" ,0: ( 3) /var/a\n ,1: ( 2) /var/c\n ,2: ( 2) /var/b\n", cdd.strm_err.str());
+    REQUIRE("" == cdd.strm_out.str());
+    REQUIRE(" ,0: ( 3) /var/a\n ,1: ( 2) /var/c\n ,2: ( 2) /var/b\n" == cdd.strm_err.str());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

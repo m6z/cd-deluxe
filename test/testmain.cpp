@@ -22,9 +22,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#ifndef WIN32
-#define BOOST_TEST_DYN_LINK
-#endif
-#define BOOST_TEST_MAIN
-#include <boost/test/unit_test.hpp>
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 

@@ -22,43 +22,41 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#include <boost/test/unit_test.hpp>
+#include "catch.hpp"
 
-BOOST_AUTO_TEST_SUITE(util_test)
-
-BOOST_AUTO_TEST_CASE(normalize_path)
+TEST_CASE("util_test")
 {
-    BOOST_REQUIRE_EQUAL("/tmp/a", Cdd::normalize_path("/tmp/a"));
+
+SECTION("normalize_path")
+{
+    REQUIRE("/tmp/a" == Cdd::normalize_path("/tmp/a"));
     // Remove trailing slash
-    BOOST_REQUIRE_EQUAL("/tmp/a", Cdd::normalize_path("/tmp/a/"));
+    REQUIRE("/tmp/a" == Cdd::normalize_path("/tmp/a/"));
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("c:/tmp/a", Cdd::normalize_path("C:\\tmp\\a\\"));
+    REQUIRE("c:/tmp/a" == Cdd::normalize_path("C:\\tmp\\a\\"));
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(windowize_path)
+SECTION("windowize_path")
 {
 #ifdef WIN32
-    BOOST_REQUIRE_EQUAL("\\tmp\\a", Cdd::windowize_path("/tmp/a"));
+    REQUIRE("\\tmp\\a" == Cdd::windowize_path("/tmp/a"));
 #endif
 }
 
-string fun(string s)
+SECTION("expand_dots")
 {
-    return Cdd::normalize_path(Cdd::expand_dots(s));
+    auto fun = [](string s) { return Cdd::normalize_path(Cdd::expand_dots(s)); };
+
+    REQUIRE("/tmp/a" == fun("/tmp/a"));
+    REQUIRE("../.." == fun("..."));
+    REQUIRE("../../.." == fun("...."));
+    REQUIRE("abc..." == fun("abc..."));
+    REQUIRE("...def" == fun("...def"));
+    REQUIRE("abc...def" == fun("abc...def"));
+    REQUIRE("abc/../../def" == fun("abc/.../def"));
+    REQUIRE("abc/../../../def" == fun("abc\\....\\def"));
+    REQUIRE("abc/../../def/../../ghi" == fun("abc\\...\\def/.../ghi"));
 }
 
-BOOST_AUTO_TEST_CASE(expand_dots)
-{
-    BOOST_REQUIRE_EQUAL("/tmp/a", fun("/tmp/a"));
-    BOOST_REQUIRE_EQUAL("../..", fun("..."));
-    BOOST_REQUIRE_EQUAL("../../..", fun("...."));
-    BOOST_REQUIRE_EQUAL("abc...", fun("abc..."));
-    BOOST_REQUIRE_EQUAL("...def", fun("...def"));
-    BOOST_REQUIRE_EQUAL("abc...def", fun("abc...def"));
-    BOOST_REQUIRE_EQUAL("abc/../../def", fun("abc/.../def"));
-    BOOST_REQUIRE_EQUAL("abc/../../../def", fun("abc\\....\\def"));
-    BOOST_REQUIRE_EQUAL("abc/../../def/../../ghi", fun("abc\\...\\def/.../ghi"));
 }
-
-BOOST_AUTO_TEST_SUITE_END()
