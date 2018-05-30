@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2011 Michael Graz
+Copyright 2010-2018 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -22,10 +22,39 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+// TODO consolidate header files more rationally
+#include <regex>
+
+#include "cxxopts.hpp"
+
+#define countof(x) (sizeof(x)/sizeof(x[0]))
+
+// namespace fs = boost::filesystem;
+// namespace fs = std::experimental::filesystem;
+// namespace po = boost::program_options;
 
 const string Cdd::env_options_name = "CDD_OPTIONS";
+
+//----------------------------------------------------------------------
+// ref: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
+
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::stringstream ss(s);
+    std::string item;
+    int count = 0;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+std::vector<std::string> split(const std::string &s, char delim=' ') {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+
+//----------------------------------------------------------------------
 
 Cdd::Cdd(void)
 {
@@ -170,6 +199,27 @@ string Cdd::windowize_path(const string& path)
     return result;
 }
 
+string Cdd::get_parent_path(const string& path)
+{
+    std::size_t found = path.find_last_of("/\\");
+    if ( found != string::npos )
+    {
+        if ( found == 0 )
+        {
+            // special case of file in root dir
+            return path.substr(0, 1);
+        }
+        return path.substr(0, found);
+    }
+#ifndef WIN32
+    if ( path.length() >= 2 && path[1] == ':' )
+    {
+        return path.substr(0, 2);
+    }
+#endif
+    return path;    // just return original path
+}
+
 bool Cdd::paths_equal(const string& path1, int inode1, const string& path2)
 {
     int inode2 = get_inode(path2);
@@ -190,9 +240,9 @@ int Cdd::get_inode(const string& path)
 
 string Cdd::expand_dots(string path)
 {
-    static boost::regex re_dots("(?:^|[\\\\/])([.]{3,})(?:[\\\\/]|$)");
-    boost::smatch what;
-    if (boost::regex_search(path, what, re_dots))
+    static std::regex re_dots("(?:^|[\\\\/])([.]{3,})(?:[\\\\/]|$)");
+    std::smatch what;
+    if (std::regex_search(path, what, re_dots))
     {
         string s_start(what[0].first, what[1].first);
         string s_end(what[1].second, what[0].second);
@@ -206,7 +256,7 @@ string Cdd::expand_dots(string path)
             dots += "/..";
 #endif
         }
-        return what.prefix() + s_start + dots + expand_dots(s_end + what.suffix());
+        return string(what.prefix()) + s_start + dots + expand_dots(s_end + string(what.suffix()));
     }
     return path;
 }
@@ -289,6 +339,24 @@ bool Cdd::change_to_path_spec(void)
     return rc;
 }
 
+static std::regex re_num("(\\d+)");
+static std::regex re_dashes("-+");
+static std::regex re_two_or_more_dashes("--+");
+static std::regex re_dash_num("-(\\d+)");
+static std::regex re_pluses("[+]+");
+static std::regex re_plus_num("[+](\\d+)");
+static std::regex re_commas(",+");
+static std::regex re_comma_num(",(\\d+)");
+
+bool is_valid_path_spec(const char *s)
+{
+    if ( std::regex_match(s, re_two_or_more_dashes) )
+        return true;
+    if ( std::regex_match(s, re_dash_num) )
+        return true;
+    return false;
+}
+
 // Main matching engine
 // path_found will have the result of the path match if it exists
 // path_extra will have the strings to display as an alternative to path_found
@@ -296,14 +364,6 @@ bool Cdd::change_to_path_spec(void)
 
 bool Cdd::process_path_spec(string& path_found, vector<string>& path_extra, stringstream& path_error)
 {
-    static boost::regex re_num("(\\d+)");
-    static boost::regex re_dashes("-+");
-    static boost::regex re_dash_num("-(\\d+)");
-    static boost::regex re_pluses("[+]+");
-    static boost::regex re_plus_num("[+](\\d+)");
-    static boost::regex re_commas(",+");
-    static boost::regex re_comma_num(",(\\d+)");
-
     // Rewrite things like "..." to "../.."
     opt_path = expand_dots(opt_path);
 
@@ -321,8 +381,9 @@ bool Cdd::process_path_spec(string& path_found, vector<string>& path_extra, stri
     // If it is a file, change to the directory containing the file
     if (is_regular_file(opt_path))
     {
-        fs::path path(opt_path);
-        path_found = path.parent_path().string();
+        // fs::path path(opt_path);
+        // path_found = path.parent_path().string();
+        path_found = get_parent_path(opt_path);
         return true;
     }
     if (vec_dir_stack.empty())
@@ -330,10 +391,10 @@ bool Cdd::process_path_spec(string& path_found, vector<string>& path_extra, stri
         path_error << "No history of directories" << endl;
         return false;
     }
-    boost::smatch what;
-    if (boost::regex_match(opt_path, what, re_num))
+    std::smatch match;
+    if (std::regex_match(opt_path, match, re_num))
     {
-        int amount = boost::lexical_cast<int>(what[1]);
+        int amount = std::stoi(match[1]);
         if (direction.is_backwards())
             return go_backwards(amount, path_found, path_error);
         if (direction.is_forwards())
@@ -342,34 +403,34 @@ bool Cdd::process_path_spec(string& path_found, vector<string>& path_extra, stri
             return go_common(amount, path_found, path_error);
         return false;
     }
-    if (boost::regex_match(opt_path, what, re_dash_num))
+    if (std::regex_match(opt_path, match, re_dash_num))
     {
-        int amount = boost::lexical_cast<int>(what[1]);
+        int amount = std::stoi(match[1]);
         return go_backwards(amount, path_found, path_error);
     }
-    if (boost::regex_match(opt_path, what, re_dashes))
+    if (std::regex_match(opt_path, match, re_dashes))
     {
-        int amount = what[0].str().size();
+        int amount = match[0].str().size();
         return go_backwards(amount, path_found, path_error);
     }
-    if (boost::regex_match(opt_path, what, re_plus_num))
+    if (std::regex_match(opt_path, match, re_plus_num))
     {
-        int amount = boost::lexical_cast<int>(what[1]);
+        int amount = std::stoi(match[1]);
         return go_forwards(amount, path_found, path_error);
     }
-    if (boost::regex_match(opt_path, what, re_pluses))
+    if (std::regex_match(opt_path, match, re_pluses))
     {
-        int amount = what[0].str().size();
+        int amount = match[0].str().size();
         return go_forwards(amount-1, path_found, path_error);
     }
-    if (boost::regex_match(opt_path, what, re_comma_num))
+    if (std::regex_match(opt_path, match, re_comma_num))
     {
-        int amount = boost::lexical_cast<int>(what[1]);
+        int amount = std::stoi(match[1]);
         return go_common(amount, path_found, path_error);
     }
-    if (boost::regex_match(opt_path, what, re_commas))
+    if (std::regex_match(opt_path, match, re_commas))
     {
-        int amount = what[0].str().size();
+        int amount = match[0].str().size();
         return go_common(amount-1, path_found, path_error);
     }
 
@@ -473,29 +534,33 @@ void Cdd::show_history_most_to_least(void)
 
 bool Cdd::is_directory(string path)
 {
-    return fs::is_directory(path);
+    // return fs::is_directory(path);
+    struct stat info;
+    return stat(path.c_str(), &info) == 0 && info.st_mode & S_IFDIR;
 }
 
 bool Cdd::is_regular_file(string path)
 {
-    return fs::is_regular_file(path);
+    // return fs::is_regular_file(path);
+    struct stat info;
+    return stat(path.c_str(), &info) == 0 && !(info.st_mode & S_IFDIR);
 }
 
 bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringstream& path_error)
 {
     // Ignore case by default
-    boost::regex re;
+    std::regex re;
     try
     {
-        re.assign(opt_path, boost::regex_constants::icase);
+        re.assign(opt_path, std::regex_constants::icase);
     }
-    catch (boost::regex_error& e)
+    catch (std::regex_error& e)
     {
         path_error << "Cannot process pattern: '" << opt_path << "'" << endl << e.what() << endl;
         return false;
     }
 
-    boost::smatch what;
+    std::smatch what;
     if (direction.is_backwards())
     {
         int number = -1;
@@ -503,7 +568,7 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
         for (it=vec_dir_last_to_first.begin(); it!=vec_dir_last_to_first.end(); ++it)
         {
             string dir = *it;
-            if (boost::regex_search(dir, what, re))
+            if (std::regex_search(dir, what, re))
             {
                 if (path_found.empty())
                     path_found = dir;
@@ -525,7 +590,7 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
         for (it=vec_dir_first_to_last.begin(); it!=vec_dir_first_to_last.end(); ++it)
         {
             string dir = *it;
-            if (boost::regex_search(dir, what, re))
+            if (std::regex_search(dir, what, re))
             {
                 if (path_found.empty())
                     path_found = dir;
@@ -547,7 +612,7 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
         for (it=vec_dir_most_to_least.begin(); it!=vec_dir_most_to_least.end(); ++it)
         {
             string dir = it->dir;
-            if (boost::regex_search(dir, what, re))
+            if (std::regex_search(dir, what, re))
             {
                 if (path_found.empty())
                     path_found = dir;
@@ -677,9 +742,9 @@ void Cdd::set_opt_path(const string& opt_path)
     int ivalue;
     try
     {
-        ivalue = boost::lexical_cast<int>(opt_path);
+        ivalue = std::stoi(opt_path);
     }
-    catch (bad_cast& bc)
+    catch (std::logic_error &)
     {
         // Not an int, so give up
         return;
@@ -725,191 +790,412 @@ struct OptionDirection
     OptionDirection(string s) : direction(s) {}
 };
 
-void validate(boost::any& v, const std::vector<std::string>& values, OptionDirection*, int)
+std::istream& operator>>(std::istream& is, OptionDirection& obj)
 {
-    po::validators::check_first_occurrence(v);
-    const string& s = po::validators::get_single_string(values);
-    if (Cdd::Direction::is_valid_direction(s))
-        v = boost::any(OptionDirection(s));
-    else
-        throw po::validation_error(po::validation_error::invalid_option_value);
+    // read obj from stream
+    is >> obj.direction;
+//     if( /* T could not be constructed */ )
+//         is.setstate(std::ios::failbit);
+    return is;
 }
 
-bool Cdd::options(int ac, const char *av[], const string& env_options)
+template<typename T>
+T get_value(const char *opt_name, const cxxopts::ParseResult& opts_cmd, const cxxopts::ParseResult& opts_env)
 {
-    if (ac > 0 && av[ac-1] == string("--"))
+    if ( opts_cmd.count(opt_name) > 0 )
+        return opts_cmd[opt_name].as<T>();
+    if ( opts_env.count(opt_name) > 0 )
+        return opts_env[opt_name].as<T>();
+    return {};
+}
+
+// bool Cdd::options_old(int ac, const char *av[], const string& env_options)
+// {
+//     if (ac > 0 && av[ac-1] == string("--"))
+//     {
+//         // Special case.  Cannot seem to catch the double hyphen string in program_options package.
+//         // So just grabbing it here.
+//         opt_path = "--";
+//         ac--;
+//     }
+// 
+//     OptionDirection option_direction(direction._direction);
+//     po::options_description desc("cd Deluxe options");
+//     po::variables_map vm;
+// 
+//     // First, parse the options string with a limited set of options
+//     desc.add_options()
+//         ("action", po::value<string>(), "Specify freeform action")
+//         ("direction", po::value<OptionDirection>(&option_direction), "Direction of search and history")
+//         ("limit-backwards", po::value<int>()->default_value(8), "Limit of history (last to first) to display")
+//         ("limit-forwards", po::value<int>()->default_value(0), "Limit of history (first to last) to display")
+//         ("limit-common", po::value<int>()->default_value(10), "Limit of history (most to least) to display")
+//         ("all", "Show all, do not limit listing");
+// 
+//     if (!env_options.empty())
+//     {
+//         try
+//         {
+//             po::parsed_options parsed = po::command_line_parser(po::split_unix(env_options)).options(desc).run();
+//             po::store(parsed, vm);
+//             po::notify(vm);
+//         }
+//         catch(po::error& e)
+//         {
+//             strm_err << "** " << env_options_name << " error: " << e.what() << endl;
+//         }
+//         catch(exception& e)
+//         {
+//             strm_err << "** " << env_options_name << " exception: " << e.what() << endl;
+//         }
+//     }
+// 
+//     // Second, parse the options passed to the program
+//     desc.add_options()
+//         ("help", "Program help")
+//         ("version", "Version information")
+//         ("path", po::value<string>(), "Change to path number|string")
+//         ("history", "Show history")
+//         ("gc", "Garbage collect")
+//         ("delete", "Delete from history")
+//         ("reset", "Reset (erase) all history");
+// 
+//     vector<string> vec_action;
+//     try
+//     {
+//         po::parsed_options parsed = po::command_line_parser(ac, av).options(desc).allow_unregistered().run();
+//         po::store(parsed, vm);
+//         po::notify(vm);
+//         vec_action = po::collect_unrecognized(parsed.options, po::include_positional);
+//     }
+//     catch(po::error& e)
+//     {
+//         strm_err << "** Options error: " << e.what() << endl;
+//         help_tip();
+//         return false;
+//     }
+// 
+//     if (vm.count("help"))
+//     {
+//         opt_help = true;
+//         return true;
+//     }
+//     if (vm.count("version"))
+//     {
+//         opt_version = true;
+//         return true;
+//     }
+// 
+//     if (vm.count("history"))
+//         opt_history = true;
+//     if (vm.count("gc"))
+//         opt_gc = true;
+//     if (vm.count("delete"))
+//         opt_delete = true;
+//     if (vm.count("reset"))
+//         opt_reset = true;
+//     if (vm.count("direction"))
+//         direction.assign(option_direction.direction);
+//     opt_limit_backwards = vm["limit-backwards"].as<int>();
+//     opt_limit_forwards = vm["limit-forwards"].as<int>();
+//     opt_limit_common = vm["limit-common"].as<int>();
+//     if (vm.count("all"))
+//         opt_all = true;
+//     if (vm.count("path"))
+//         set_opt_path(vm["path"].as<string>());
+// 
+//     if (vec_action.empty())
+//     {
+//         // Need at least history or path or one of the commands
+//         if (opt_history || (! opt_path.empty()) || opt_gc || opt_delete || opt_reset)
+//             return true;
+//         // Here: no actions specified, look in the 'action' option parameter
+//         if (vm.count("action"))
+//         {
+//             try
+//             {
+//                 vec_action = po::split_unix(vm["action"].as<string>());
+//             }
+//             catch (exception& e)
+//             {
+//                 strm_err << "** Caught exception parsing option --action: " << e.what() << endl;
+//                 help_tip();
+//                 return false;
+//             }
+//         }
+//     }
+// 
+//     if (vec_action.empty())
+//     {
+//         // If no actions specified, default action is history
+//         opt_history = true;
+//         return true;
+//     }
+// 
+//     if (vec_action.size() == 1)
+//     {
+//         if (set_history_direction(vec_action[0]))
+//             opt_history = true;
+//         else
+//             set_opt_path(vec_action[0]);
+//         return true;
+//     }
+//     if (vec_action.size() == 2)
+//     {
+//         if (Direction::is_valid_direction(vec_action[0]))
+//         {
+//             direction.assign(vec_action[0]);
+//             set_opt_path(vec_action[1]);
+//             return true;
+//         }
+// 
+//         if (set_history_direction(vec_action[0]))
+//         {
+//             opt_history = true;
+//             int amount;
+//             try
+//             {
+//                 amount = std::stoi(vec_action[1]);
+//             }
+//             catch (std::logic_error &)
+//             {
+//                 strm_err << "** Options error: expecting number for second option: "
+//                     << vec_action[0] << " " << vec_action[1] << endl;
+//                 help_tip();
+//                 return false;
+//             }
+//             if (direction.is_backwards())
+//                 opt_limit_backwards = amount;
+//             else if (direction.is_forwards())
+//                 opt_limit_forwards = amount;
+//             else if (direction.is_common())
+//                 opt_limit_common = amount;
+//             // Number specified here overrides --all
+//             opt_all = false;
+//             return true;
+//         }
+//     }
+//     if (vec_action.size() > 2)
+//     {
+//         strm_err << "** Options error: too many options specified" << endl;
+//         help_tip();
+//         return false;
+//     }
+//     strm_err << "** Options error: unable to interpret options" << endl;
+//     help_tip();
+//     return false;
+// }
+
+bool Cdd::options_new(int ac, const char *av[], const string& env_options)
+{
+    if (ac > 0)
     {
-        // Special case.  Cannot seem to catch the double hyphen string in program_options package.
-        // So just grabbing it here.
-        opt_path = "--";
-        ac--;
+        // handle special cases which conflict with tradition option parsing
+        if ( is_valid_path_spec(av[ac-1]) )
+            opt_path = av[--ac];
     }
 
-    OptionDirection option_direction(direction._direction);
-    po::options_description desc("cd Deluxe options");
-    po::variables_map vm;
+//     std::cout << "xx opt_path: >" << opt_path.c_str() << "<\n";
+//     std::cout << "xx direction._direction: >" << direction._direction << "<\n";
+//     for(int i=0; i<ac; i++)
+//         std::cout << "xx options_new ac[" << i << "]: >" << av[i] << "<\n";
 
-    // First, parse the options string with a limited set of options
-    desc.add_options()
-        ("action", po::value<string>(), "Specify freeform action")
-        ("direction", po::value<OptionDirection>(&option_direction), "Direction of search and history")
-        ("limit-backwards", po::value<int>()->default_value(8), "Limit of history (last to first) to display")
-        ("limit-forwards", po::value<int>()->default_value(0), "Limit of history (first to last) to display")
-        ("limit-common", po::value<int>()->default_value(10), "Limit of history (most to least) to display")
-        ("all", "Show all, do not limit listing");
-
-    if (!env_options.empty())
-    {
-        try
-        {
-            po::parsed_options parsed = po::command_line_parser(po::split_unix(env_options)).options(desc).run();
-            po::store(parsed, vm);
-            po::notify(vm);
-        }
-        catch(po::error& e)
-        {
-            strm_err << "** " << env_options_name << " error: " << e.what() << endl;
-        }
-        catch(exception& e)
-        {
-            strm_err << "** " << env_options_name << " exception: " << e.what() << endl;
-        }
-    }
-
-    // Second, parse the options passed to the program
-    desc.add_options()
-        ("help", "Program help")
-        ("version", "Version information")
-        ("path", po::value<string>(), "Change to path number|string")
-        ("history", "Show history")
-        ("gc", "Garbage collect")
-        ("delete", "Delete from history")
-        ("reset", "Reset (erase) all history");
-
-    vector<string> vec_action;
+    string opts_src;
     try
     {
-        po::parsed_options parsed = po::command_line_parser(ac, av).options(desc).allow_unregistered().run();
-        po::store(parsed, vm);
-        po::notify(vm);
-        vec_action = po::collect_unrecognized(parsed.options, po::include_positional);
-    }
-    catch(po::error& e)
-    {
-        strm_err << "** Options error: " << e.what() << endl;
-        help_tip();
-        return false;
-    }
+        cxxopts::Options options("cdd", "cd Deluxe options");
 
-    if (vm.count("help"))
-    {
-        opt_help = true;
-        return true;
-    }
-    if (vm.count("version"))
-    {
-        opt_version = true;
-        return true;
-    }
+        // First, parse the options string with a limited set of options
+        options.add_options()
+            ("action", "Specify freeform action", cxxopts::value<string>())
+            // ("direction", "Direction of search and history", cxxopts::value<OptionDirection>()->default_value(&option_direction))
+            ("direction", "Direction of search and history", cxxopts::value<string>()->default_value(direction._direction))
+            ("limit-backwards", "Limit of history (last to first) to display", cxxopts::value<int>()->default_value("8"))
+            ("limit-forwards", "Limit of history (first to last) to display", cxxopts::value<int>()->default_value("0"))
+            ("limit-common", "Limit of history (most to least) to display", cxxopts::value<int>()->default_value("10"))
+            ("all", "Show all, do not limit listing")
+            ;
 
-    if (vm.count("history"))
-        opt_history = true;
-    if (vm.count("gc"))
-        opt_gc = true;
-    if (vm.count("delete"))
-        opt_delete = true;
-    if (vm.count("reset"))
-        opt_reset = true;
-    if (vm.count("direction"))
-        direction.assign(option_direction.direction);
-    opt_limit_backwards = vm["limit-backwards"].as<int>();
-    opt_limit_forwards = vm["limit-forwards"].as<int>();
-    opt_limit_common = vm["limit-common"].as<int>();
-    if (vm.count("all"))
-        opt_all = true;
-    if (vm.count("path"))
-        set_opt_path(vm["path"].as<string>());
+        auto vec_env_options = split(env_options);
+        // The options package is expecting the program name to be in zeroth position.
+        // Put in a placeholder that will be ignored.
+        vec_env_options.insert(vec_env_options.begin(), "dummy");
 
-    if (vec_action.empty())
-    {
-        // Need at least history or path or one of the commands
-        if (opt_history || (! opt_path.empty()) || opt_gc || opt_delete || opt_reset)
+        // need to turn this into an array of char pointers for cxxopts
+        char *argv_env_options[32];  // choose a suitably large number
+        int argc_env_options = vec_env_options.size();
+        if ( argc_env_options > countof(argv_env_options) )
+            argc_env_options = countof(argv_env_options);
+        for(int i=0; i<argc_env_options; i++)
+            argv_env_options[i] = const_cast<char *>(vec_env_options[i].c_str());
+
+        opts_src = "in environment variable";
+        char **argv_env_options_ptr = argv_env_options;
+        auto opts_env = options.parse(argc_env_options, argv_env_options_ptr);
+
+        std::vector<std::string> vec_action;
+
+        options.add_options()
+            ("help", "Program help")
+            ("version", "Version information")
+            ("path", "Change to path number|string", cxxopts::value<string>())
+            ("history", "Show history")
+            ("gc", "Garbage collect")
+            ("delete", "Delete from history")
+            ("reset", "Reset (erase) all history")
+            ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(vec_action))
+            ;
+
+        options.parse_positional({"positional"});
+
+        // need to turn this into an array of char pointers for cxxopts
+        char *argv_cmd_options[32];  // choose a suitably large number
+        int argc_cmd_options = ac;
+        if ( argc_cmd_options > countof(argv_cmd_options) )
+            argc_cmd_options = countof(argv_cmd_options);
+        for(int i=0; i<argc_cmd_options; i++)
+            argv_cmd_options[i] = const_cast<char *>(av[i]);
+
+        opts_src = "on command line";
+        char **argv_cmd_options_ptr = argv_cmd_options;
+        auto opts_cmd = options.parse(argc_cmd_options, argv_cmd_options_ptr);
+
+        if (opts_cmd.count("help"))
+        {
+            opt_help = true;
             return true;
-        // Here: no actions specified, look in the 'action' option parameter
-        if (vm.count("action"))
+        }
+        if (opts_cmd.count("version"))
+        {
+            opt_version = true;
+            return true;
+        }
+
+        if (opts_cmd.count("history"))
+            opt_history = true;
+        if (opts_cmd.count("gc"))
+            opt_gc = true;
+        if (opts_cmd.count("delete"))
+            opt_delete = true;
+        if (opts_cmd.count("reset"))
+            opt_reset = true;
+        string opt_direction;
+        opt_direction = get_value<string>("direction", opts_cmd, opts_env);
+        if ( ! opt_direction.empty() )
         {
             try
             {
-                vec_action = po::split_unix(vm["action"].as<string>());
+                // direction.assign(option_direction.direction);
+                // direction.assign(opts_cmd["direction"].as<string>());
+                direction.assign(opt_direction);
             }
-            catch (exception& e)
+            catch(exception& e)
             {
-                strm_err << "** Caught exception parsing option --action: " << e.what() << endl;
+                strm_err << "** Options error: " << e.what() << endl;
                 help_tip();
                 return false;
             }
         }
-    }
 
-    if (vec_action.empty())
-    {
-        // If no actions specified, default action is history
-        opt_history = true;
-        return true;
-    }
+        opt_limit_forwards = get_value<int>("limit-forwards", opts_cmd, opts_env);
+        opt_limit_backwards = get_value<int>("limit-backwards", opts_cmd, opts_env);
+        opt_limit_common = opts_cmd["limit-common"].as<int>();
+        opt_all = get_value<bool>("all", opts_cmd, opts_env);
 
-    if (vec_action.size() == 1)
-    {
-        if (set_history_direction(vec_action[0]))
-            opt_history = true;
-        else
-            set_opt_path(vec_action[0]);
-        return true;
-    }
-    if (vec_action.size() == 2)
-    {
-        if (Direction::is_valid_direction(vec_action[0]))
+        if (opts_cmd.count("path"))
+            set_opt_path(opts_cmd["path"].as<string>());
+
+        if (vec_action.empty())
         {
-            direction.assign(vec_action[0]);
-            set_opt_path(vec_action[1]);
+            // Need at least history or path or one of the commands
+            if (opt_history || (! opt_path.empty()) || opt_gc || opt_delete || opt_reset)
+                return true;
+            // Here: no actions specified, look in the 'action' option parameter
+            string action = get_value<string>("action", opts_cmd, opts_env);
+            if ( ! action.empty() )
+            {
+                try
+                {
+                    std::istringstream iss(action);
+                    for(std::string s; iss >> s; )
+                        vec_action.push_back(s);
+                }
+                catch (exception& e)
+                {
+                    strm_err << "** Caught exception parsing option --action: " << e.what() << endl;
+                    help_tip();
+                    return false;
+                }
+            }
+        }
+
+        if (vec_action.empty())
+        {
+            // If no actions specified, default action is history
+            opt_history = true;
             return true;
         }
 
-        if (set_history_direction(vec_action[0]))
+        if (vec_action.size() == 1)
         {
-            opt_history = true;
-            int amount;
-            try
-            {
-                amount = boost::lexical_cast<int>(vec_action[1]);
-            }
-            catch (bad_cast& bc)
-            {
-                strm_err << "** Options error: expecting number for second option: "
-                    << vec_action[0] << " " << vec_action[1] << endl;
-                help_tip();
-                return false;
-            }
-            if (direction.is_backwards())
-                opt_limit_backwards = amount;
-            else if (direction.is_forwards())
-                opt_limit_forwards = amount;
-            else if (direction.is_common())
-                opt_limit_common = amount;
-            // Number specified here overrides --all
-            opt_all = false;
+            if (set_history_direction(vec_action[0]))
+                opt_history = true;
+            else
+                set_opt_path(vec_action[0]);
             return true;
         }
+        if (vec_action.size() == 2)
+        {
+            if (Direction::is_valid_direction(vec_action[0]))
+            {
+                direction.assign(vec_action[0]);
+                set_opt_path(vec_action[1]);
+                return true;
+            }
+
+            if (set_history_direction(vec_action[0]))
+            {
+                opt_history = true;
+                int amount;
+                try
+                {
+                    amount = std::stoi(vec_action[1]);
+                }
+                catch (std::logic_error &)
+                {
+                    strm_err << "** Options error: expecting number for second option: "
+                        << vec_action[0] << " " << vec_action[1] << endl;
+                    help_tip();
+                    return false;
+                }
+                if (direction.is_backwards())
+                    opt_limit_backwards = amount;
+                else if (direction.is_forwards())
+                    opt_limit_forwards = amount;
+                else if (direction.is_common())
+                    opt_limit_common = amount;
+                // Number specified here overrides --all
+                opt_all = false;
+                return true;
+            }
+        }
+        if (vec_action.size() > 2)
+        {
+            strm_err << "** Options error: too many options specified" << endl;
+            help_tip();
+            return false;
+        }
+        strm_err << "** Options error: unable to interpret options" << endl;
+        help_tip();
+        return false;
+
     }
-    if (vec_action.size() > 2)
+    catch(cxxopts::OptionException& e)
     {
-        strm_err << "** Options error: too many options specified" << endl;
+        strm_err << "** Options error " << opts_src.c_str() << ": " << e.what() << endl;
         help_tip();
         return false;
     }
-    strm_err << "** Options error: unable to interpret options" << endl;
-    help_tip();
-    return false;
 }
 
 void Cdd::help_tip(void)
@@ -951,7 +1237,7 @@ cerr <<
 "PATH_SPEC can be a number, a repeated direction, or a direction and a pattern.\n"
 "\n"
 "See http://www.plan10.com/cdd for more information.\n"
-"Copyright 2010-2011 Michael Graz\n"
+"Copyright 2010-2018 Michael Graz\n"
 ;
 
 }
@@ -960,3 +1246,5 @@ void Cdd::version(void)
 {
     cerr << "cdd " << CDD_VERSION << endl;
 }
+
+// vim:ff=unix

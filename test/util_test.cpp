@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2011 Michael Graz
+Copyright 2010-2018 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -44,6 +44,17 @@ SECTION("windowize_path")
 #endif
 }
 
+SECTION("parent_path")
+{
+    REQUIRE("/abc/def" == Cdd::get_parent_path("/abc/def/ghi.tmp"));
+    REQUIRE("/abc" == Cdd::get_parent_path("/abc/def.tmp"));
+    REQUIRE("/" == Cdd::get_parent_path("/abc.tmp"));
+#ifdef WIN32
+    REQUIRE("c:\\tmp" == Cdd::get_parent_path("c:\\tmp\\a"));
+    REQUIRE("c:" == Cdd::get_parent_path("c:abc.tmp"));
+#endif
+}
+
 SECTION("expand_dots")
 {
     auto fun = [](string s) { return Cdd::normalize_path(Cdd::expand_dots(s)); };
@@ -60,3 +71,5 @@ SECTION("expand_dots")
 }
 
 }
+
+// vim:ff=unix

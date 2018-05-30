@@ -8,7 +8,9 @@
 #ifdef WIN32
 #include <io.h>
 #else
+#include <unistd.h>
 #include <sys/io.h>
+#include <sys/param.h>
 #endif
 #include <iostream>
 #include <string>
@@ -16,8 +18,8 @@
 
 #include <cdd/cdd.h>
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
+// #define BOOST_FILESYSTEM_VERSION 3
+// #include <boost/filesystem/path.hpp>
+// #include <boost/filesystem/operations.hpp>
 
 // vim:ff=unix

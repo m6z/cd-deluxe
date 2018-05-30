@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2011 Michael Graz
+Copyright 2010-2018 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -25,3 +25,4 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
+// vim:ff=unix

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2011 Michael Graz
+Copyright 2010-2018 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -23,7 +23,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CDD_H
 #define CDD_H
 
-#define CDD_VERSION "1.0.3"
+#define CDD_VERSION "1.1.0"
 
 #include <string>
 #include <vector>
@@ -125,12 +125,14 @@ struct Cdd
     Cdd(string arr_pushd[], int count, string current_path=string());
     void initialize(void);
     void assign(vector<string>& vec_pushd, string current_path);
-    bool options(int ac, const char *av[], const string& options=string());
+    // bool options_old(int ac, const char *av[], const string& options=string());
+    bool options_new(int ac, const char *av[], const string& options=string());
     void help_tip(void);
     static void help(void);
     static void version(void);
     static string normalize_path(const string& path);
     static string windowize_path(const string& path);
+    static string get_parent_path(const string& path);
     static bool paths_equal(const string& path1, int inode1, const string& path2);
     static int get_inode(const string& path);
     static string expand_dots(string path);
@@ -161,3 +163,5 @@ struct Cdd
 };
 
 #endif
+
+// vim:ff=unix

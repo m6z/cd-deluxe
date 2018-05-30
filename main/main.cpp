@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2011 Michael Graz
+Copyright 2010-2018 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -22,7 +22,13 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-namespace fs = boost::filesystem;
+// namespace fs = boost::filesystem;
+
+std::string get_working_path()
+{
+   char temp[MAXPATHLEN];
+   return ( getcwd(temp, MAXPATHLEN) ? std::string( temp ) : std::string("") );
+}
 
 int main(int argc, const char* argv[])
 {
@@ -40,9 +46,11 @@ int main(int argc, const char* argv[])
 
     try
     {
-        Cdd cdd(vec_pushd, fs::current_path().string());
+        // Cdd cdd(vec_pushd, fs::current_path().string());
+        Cdd cdd(vec_pushd, get_working_path());
+
         const char *env_options = getenv(Cdd::env_options_name.c_str());
-        if (cdd.options(argc, argv, env_options ? env_options : string()))
+        if (cdd.options_new(argc, argv, env_options ? env_options : string()))
             cdd.process();
         cout << cdd.strm_out.str();
         cerr << cdd.strm_err.str();
@@ -56,3 +64,4 @@ int main(int argc, const char* argv[])
     return 0;
 }
 
+// vim:ff=unix

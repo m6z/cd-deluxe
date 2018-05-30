@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2011 Michael Graz
+Copyright 2010-2018 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -107,3 +107,5 @@ SECTION("multi_match_common")
 }
 
 }
+
+// vim:ff=unix
