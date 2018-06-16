@@ -298,8 +298,8 @@ void Cdd::process(void)
     }
     else if (opt_path.size())
     {
-        if (change_to_path_spec());
-            return;
+		change_to_path_spec();
+        return;
     }
     else if (opt_history)
     {
@@ -437,7 +437,7 @@ bool Cdd::process_path_spec(string& path_found, vector<string>& path_extra, stri
     return process_match(path_found, path_extra, path_error);
 }
 
-bool Cdd::go_backwards(int amount, string& path_found, stringstream& path_error)
+bool Cdd::go_backwards(unsigned amount, string& path_found, stringstream& path_error)
 {
     if (amount < 1 || amount > vec_dir_last_to_first.size())
     {
@@ -448,7 +448,7 @@ bool Cdd::go_backwards(int amount, string& path_found, stringstream& path_error)
     return true;
 }
 
-bool Cdd::go_forwards(int amount, string& path_found, stringstream& path_error)
+bool Cdd::go_forwards(unsigned amount, string& path_found, stringstream& path_error)
 {
     if (amount < 0 || amount >= vec_dir_first_to_last.size())
     {
@@ -459,7 +459,7 @@ bool Cdd::go_forwards(int amount, string& path_found, stringstream& path_error)
     return true;
 }
 
-bool Cdd::go_common(int amount, string& path_found, stringstream& path_error)
+bool Cdd::go_common(unsigned amount, string& path_found, stringstream& path_error)
 {
     if (amount < 0 || amount >= vec_dir_most_to_least.size())
     {
@@ -483,7 +483,7 @@ void Cdd::show_history(void)
 void Cdd::show_history_first_to_last(void)
 {
     vector<string>::iterator it;
-    int count = 0;
+    unsigned count = 0;
     int number = 0;
     for (it=vec_dir_first_to_last.begin(); it!=vec_dir_first_to_last.end(); ++it)
     {
@@ -503,7 +503,7 @@ void Cdd::show_history_last_to_first(void)
         return;
     }
     vector<string>::iterator it;
-    int count = 0;
+    unsigned count = 0;
     int number = -1;
     for (it=vec_dir_last_to_first.begin(); it!=vec_dir_last_to_first.end(); ++it)
     {
@@ -518,7 +518,7 @@ void Cdd::show_history_last_to_first(void)
 void Cdd::show_history_most_to_least(void)
 {
     vector<Common>::iterator it;
-    int count = 0;
+    unsigned count = 0;
     int number = 0;
     for (it=vec_dir_most_to_least.begin(); it!=vec_dir_most_to_least.end(); ++it)
     {
@@ -1099,7 +1099,7 @@ bool Cdd::options_new(int ac, const char *av[], const string& env_options)
 
         opt_limit_forwards = get_value<int>("limit-forwards", opts_cmd, opts_env);
         opt_limit_backwards = get_value<int>("limit-backwards", opts_cmd, opts_env);
-        opt_limit_common = opts_cmd["limit-common"].as<int>();
+        opt_limit_common = get_value<int>("limit-common", opts_cmd, opts_env);
         opt_all = get_value<bool>("all", opts_cmd, opts_env);
 
         if (opts_cmd.count("path"))
@@ -1156,7 +1156,7 @@ bool Cdd::options_new(int ac, const char *av[], const string& env_options)
             if (set_history_direction(vec_action[0]))
             {
                 opt_history = true;
-                int amount;
+                unsigned amount;
                 try
                 {
                     amount = std::stoi(vec_action[1]);

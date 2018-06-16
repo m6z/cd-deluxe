@@ -89,9 +89,9 @@ struct Cdd
     bool opt_gc;
     bool opt_delete;
     bool opt_reset;
-    int opt_limit_backwards;
-    int opt_limit_forwards;
-    int opt_limit_common;
+    unsigned opt_limit_backwards;
+    unsigned opt_limit_forwards;
+    unsigned opt_limit_common;
     bool opt_all;
     static const string env_options_name;
 
@@ -141,9 +141,9 @@ struct Cdd
     void process(void);
     bool change_to_path_spec(void);
     bool process_path_spec(string& path_found, vector<string>& path_extra, stringstream& path_error);
-    bool go_backwards(int amount, string& path_found, stringstream& path_error);
-    bool go_forwards(int amount, string& path_found, stringstream& path_error);
-    bool go_common(int amount, string& path_found, stringstream& path_error);
+    bool go_backwards(unsigned amount, string& path_found, stringstream& path_error);
+    bool go_forwards(unsigned amount, string& path_found, stringstream& path_error);
+    bool go_common(unsigned amount, string& path_found, stringstream& path_error);
     bool process_match(string& path_found, vector<string>& path_extra, stringstream& path_error);
     void show_history(void);
     void show_history_first_to_last(void);

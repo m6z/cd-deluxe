@@ -24,10 +24,44 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 // namespace fs = boost::filesystem;
 
+#ifdef _WIN32
+    #include <direct.h>
+    #define MAX_PATH_LENGTH _MAX_PATH
+    #define getcwd _getcwd
+    #define isatty _isatty
+    #define fileno _fileno
+#elif
+    #include <unistd.h>
+    #define MAX_PATH_LENGTH MAXPATHLEN
+#endif
+
 std::string get_working_path()
 {
-   char temp[MAXPATHLEN];
-   return ( getcwd(temp, MAXPATHLEN) ? std::string( temp ) : std::string("") );
+   char temp[MAX_PATH_LENGTH];
+   return ( getcwd(temp, sizeof(temp)) ? std::string( temp ) : std::string("") );
+}
+
+string get_environment(string var_name)
+{
+    string result;
+
+#ifdef _WIN32
+    char* buffer = nullptr;
+    size_t sz = 0;
+    if (_dupenv_s(&buffer, &sz, var_name.c_str()) == 0 && buffer != nullptr)
+    {
+        result = buffer;
+        free(buffer);
+    }
+#else
+    char *var_value = getenv(var_nam
+    if ( var_value != nullptr )
+    {
+        result = var_value;
+    }
+#endif
+
+    return result;
 }
 
 int main(int argc, const char* argv[])
@@ -49,9 +83,13 @@ int main(int argc, const char* argv[])
         // Cdd cdd(vec_pushd, fs::current_path().string());
         Cdd cdd(vec_pushd, get_working_path());
 
-        const char *env_options = getenv(Cdd::env_options_name.c_str());
-        if (cdd.options_new(argc, argv, env_options ? env_options : string()))
+//         const char *env_options = std::getenv(Cdd::env_options_name.c_str());
+//         if (cdd.options_new(argc, argv, env_options ? env_options : string()))
+//             cdd.process();
+
+        if (cdd.options_new(argc, argv, get_environment(Cdd::env_options_name)))
             cdd.process();
+
         cout << cdd.strm_out.str();
         cerr << cdd.strm_err.str();
     }
