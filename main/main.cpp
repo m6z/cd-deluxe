@@ -30,7 +30,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
     #define getcwd _getcwd
     #define isatty _isatty
     #define fileno _fileno
-#elif
+#else
     #include <unistd.h>
     #define MAX_PATH_LENGTH MAXPATHLEN
 #endif
@@ -54,7 +54,7 @@ string get_environment(string var_name)
         free(buffer);
     }
 #else
-    char *var_value = getenv(var_nam
+    char *var_value = getenv(var_name.c_str());
     if ( var_value != nullptr )
     {
         result = var_value;
