@@ -125,8 +125,7 @@ struct Cdd
     Cdd(string arr_pushd[], int count, string current_path=string());
     void initialize(void);
     void assign(vector<string>& vec_pushd, string current_path);
-    // bool options_old(int ac, const char *av[], const string& options=string());
-    bool options_new(int ac, const char *av[], const string& options=string());
+    bool options(int ac, const char *av[], const string& options=string());
     void help_tip(void);
     static void help(void);
     static void version(void);

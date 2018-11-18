@@ -65,6 +65,21 @@ SECTION("multi_match_backwards")
     REQUIRE("cdd: /bb/ee\n -3: /aa/bb\n -4: /bb/cc\n" == cdd.strm_err.str());
 }
 
+SECTION("multi_match_backwards_limit")
+{
+    Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+    cdd.opt_path = "bb";
+    cdd.opt_limit_backwards = 2;
+    cdd.direction.assign("-");
+    cdd.process();
+#ifdef WIN32
+    REQUIRE("pushd /bb/ee\n" == cdd.strm_out.str());
+#else
+    REQUIRE("pushd '/bb/ee'\n" == cdd.strm_out.str());
+#endif
+    REQUIRE("cdd: /bb/ee\n -3: /aa/bb\n ... showing last 2 matching of 3\n" == cdd.strm_err.str());
+}
+
 SECTION("multi_match_default_backwards")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
@@ -92,6 +107,21 @@ SECTION("multi_match_forwards")
     REQUIRE("cdd: /aa/bb\n  1: /bb/cc\n  3: /bb/ee\n" == cdd.strm_err.str());
 }
 
+SECTION("multi_match_forwards_limit")
+{
+    Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+    cdd.opt_path = "bb";
+    cdd.opt_limit_forwards = 2;
+    cdd.direction.assign("+");
+    cdd.process();
+#ifdef WIN32
+    REQUIRE("pushd /aa/bb\n" == cdd.strm_out.str());
+#else
+    REQUIRE("pushd '/aa/bb'\n" == cdd.strm_out.str());
+#endif
+    REQUIRE("cdd: /aa/bb\n  1: /bb/cc\n ... showing first 2 matching of 3\n" == cdd.strm_err.str());
+}
+
 SECTION("multi_match_common")
 {
     Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
@@ -104,6 +134,22 @@ SECTION("multi_match_common")
     REQUIRE("pushd '/cc/dd'\n" == cdd.strm_out.str());
 #endif
     REQUIRE("cdd: /cc/dd\n ,3: ( 1) /bb/cc\n" == cdd.strm_err.str());
+}
+
+SECTION("multi_match_common_limit")
+{
+    Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+    cdd.opt_path = "cc";
+    cdd.opt_limit_common = 1;
+    cdd.direction.assign(",");
+    cdd.process();
+#ifdef WIN32
+    REQUIRE("pushd /cc/dd\n" == cdd.strm_out.str());
+#else
+    REQUIRE("pushd '/cc/dd'\n" == cdd.strm_out.str());
+#endif
+    // TODO this is wrong
+    REQUIRE("cdd: /cc/dd\n ... showing top 1 matching of 2\n" == cdd.strm_err.str());
 }
 
 }

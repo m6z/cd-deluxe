@@ -22,8 +22,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-// namespace fs = boost::filesystem;
-
 #ifdef _WIN32
     #include <direct.h>
     #define MAX_PATH_LENGTH _MAX_PATH
@@ -80,14 +78,9 @@ int main(int argc, const char* argv[])
 
     try
     {
-        // Cdd cdd(vec_pushd, fs::current_path().string());
         Cdd cdd(vec_pushd, get_working_path());
 
-//         const char *env_options = std::getenv(Cdd::env_options_name.c_str());
-//         if (cdd.options_new(argc, argv, env_options ? env_options : string()))
-//             cdd.process();
-
-        if (cdd.options_new(argc, argv, get_environment(Cdd::env_options_name)))
+        if (cdd.options(argc, argv, get_environment(Cdd::env_options_name)))
             cdd.process();
 
         cout << cdd.strm_out.str();

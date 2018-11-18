@@ -23,12 +23,4 @@
 #include <iterator>
 // #include <experimental/filesystem>
 
-// #include <boost/regex.hpp>
-// #include <boost/program_options.hpp>
-// #include <boost/lexical_cast.hpp>
-
-// #define BOOST_FILESYSTEM_VERSION 3
-// #include <boost/filesystem/path.hpp>
-// #include <boost/filesystem/operations.hpp>
-
 // vim:ff=unix

@@ -18,8 +18,4 @@
 
 #include <cdd/cdd.h>
 
-// #define BOOST_FILESYSTEM_VERSION 3
-// #include <boost/filesystem/path.hpp>
-// #include <boost/filesystem/operations.hpp>
-
 // vim:ff=unix
