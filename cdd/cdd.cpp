@@ -207,7 +207,7 @@ string Cdd::get_parent_path(const string& path)
         }
         return path.substr(0, found);
     }
-#ifndef WIN32
+#ifdef WIN32
     if ( path.length() >= 2 && path[1] == ':' )
     {
         return path.substr(0, 2);
