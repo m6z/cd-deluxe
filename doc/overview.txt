@@ -1,7 +1,7 @@
-Cd Deluxe is an improved "change directory" command for Linux and Windows with the following characteristics
+Cd Deluxe is an improved "change directory" command for Linux and Windows with the following characteristics:
 
 - Speeds command line use by providing the ability to jump quickly and intuitively to other directories without having to type long path names.
-- Improves access to the visited directory stack in Linux/Unix/Windows operating systems.
+- Improves access to the visited directory history in Linux/Unix/Windows operating systems.
 - Is an evolution of the humble "cd" command which is one of the most used but least capable utilities.
 - Is simple and lightweight to install.
 
@@ -18,12 +18,12 @@ cd +2   Change to the second directory visited.
 cd +++  Change to the third visited, and so on.
 cd +?   Show an abbreviated list of the first visited directories
 cd ,    A comma means to change to the "the most common directory".  Comma = Common.
-cd ,1   Change to the next to most common directory.
+cd ,1   Change to the next to most commonly visited directory.
 cd ,?   Show an abbreviated list of the most commonly visited directories along with the visit counts
-cd word Change to the most recent directory matching "word".  Regular expressions can be used
+cd word Change to the most recent directory matching "word".  Regular expressions can be used.
 cd + word   Change to directory matching word, searching forwards from the beginning of history rather than backwards
 cd , word   Change to the most commonly visited directory matching word
-cd filename     Jump to the directory
+cd filename     Jump to the directory containing the filename.
 
 The only input to the command is the shell directory stack.  This is the builtin "dirs" command on Unix shells and "doskey/history" command on Windows cmd.exe.  No database or file persistence is involved resulting in fast operation.
 
