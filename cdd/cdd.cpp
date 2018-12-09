@@ -956,6 +956,12 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
         if (opts_cmd.count("path"))
             set_opt_path(opts_cmd["path"].as<string>());
 
+        if ( opt_delete && opt_path.empty() )
+        {
+            strm_err << "** No path indicated for delete" << endl;
+            return false;
+        }
+
         if (vec_action.empty())
         {
             // Need at least history or path or one of the commands

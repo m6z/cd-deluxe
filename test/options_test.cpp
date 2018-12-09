@@ -620,12 +620,8 @@ SECTION("del_none")
     Cdd cdd;
     const char *av[] = {"_cdd", "--del"};
     bool rc = cdd.options(countof(av), av);
-    REQUIRE(false == cdd.opt_delete);
     REQUIRE(false == rc);
-    REQUIRE(
-        "** oopsie\n"
-        "end\n" ==
-        cdd.strm_err.str());
+    REQUIRE( "** No path indicated for delete\n" == cdd.strm_err.str() );
 }
 
 SECTION("del_one")
