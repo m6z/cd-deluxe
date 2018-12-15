@@ -1,0 +1,8 @@
+image:
+- Ubuntu
+- Visual Studio 2015
+
+configuration: Release
+
+build:
+  project: CMakeLists.txt
