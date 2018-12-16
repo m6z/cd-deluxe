@@ -1,6 +1,6 @@
 image:
 - Ubuntu1804
-# - Visual Studio 2015
+- Visual Studio 2015
 
 configuration: Release
 
@@ -14,4 +14,7 @@ build_script:
     cmake --version
     cmake ..
     cmake --build .
+  cmd: |
+    msbuild cd_deluxe_vs2015.sln /p:Configuration=Release
 
+# vim:sw=2:ts=2:noet
