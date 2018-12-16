@@ -1,5 +1,5 @@
 image:
-- Ubuntu1804
+# - Ubuntu1804
 - Visual Studio 2015
 
 configuration: Release
@@ -15,6 +15,12 @@ build_script:
     cmake ..
     cmake --build .
   cmd: |
-    msbuild cd_deluxe_vs2015.sln /p:Configuration=Release
+    msbuild cd_deluxe_vs2015.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+test_script:
+	sh:	|
+		test/testmain
+	cmd: |
+		Release\\test\\testmain.exe
 
 # vim:sw=2:ts=2:noet
