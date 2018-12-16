@@ -1,8 +1,17 @@
 image:
 - Ubuntu
-- Visual Studio 2015
+# - Visual Studio 2015
 
 configuration: Release
 
-build:
-  project: CMakeLists.txt
+# build:
+#   project: CMakeLists.txt
+
+build_script:
+  sh: |
+    mkdir build
+    cd build
+    cmake --version
+    cmake ..
+    cmake --build .
+
