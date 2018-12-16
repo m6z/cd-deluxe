@@ -1,6 +1,6 @@
 image:
-# - Ubuntu1804
-- Visual Studio 2015
+- Ubuntu1804
+# - Visual Studio 2015
 
 configuration: Release
 
