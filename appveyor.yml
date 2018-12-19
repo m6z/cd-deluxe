@@ -18,9 +18,9 @@ build_script:
     msbuild cd_deluxe_vs2015.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
 test_script:
-  sh |:
+  sh: |
     test/testmain
   cmd: |
-    Release\\test\\testmain.exe
+    Release\\testmain.exe
 
 # vim:sw=2:ts=2:et
