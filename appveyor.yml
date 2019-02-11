@@ -35,8 +35,12 @@ before_build:
     echo xx before build
 
 build_script:
-  - cmd: echo xx build_script cmd
-  - sh: echo xx build_script sh
+  - cmd: |
+      echo xx build_script cmd 1
+      echo xx build_script cmd 2
+  - sh: |
+      echo xx build_script sh 1
+      echo xx build_script sh 2
 #   sh: |
 #     mkdir build
 #     cd build
