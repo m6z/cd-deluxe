@@ -44,7 +44,9 @@ build_script:
     cmake ..
     cmake --build .
   cmd: |
+    echo xx build script
     C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
+    echo xx after python
     msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
     Release\\testmain.exe
     chdir install
