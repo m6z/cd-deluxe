@@ -1,0 +1,6 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+#define CDD_VERSION "{cdd_version}"
+
+#endif

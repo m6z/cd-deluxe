@@ -21,6 +21,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "stdafx.h"
+#include "cdd_version.h"
 
 // TODO consolidate header files more rationally
 #include <regex>

@@ -23,8 +23,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CDD_H
 #define CDD_H
 
-#define CDD_VERSION "1.1.0"
-
 #include <string>
 #include <vector>
 #include <sstream>

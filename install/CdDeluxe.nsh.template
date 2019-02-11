@@ -1,0 +1,2 @@
+!define CDD_EXE "CddInstaller_{cdd_version}_{date}.exe"
+!define CDD_VER "{cdd_version}"
