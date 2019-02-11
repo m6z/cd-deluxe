@@ -32,6 +32,10 @@ build: off
 #   msbuild release version
 #   run tests
 
+before_build:
+  cmd: |
+    echo xx before build
+
 build_script:
   sh: |
     mkdir build
@@ -46,6 +50,10 @@ build_script:
     chdir install
     makensis.exe cdd_installer.nsi
     appveyor PushArtifact *.exe -DeploymentName cdd_artifact
+
+after_build:
+  cmd: |
+    echo xx after build
 
 test_script:
   sh: |
