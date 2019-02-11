@@ -14,6 +14,8 @@ only_commits:
 # build:
 #   project: CMakeLists.txt
 
+build: off
+
 #----------------------------------------------------------------------
 
 # For Ubuntu
