@@ -43,7 +43,9 @@ build_script:
       Release\\testmain.exe
       chdir install
       makensis.exe cdd_installer.nsi
-      appveyor PushArtifact *.exe -DeploymentName cdd_artifact
+      dir/b *.exe > name_exe.tmp
+      set/p name_exe=< name_exe.tmp
+      appveyor PushArtifact %name_exe% -DeploymentName cdd_artifact
       echo xx build_script cmd finish
   - sh: |
       echo xx build_script sh 1

@@ -10,6 +10,8 @@ dct_format = {
     'date': datetime.datetime.now().strftime('%Y%m%d'),
 }
 
+print('dct_format:', dct_format)
+
 lst_file = [
     ( 'cdd/cdd_version.h.template',    'utf-8'     ),
     ( 'main/main_vs2015.rc.template',  'utf-16-le' ),
