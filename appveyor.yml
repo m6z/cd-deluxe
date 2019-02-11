@@ -36,8 +36,15 @@ before_build:
 
 build_script:
   - cmd: |
-      echo xx build_script cmd 1
-      echo xx build_script cmd 2
+      echo xx build_script cmd start
+      C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
+      echo xx after python
+      msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+      Release\\testmain.exe
+      chdir install
+      makensis.exe cdd_installer.nsi
+      appveyor PushArtifact *.exe -DeploymentName cdd_artifact
+      echo xx build_script cmd finish
   - sh: |
       echo xx build_script sh 1
       echo xx build_script sh 2
