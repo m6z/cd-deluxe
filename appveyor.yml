@@ -43,13 +43,13 @@ build_script:
     cmake --build .
   cmd: |
     echo xx build script
-    C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
-    echo xx after python
-    msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-    Release\\testmain.exe
-    chdir install
-    makensis.exe cdd_installer.nsi
-    appveyor PushArtifact *.exe -DeploymentName cdd_artifact
+#     C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
+#     echo xx after python
+#     msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+#     Release\\testmain.exe
+#     chdir install
+#     makensis.exe cdd_installer.nsi
+#     appveyor PushArtifact *.exe -DeploymentName cdd_artifact
 
 after_build:
   cmd: |
