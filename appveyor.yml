@@ -35,14 +35,15 @@ before_build:
     echo xx before build
 
 build_script:
-  sh: |
-    mkdir build
-    cd build
-    cmake --version
-    cmake ..
-    cmake --build .
-  cmd: |
-    echo xx build script
+  - echo xx build_script
+#   sh: |
+#     mkdir build
+#     cd build
+#     cmake --version
+#     cmake ..
+#     cmake --build .
+#   cmd: |
+#     echo xx build script
 #     C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
 #     echo xx after python
 #     msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
