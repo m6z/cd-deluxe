@@ -1,11 +1,28 @@
+branches:
+  only:
+    - master
+
 image:
-- Ubuntu1804
-# - Visual Studio 2015
+# - Ubuntu1804
+  - Visual Studio 2015
 
 configuration: Release
 
+only_commits:
+  message: /build/
+
 # build:
 #   project: CMakeLists.txt
+
+#----------------------------------------------------------------------
+
+# For Ubuntu
+#   cmake build release
+#   embed version number?
+#
+# For Windows
+#   msbuild release version
+#   run tests
 
 build_script:
   sh: |
@@ -15,7 +32,12 @@ build_script:
     cmake ..
     cmake --build .
   cmd: |
-    msbuild cd_deluxe_vs2015.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+    C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
+    msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+    Release\\testmain.exe
+    chdir install
+    makensis.exe cdd_installer.nsi
+    appveyor PushArtifact *.exe -DeploymentName cdd_artifact
 
 test_script:
   sh: |
