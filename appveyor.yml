@@ -2,9 +2,15 @@ branches:
   only:
     - master
 
-image:
-# - Ubuntu1804
-  - Visual Studio 2015
+# image:
+# # - Ubuntu1804
+#   - Visual Studio 2015
+
+environment:
+  matrix:
+    # Visual Studio
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      PROJECT_DIR: vs2015
 
 configuration: Release
 
