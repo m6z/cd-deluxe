@@ -1,0 +1,11 @@
+
+1. Copy _cdd to a directory like /usr/local/bin or ~/bin
+
+2. Add the following to ~/.bashrc as an example.  The example assumes path /usr/local/bin/_cdd.
+
+    if [[ -x /usr/local/bin/_cdd ]]
+    then
+        function cdd { while read x; do eval $x >/dev/null; done < <(dirs -l -p | /usr/local/bin/_cdd "$@"); }
+        alias cd=cdd
+    fi
+
