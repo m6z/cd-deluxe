@@ -49,6 +49,7 @@ build_script:
       echo xx build_script cmd finish
   - sh: |
       echo xx build_script sh start
+      python3 update_version.py ${APPVEYOR_BUILD_VERSION}
       mkdir build
       cd build
       cmake -DCMAKE_BUILD_TYPE=Release ..
