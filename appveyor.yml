@@ -3,8 +3,8 @@ branches:
     - master
 
 image:
-  - Visual Studio 2015
-# - Ubuntu1804
+# - Visual Studio 2015
+  - Ubuntu1804
 
 # environment:
 #   matrix:
@@ -48,8 +48,20 @@ build_script:
       appveyor PushArtifact %name_exe% -DeploymentName cdd_artifact
       echo xx build_script cmd finish
   - sh: |
-      echo xx build_script sh 1
-      echo xx build_script sh 2
+      echo xx build_script sh start
+      mkdir build
+      cd build
+      cmake -DCMAKE_BUILD_TYPE=Release ..
+      cmake --build .
+      test/testmain
+      mkdir release
+      cp main/_cdd release
+      cp ../LICENSE release
+      artifact_name=cdd-v${APPVEYOR_BUILD_VERSION}.tgz
+      tar -zcvf ${artifact_name} -C release .
+      ll ${artifact_name}
+      echo xx build_script sh finish
+
 #   sh: |
 #     mkdir build
 #     cd build
@@ -67,13 +79,15 @@ build_script:
 #     appveyor PushArtifact *.exe -DeploymentName cdd_artifact
 
 after_build:
-  cmd: |
-    echo xx after build
+  - cmd: |
+      echo xx after build cmd
+  - sh: |
+      echo xx after build sh
 
-test_script:
-  sh: |
-    test/testmain
-  cmd: |
-    Release\\testmain.exe
+# test_script:
+#   sh: |
+#     test/testmain
+#   cmd: |
+#     Release\\testmain.exe
 
 # vim:sw=2:ts=2:et
