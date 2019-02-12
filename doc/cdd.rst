@@ -431,7 +431,7 @@ FREEFORM_OPTIONs are options that are specified in shorthand like "+?" or ",,,".
 
 .. class:: trailer
 
-Copyright (c) 2010-2011 `Michael Graz`__
+Copyright (c) 2010-2019 `Michael Graz`__
 
 __ mailto:mgraz.cdd@plan10.com
 

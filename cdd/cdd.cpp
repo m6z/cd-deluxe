@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2018 Michael Graz
+Copyright 2010-2019 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -1095,7 +1095,7 @@ cerr <<
 "PATH_SPEC can be a number, a repeated direction, or a direction and a pattern.\n"
 "\n"
 "See http://www.plan10.com/cdd for more information.\n"
-"Copyright 2010-2018 Michael Graz\n"
+"Copyright 2010-2019 Michael Graz\n"
 ;
 
 }
