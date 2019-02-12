@@ -3,7 +3,7 @@ branches:
     - master
 
 image:
-# - Visual Studio 2015
+  - Visual Studio 2015
   - Ubuntu1804
 
 # environment:
@@ -60,6 +60,7 @@ build_script:
       artifact_name=cdd-v${APPVEYOR_BUILD_VERSION}.tgz
       tar -zcvf ${artifact_name} -C release .
       ll ${artifact_name}
+      appveyor PushArtifact ${artifact_name} -DeploymentName cdd_artifact
       echo xx build_script sh finish
 
 #   sh: |
