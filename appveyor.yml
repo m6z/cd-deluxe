@@ -54,14 +54,15 @@ build_script:
       cmake -DCMAKE_BUILD_TYPE=Release ..
       cmake --build .
       test/testmain
-      mkdir release
-      cp main/_cdd release
-      cp ../LICENSE release
-      cp ../install_ubuntu/INSTALL release
       release_name=cdd-v${APPVEYOR_BUILD_VERSION}
+      mkdir ${release_name}
+      cp main/_cdd ${release_name}
+      cp ../LICENSE ${release_name}
+      cp ../install_ubuntu/INSTALL ${release_name}
       artifact_name=${release_name}.tgz
-      tar -zcvf ${artifact_name} -C release ${release_name}
+      tar -zcvf ${artifact_name} {release_name}
       ll ${artifact_name}
+      tar -ztvf {release_name}
       appveyor PushArtifact ${artifact_name} -DeploymentName cdd_artifact
       echo xx build_script sh finish
 
