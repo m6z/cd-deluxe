@@ -3,7 +3,7 @@ branches:
     - master
 
 image:
-# - Visual Studio 2015
+  - Visual Studio 2015
   - Ubuntu1804
 
 # environment:
@@ -94,5 +94,14 @@ after_build:
 #     test/testmain
 #   cmd: |
 #     Release\\testmain.exe
+
+deploy:
+  - provider: GitHub
+    description: 'MG github deploy'
+    artifact: cdd_artifact
+    auth_token:
+      secure: 2agopPPVSs1AmZL7j9rh7Sr1msI3hKGjAkuTezGgEgsCvoaWTDdpp0zUl37McW6d
+    on:
+      branch: master
 
 # vim:sw=2:ts=2:et
