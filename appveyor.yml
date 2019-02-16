@@ -3,14 +3,8 @@ branches:
     - master
 
 image:
-#  - Visual Studio 2015
+  - Visual Studio 2015
   - Ubuntu1804
-
-# environment:
-#   matrix:
-#     # Visual Studio
-#     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-#       PROJECT_DIR: vs2015
 
 configuration: Release
 
@@ -19,18 +13,7 @@ skip_tags: true
 only_commits:
   message: /build/
 
-# build:
-#   project: CMakeLists.txt
-
 #----------------------------------------------------------------------
-
-# For Ubuntu
-#   cmake build release
-#   embed version number?
-#
-# For Windows
-#   msbuild release version
-#   run tests
 
 before_build:
   cmd: |
@@ -69,22 +52,6 @@ build_script:
       appveyor PushArtifact ${artifact_name} -DeploymentName cdd_artifact
       echo xx build_script sh finish
 
-#   sh: |
-#     mkdir build
-#     cd build
-#     cmake --version
-#     cmake ..
-#     cmake --build .
-#   cmd: |
-#     echo xx build script
-#     C:\\Python37\\python.exe update_version.py %APPVEYOR_BUILD_VERSION%
-#     echo xx after python
-#     msbuild cd_deluxe_vs2015.sln /property:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-#     Release\\testmain.exe
-#     chdir install
-#     makensis.exe cdd_installer.nsi
-#     appveyor PushArtifact *.exe -DeploymentName cdd_artifact
-
 after_build:
   - cmd: |
       echo xx after build cmd
@@ -105,6 +72,5 @@ deploy:
       secure: 2agopPPVSs1AmZL7j9rh7Sr1msI3hKGjAkuTezGgEgsCvoaWTDdpp0zUl37McW6d
     on:
       branch: master
-
 
 # vim:sw=2:ts=2:et
