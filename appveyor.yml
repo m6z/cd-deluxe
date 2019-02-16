@@ -14,6 +14,8 @@ image:
 
 configuration: Release
 
+skip_tags: true
+
 only_commits:
   message: /build/
 
@@ -103,6 +105,5 @@ deploy:
       secure: 2agopPPVSs1AmZL7j9rh7Sr1msI3hKGjAkuTezGgEgsCvoaWTDdpp0zUl37McW6d
     on:
       branch: master
-
 
 # vim:sw=2:ts=2:et
