@@ -47,6 +47,7 @@ struct Cdd
     // The vector of set of directories visited (duplicates removed),
     // stored in first visited to last visited order
     vector<string> vec_dir_first_to_last;
+    bool has_directory_stack = false;
 
     // This tracks the most common directories
     struct Common
@@ -119,10 +120,12 @@ struct Cdd
     Direction direction;
 
     Cdd(void);
-    Cdd(vector<string>& vec_pushd, string current_path=string());
+    Cdd(vector<string>& vec_pushd, string current_path);
     Cdd(string arr_pushd[], int count, string current_path=string());
-    void initialize(void);
     void assign(vector<string>& vec_pushd, string current_path);
+    void assign(string arr_pushd[], int count, string current_path=string());
+    void assign_debug_input(const string& input_path);
+    void initialize(void);
     bool options(int ac, const char *av[], const string& options=string());
     void help_tip(void);
     static void help(void);

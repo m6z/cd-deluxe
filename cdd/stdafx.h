@@ -8,6 +8,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "cdd.h"
+#include "cdd_util.h"
 
 #ifndef WIN32
 #include <sys/stat.h>
@@ -18,6 +19,7 @@
 #include <string>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include <iterator>

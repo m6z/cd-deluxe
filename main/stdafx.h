@@ -17,5 +17,6 @@
 #include <vector>
 
 #include <cdd/cdd.h>
+#include <cdd/cdd_util.h>
 
 // vim:ff=unix

@@ -25,12 +25,15 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 // TODO consolidate header files more rationally
 #include <regex>
+#include <cassert>
 
 #include "cxxopts.hpp"
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
 const string Cdd::env_options_name = "CDD_OPTIONS";
+
+const char *param_debug_input = "debug-input";
 
 //----------------------------------------------------------------------
 // ref: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
@@ -67,9 +70,7 @@ Cdd::Cdd(vector<string>& vec_pushd, string current_path)
 Cdd::Cdd(string arr_pushd[], int count, string current_path)
 {
     initialize();
-    vector<string> vec_pushd;
-    vec_pushd.assign(arr_pushd, arr_pushd + count);
-    assign(vec_pushd, current_path);
+    assign(arr_pushd, count, current_path);
 }
 
 void Cdd::initialize(void)
@@ -89,8 +90,16 @@ void Cdd::initialize(void)
     opt_all = false;
 }
 
+void Cdd::assign(string arr_pushd[], int count, string current_path)
+{
+    vector<string> vec_pushd;
+    vec_pushd.assign(arr_pushd, arr_pushd + count);
+    assign(vec_pushd, current_path);
+}
+
 void Cdd::assign(vector<string>& vec_pushd, string current_path)
 {
+    assert( ! has_directory_stack );
     vec_dir_stack = vec_pushd;
     this->current_path = current_path;
 
@@ -159,6 +168,19 @@ void Cdd::assign(vector<string>& vec_pushd, string current_path)
     for (MapCommon::iterator mi=map_common.begin(); mi!=map_common.end(); ++mi)
         vec_dir_most_to_least.push_back(mi->second);
     sort(vec_dir_most_to_least.begin(), vec_dir_most_to_least.end());
+    has_directory_stack = true;
+}
+
+void Cdd::assign_debug_input(const string& input_path)
+{
+    assert( ! has_directory_stack );
+    std::cerr << "Using file instead of stdin: \"" << input_path << "\"\n";
+    vector<string> vec_pushd;
+    string line;
+    std::fstream fstrm(input_path);
+    while (getline(fstrm, line))
+        vec_pushd.push_back(line);
+    assign(vec_pushd, get_working_path());
 }
 
 string Cdd::normalize_path(const string& path)
@@ -897,6 +919,9 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
             ("delete", "Delete from history")
             ("reset", "Reset (erase) all history")
             ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(vec_action))
+#if !defined(NDEBUG)
+            (param_debug_input, "Directory stack to use, parsed from a file", cxxopts::value<string>())
+#endif
             ;
 
         options.parse_positional({"positional"});
@@ -924,6 +949,11 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
             return true;
         }
 
+#if !defined(NDEBUG)
+        if ( opts_cmd.count(param_debug_input) )
+            assign_debug_input(opts_cmd[param_debug_input].as<string>());
+#endif
+
         if (opts_cmd.count("history"))
             opt_history = true;
         if (opts_cmd.count("gc"))
@@ -948,16 +978,13 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
             }
         }
 
-//         std::cerr << "xx 1 opt_limit_forwards=" << opt_limit_forwards <<
-//             " opt_limit_backwards=" << opt_limit_backwards <<
-//             " opt_limit_common=" << opt_limit_common << std::endl;
-
         opt_all = get_value<bool>("all", opts_cmd, opts_env);
 
         if (opts_cmd.count("path"))
             set_opt_path(opts_cmd["path"].as<string>());
 
-        if ( opt_delete && opt_path.empty() )
+        // opt_path may be assigned later from vec_action
+        if ( opt_delete && opt_path.empty() && vec_action.empty() )
         {
             strm_err << "** No path indicated for delete" << endl;
             return false;
