@@ -14,9 +14,21 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cdd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cdd_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cdd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cdd_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
