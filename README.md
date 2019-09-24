@@ -43,21 +43,16 @@ Cd Deluxe is a drop-in replacement for the standard cd ("change directory") comm
 
 The simplest use is to change to another directory. In this way it is no different than the standard cd command:
 
-'''
-=> D:\Users\Mike\
-=> cdd Development
+    => D:\Users\Mike\
+    => cdd Development
 
-=> D:\Users\Mike\Development\
-'''
+    => D:\Users\Mike\Development\
 
 In the examples above and following, the top line indicates the current directory, the line below it shows the cdd command that was issued, and the last line shows the resulting directory after cdd command.
 
 When entered without any parameters it will by default list out this history of directories visited in reverse order (without changing the directory):
 
-'''
-=> D:\Users\Mike\Development\
-=> cdd
- -1: D:\Users\Mike
+    => D:\Users\Mike\Development\
+    => cdd
+     -1: D:\Users\Mike
 
-=> D:\Users\Mike\Development\
-'''
