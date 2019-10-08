@@ -33,6 +33,8 @@ InstallDir "$PROGRAMFILES\Cd Deluxe"
 
 ShowInstDetails show
 
+!addplugindir "."
+
 !define UNINST_ROOT "HKLM"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\CdDeluxe"
 
