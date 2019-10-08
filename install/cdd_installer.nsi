@@ -18,7 +18,7 @@
 
 !include MUI2.nsh
 !include nsDialogs.nsh
-!include EnvVarUpdate.nsh
+; !include EnvVarUpdate.nsh
 !include CdDeluxe.nsh  ; dynamically generated
 
 ;----------------------------------------------------------------------
@@ -149,7 +149,8 @@ Section "CddInstaller (required)"
   ; Add to path
   IntCmp $AddToPath 0 add_to_path_end
   ; MessageBox MB_OK "xx adding to path"
-  ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR"
+  ; ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR"
+  EnVar::AddValue "PATH" "$INSTDIR"
   add_to_path_end:
 
   ; Start menu
@@ -190,7 +191,8 @@ Section "CddInstaller (required)"
 SectionEnd
 
 Section "Uninstall"
-  ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR"
+  ; ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR"
+  EnVar::DeleteValue "PATH" "$INSTDIR"
   
   Delete $INSTDIR\cdd_installer.nsi
   Delete $INSTDIR\_cdd.exe
