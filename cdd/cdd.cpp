@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2019 Michael Graz
+Copyright 2010-2021 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -88,6 +88,11 @@ void Cdd::initialize(void)
     opt_limit_forwards = 0;
     opt_limit_common = 10;
     opt_all = false;
+#ifdef WIN32
+    opt_separator = '\\';
+#else
+    opt_separator = '/';
+#endif
 }
 
 void Cdd::assign(string arr_pushd[], int count, string current_path)
@@ -194,7 +199,7 @@ string Cdd::normalize_path(const string& path)
         // Windows pathnames are case insensitive
         c = tolower(c);
 #endif
-        if (c == '\\')
+        if (c == opt_separator)
             c = '/';
         if (++count == path.size())
         {
@@ -213,13 +218,14 @@ string Cdd::windowize_path(const string& path)
     for (string::const_iterator it=path.begin(); it!=path.end(); ++it)
     {
         char c = *it;
-        result.push_back(c == '/' ? '\\' : c);
+        result.push_back(c == '/' ? opt_separator : c);
     }
     return result;
 }
 
 string Cdd::get_parent_path(const string& path)
 {
+    // TODO use opt_separator here
     std::size_t found = path.find_last_of("/\\");
     if ( found != string::npos )
     {
@@ -269,11 +275,13 @@ string Cdd::expand_dots(string path)
         int dot_len = what[1].second - what[1].first;
         for (int i=2; i<dot_len; i++)
         {
-#ifdef WIN32
-            dots += "\\..";
-#else
-            dots += "/..";
-#endif
+            dots += opt_separator;
+            dots += "..";
+// #ifdef WIN32
+//             dots += "\\..";
+// #else
+//             dots += "/..";
+// #endif
         }
         return string(what.prefix()) + s_start + dots + expand_dots(s_end + string(what.suffix()));
     }
@@ -887,6 +895,7 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
             ("limit-backwards", "Limit of history (last to first) to display", cxxopts::value(opt_limit_backwards))
             ("limit-forwards", "Limit of history (first to last) to display", cxxopts::value(opt_limit_forwards))
             ("limit-common", "Limit of history (most to least) to display", cxxopts::value(opt_limit_common))
+            ("path-separator", "Custom path separator", cxxopts::value(opt_separator))
             ("all", "Show all, do not limit listing")
             ;
 
@@ -1091,6 +1100,7 @@ void Cdd::help_tip(void)
 void Cdd::help(void)
 {
 
+  // clang-format off
 cerr <<
 "Usage:\n"
 "\n"
@@ -1104,6 +1114,7 @@ cerr <<
 "  --limit-backwards=n     Show at most n directories for last to first history\n"
 "  --limit-forwards=n      Show at most n directories for first to last history\n"
 "  --limit-common=n        Show at most n directories for most to least visited directories\n"
+"  --path-separator=n      Force path separator to be a specific character\n"
 "  --all                   Show all directories (overriding any 'limit' options)\n"
 "  --action                Default freeform option to use when nothing else specified\n"
 "  --gc                    Do garbage collection by minimizing directory stack\n"
@@ -1122,9 +1133,9 @@ cerr <<
 "PATH_SPEC can be a number, a repeated direction, or a direction and a pattern.\n"
 "\n"
 "See http://www.plan10.com/cdd for more information.\n"
-"Copyright 2010-2019 Michael Graz\n"
+"Copyright 2010-2021 Michael Graz\n"
 ;
-
+  // clang-format on
 }
 
 void Cdd::version(void)

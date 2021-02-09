@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2019 Michael Graz
+Copyright 2010-2021 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -29,35 +29,41 @@ TEST_CASE("util_test")
 
 SECTION("normalize_path")
 {
-    REQUIRE("/tmp/a" == Cdd::normalize_path("/tmp/a"));
+    Cdd cdd;
+    REQUIRE("/tmp/a" == cdd.normalize_path("/tmp/a"));
     // Remove trailing slash
-    REQUIRE("/tmp/a" == Cdd::normalize_path("/tmp/a/"));
+    REQUIRE("/tmp/a" == cdd.normalize_path("/tmp/a/"));
 #ifdef WIN32
-    REQUIRE("c:/tmp/a" == Cdd::normalize_path("C:\\tmp\\a\\"));
+    REQUIRE("c:/tmp/a" == cdd.normalize_path("C:\\tmp\\a\\"));
 #endif
 }
 
 SECTION("windowize_path")
 {
 #ifdef WIN32
-    REQUIRE("\\tmp\\a" == Cdd::windowize_path("/tmp/a"));
+    Cdd cdd;
+    REQUIRE("\\tmp\\a" == cdd.windowize_path("/tmp/a"));
 #endif
 }
 
 SECTION("parent_path")
 {
-    REQUIRE("/abc/def" == Cdd::get_parent_path("/abc/def/ghi.tmp"));
-    REQUIRE("/abc" == Cdd::get_parent_path("/abc/def.tmp"));
-    REQUIRE("/" == Cdd::get_parent_path("/abc.tmp"));
+    Cdd cdd;
+    REQUIRE("/abc/def" == cdd.get_parent_path("/abc/def/ghi.tmp"));
+    REQUIRE("/abc" == cdd.get_parent_path("/abc/def.tmp"));
+    REQUIRE("/" == cdd.get_parent_path("/abc.tmp"));
 #ifdef WIN32
-    REQUIRE("c:\\tmp" == Cdd::get_parent_path("c:\\tmp\\a"));
-    REQUIRE("c:" == Cdd::get_parent_path("c:abc.tmp"));
+    REQUIRE("c:\\tmp" == cdd.get_parent_path("c:\\tmp\\a"));
+    REQUIRE("c:" == cdd.get_parent_path("c:abc.tmp"));
 #endif
 }
 
 SECTION("expand_dots")
 {
-    auto fun = [](string s) { return Cdd::normalize_path(Cdd::expand_dots(s)); };
+    auto fun = [](string s) {
+        Cdd cdd;
+        return cdd.normalize_path(cdd.expand_dots(s));
+    };
 
     REQUIRE("/tmp/a" == fun("/tmp/a"));
     REQUIRE("../.." == fun("..."));
@@ -68,6 +74,8 @@ SECTION("expand_dots")
     REQUIRE("abc/../../def" == fun("abc/.../def"));
     REQUIRE("abc/../../../def" == fun("abc\\....\\def"));
     REQUIRE("abc/../../def/../../ghi" == fun("abc\\...\\def/.../ghi"));
+
+    // TODO add tests for path_separator
 }
 
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2019 Michael Graz
+Copyright 2010-2021 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -92,6 +92,7 @@ struct Cdd
     unsigned opt_limit_forwards;
     unsigned opt_limit_common;
     bool opt_all;
+    char opt_separator;
     static const string env_options_name;
 
     struct Direction
@@ -130,12 +131,12 @@ struct Cdd
     void help_tip(void);
     static void help(void);
     static void version(void);
-    static string normalize_path(const string& path);
-    static string windowize_path(const string& path);
-    static string get_parent_path(const string& path);
+    string normalize_path(const string& path);
+    string windowize_path(const string& path);
+    string get_parent_path(const string& path);
     static bool paths_equal(const string& path1, int inode1, const string& path2);
     static int get_inode(const string& path);
-    static string expand_dots(string path);
+    string expand_dots(string path);
     int pushd_count();
 
     void process(void);

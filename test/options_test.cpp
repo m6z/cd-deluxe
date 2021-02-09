@@ -1,6 +1,6 @@
 /*
 
-Copyright 2010-2019 Michael Graz
+Copyright 2010-2021 Michael Graz
 http://www.plan10.com/cdd
 
 This file is part of Cd Deluxe.
@@ -201,6 +201,36 @@ SECTION("options_path_equals_plus_1")
     bool rc = cdd.options(countof(av), av);
     REQUIRE(true == rc);
     REQUIRE("+1" == cdd.opt_path);
+}
+
+SECTION("options_path_separator_default") {
+  Cdd cdd;
+  const char *av[] = {
+      "_cdd",
+  };
+  bool rc = cdd.options(countof(av), av);
+  REQUIRE(true == rc);
+#ifdef WIN32
+  REQUIRE('\\' == cdd.opt_separator);
+#else
+  REQUIRE('/' == cdd.opt_separator);
+#endif
+}
+
+SECTION("options_path_separator_override") {
+  Cdd cdd;
+  const char *av[] = {"_cdd", "--path-separator=$"};
+  bool rc = cdd.options(countof(av), av);
+  REQUIRE(true == rc);
+  REQUIRE('$' == cdd.opt_separator);
+}
+
+SECTION("env_path_separator") {
+  Cdd cdd;
+  const char *av[] = {"_cdd"};
+  bool rc = cdd.options(countof(av), av, "--path-separator=/");
+  REQUIRE(true == rc);
+  REQUIRE('/' == cdd.opt_separator);
 }
 
 //----------------------------------------------------------------------
