@@ -3,7 +3,7 @@ branches:
     - master
 
 image:
-  - Visual Studio 2015
+  - Visual Studio 2019
   - Ubuntu1804
 
 configuration: Release
