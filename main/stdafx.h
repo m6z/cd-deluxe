@@ -8,9 +8,10 @@
 #ifdef WIN32
 #include <io.h>
 #else
-#include <unistd.h>
-#include <sys/io.h>
-#include <sys/param.h>
+// Are these Linux specific includes needed?
+// #include <unistd.h>
+// #include <sys/io.h>
+// #include <sys/param.h>
 #endif
 #include <iostream>
 #include <string>

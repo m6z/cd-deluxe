@@ -127,7 +127,7 @@ struct Cdd
     void assign(string arr_pushd[], int count, string current_path=string());
     void assign_debug_input(const string& input_path);
     void initialize(void);
-    bool options(int ac, const char *av[], const string& options=string());
+    bool options(std::size_t ac, const char *av[], const string& options=string());
     void help_tip(void);
     static void help(void);
     static void version(void);

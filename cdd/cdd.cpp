@@ -42,7 +42,6 @@ template<typename Out>
 void split(const std::string &s, char delim, Out result) {
     std::stringstream ss(s);
     std::string item;
-    int count = 0;
     while (std::getline(ss, item, delim)) {
         *(result++) = item;
     }
@@ -191,7 +190,7 @@ void Cdd::assign_debug_input(const string& input_path)
 string Cdd::normalize_path(const string& path)
 {
     string result;
-    int count = 0;
+    size_t count = 0;
     for (string::const_iterator it=path.begin(); it!=path.end(); ++it)
     {
         char c = *it;
@@ -869,7 +868,7 @@ T get_value(const char *opt_name, const cxxopts::ParseResult& opts_cmd, const cx
     return {};
 }
 
-bool Cdd::options(int ac, const char *av[], const string& env_options)
+bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
 {
     if (ac > 0)
     {
@@ -906,10 +905,10 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
 
         // need to turn this into an array of char pointers for cxxopts
         char *argv_env_options[32];  // choose a suitably large number
-        int argc_env_options = vec_env_options.size();
+        auto argc_env_options = vec_env_options.size();
         if ( argc_env_options > countof(argv_env_options) )
             argc_env_options = countof(argv_env_options);
-        for(int i=0; i<argc_env_options; i++)
+        for(std::size_t i=0; i<argc_env_options; i++)
             argv_env_options[i] = const_cast<char *>(vec_env_options[i].c_str());
 
         opts_src = "in environment variable";
@@ -937,10 +936,10 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
 
         // need to turn this into an array of char pointers for cxxopts
         char *argv_cmd_options[32];  // choose a suitably large number
-        int argc_cmd_options = ac;
+        auto argc_cmd_options = ac;
         if ( argc_cmd_options > countof(argv_cmd_options) )
             argc_cmd_options = countof(argv_cmd_options);
-        for(int i=0; i<argc_cmd_options; i++)
+        for(std::size_t i=0; i<argc_cmd_options; i++)
             argv_cmd_options[i] = const_cast<char *>(av[i]);
 
         opts_src = "on command line";
@@ -1084,7 +1083,7 @@ bool Cdd::options(int ac, const char *av[], const string& env_options)
         return false;
 
     }
-    catch(cxxopts::OptionException& e)
+    catch(const cxxopts::exceptions::exception& e)
     {
         strm_err << "** Options error " << opts_src.c_str() << ": " << e.what() << endl;
         help_tip();

@@ -1,20 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 4.0)
 
-# find_package (Boost COMPONENTS system regex program_options filesystem REQUIRED)
-# include_directories(.. ${Boost_INCLUDE_DIRS})
+set(TARGET_NAME "cd-deluxe")
 
-include_directories(..)
+# ---- Main executable ----
+file(GLOB main_src CONFIGURE_DEPENDS "*.cpp")
 
-set(cdd_hdr ../cdd/cdd.h)
+add_executable(${TARGET_NAME} ${main_src})
 
-file(GLOB main_src "*.cpp")
-
-add_executable(_cdd ${main_src} ${cdd_hdr})
-
-target_link_libraries (_cdd LINK_PUBLIC cdd
-#     ${Boost_SYSTEM_LIBRARY}
-#     ${Boost_REGEX_LIBRARY}
-#     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-#     ${Boost_FILESYSTEM_LIBRARY}
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+        cdd
+        cxxopts
 )
+
+target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 

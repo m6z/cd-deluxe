@@ -35,3 +35,5 @@
 # Build directories
 Debug
 Release
+build*
+Testing

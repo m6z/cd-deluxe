@@ -1,21 +1,29 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 4.0)
 
-# find_package (Boost COMPONENTS system regex program_options filesystem unit_test_framework REQUIRED)
-# include_directories(.. ${Boost_INCLUDE_DIRS})
+# ---- Dependencies ----
 
-include_directories(..)
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.6.0 # adjust to latest stable tag
+)
+FetchContent_MakeAvailable(Catch2)
 
-set(cdd_hdr ../cdd/cdd.h)
+# ---- Test executable ----
+file(GLOB test_sources CONFIGURE_DEPENDS "*.cpp")
 
-file(GLOB testmain_src "*.cpp")
+add_executable(testmain ${test_sources})
 
-add_executable(testmain ${testmain_src} ${cdd_hdr})
-
-target_link_libraries (testmain LINK_PUBLIC cdd
-#     ${Boost_SYSTEM_LIBRARY}
-#     ${Boost_REGEX_LIBRARY}
-#     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-#     ${Boost_FILESYSTEM_LIBRARY}
-#     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+target_link_libraries(testmain
+    PRIVATE
+        cdd
+        Catch2::Catch2WithMain
 )
 
+target_include_directories(testmain PRIVATE ${CMAKE_SOURCE_DIR})
+
+# ---- Enable automatic test discovery ----
+include(CTest)
+include(Catch)
+catch_discover_tests(testmain)

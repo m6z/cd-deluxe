@@ -22,7 +22,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 #define countof(x) (sizeof(x)/sizeof(x[0]))
 
