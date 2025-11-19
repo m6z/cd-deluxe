@@ -62,3 +62,27 @@ std::string get_environment(std::string var_name)
     return result;
 }
 
+std::string expand_dots(std::string path)
+{
+    static std::regex re_dots("(?:^|[\\\\/])([.]{3,})(?:[\\\\/]|$)");
+    std::smatch what;
+    if (std::regex_search(path, what, re_dots))
+    {
+        std::string s_start(what[0].first, what[1].first);
+        std::string s_end(what[1].second, what[0].second);
+        std::string dots = "..";
+        int dot_len = what[1].second - what[1].first;
+        for (int i = 2; i < dot_len; i++)
+        {
+            dots += std::filesystem::path::preferred_separator;
+            dots += "..";
+            // #ifdef WIN32
+            //             dots += "\\..";
+            // #else
+            //             dots += "/..";
+            // #endif
+        }
+        return std::string(what.prefix()) + s_start + dots + expand_dots(s_end + std::string(what.suffix()));
+    }
+    return path;
+}

@@ -13,17 +13,14 @@ FetchContent_MakeAvailable(cxxopts)
 
 add_library(cdd STATIC
     cdd.cpp
+    cdd2.cpp
     cdd_util.cpp
+    cdd_options.cpp
 )
 
 # This command automatically adds the include directories and other
 # usage requirements from cxxopts to the cdd target.
 target_link_libraries(cdd PRIVATE cxxopts::cxxopts)
-
-# target_include_directories(cdd
-#     PUBLIC
-#         ${CMAKE_CURRENT_SOURCE_DIR}
-# )
 
 # Optional static lib flags (for GNU only)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

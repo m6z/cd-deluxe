@@ -470,8 +470,8 @@ struct CddPath: Cdd
         _is_directory = false;
         _is_regular_file = false;
     }
-    // virtual bool is_directory(string path) { return _is_directory; }
-    // virtual bool is_regular_file(string path) { return _is_regular_file; }
+    virtual bool is_directory(string /*path*/) { return _is_directory; }
+    virtual bool is_regular_file(string /*path*/) { return _is_regular_file; }
 };
 
 SECTION("cdd_to_dir")

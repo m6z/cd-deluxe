@@ -1,0 +1,633 @@
+#include "stdafx.h"
+
+#include <catch2/catch_test_macros.hpp>
+
+#include "cdd/cdd2.h"
+
+namespace
+{
+
+string trim(const string& str)
+{
+    size_t first = str.find_first_not_of(" \t\n\r");
+    if (first == string::npos)
+        return "";
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
+}
+
+vector<string> split_text(const string& dirs)
+{
+    vector<string> result;
+    stringstream ss(dirs);
+    string line;
+    while (getline(ss, line))
+    {
+        // trim leading and trailing whitespace
+        line = trim(line);
+        if (!line.empty())
+        {
+            result.push_back(line);
+        }
+    }
+    return result;
+}
+
+class Cdd2_Test : public Cdd2
+{
+public:
+    bool _is_directory = false;
+    bool _is_regular_file = false;
+
+    using Cdd2::Cdd2;
+    using Cdd2::get_dirs_first_to_last;
+    using Cdd2::get_dirs_last_to_first;
+    using Cdd2::get_dirs_most_to_least;
+
+    virtual bool is_directory(const fs::path& /*path*/) { return _is_directory; }
+    virtual bool is_regular_file(const fs::path& /*path*/) { return _is_regular_file; }
+};
+
+Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const vector<string>& dirs)
+{
+    CddOptions options(args, env);
+    return Cdd2_Test(options, cwd, dirs);
+}
+
+Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const string& dirs)
+{
+    CddOptions options(args, env);
+    return Cdd2_Test(options, cwd, split_text(dirs));
+}
+
+} // namespace
+
+//----------------------------------------------------------------------
+
+TEST_CASE("cdd2_test")
+{
+    SECTION("trim function")
+    {
+        REQUIRE(trim("   hello world   ") == "hello world");
+        REQUIRE(trim("\n\t  test string \r\n") == "test string");
+        REQUIRE(trim("no_whitespace") == "no_whitespace");
+        REQUIRE(trim("    ") == "");
+        REQUIRE(trim("") == "");
+    }
+
+    SECTION("KeyedPath ignoring case")
+    {
+        bool ignore_case = true;
+        Cdd2::KeyedPath kp1a("/Path/One", ignore_case);
+        Cdd2::KeyedPath kp1b("/path/one", ignore_case);
+        Cdd2::KeyedPath kp2("/PATH/TWO", ignore_case);
+
+        REQUIRE(kp1a == kp1b);
+        REQUIRE(kp1a != kp2);
+        REQUIRE(((kp1a < kp2) && (kp2 > kp1a)));
+        REQUIRE(((kp1b < kp2) && (kp2 > kp1b)));
+
+        REQUIRE(kp1a.get_dir_key() == "/path/one");
+        REQUIRE(kp1b.get_dir_key() == "/path/one");
+        REQUIRE(kp2.get_dir_key() == "/path/two");
+
+        // std::cout << "(case no) kp1a: " << kp1a << std::endl;
+        // std::cout << "(case no) kp1b: " << kp1b << std::endl;
+        // std::cout << "(case no) kp2:  " << kp2 << std::endl;
+    }
+
+    SECTION("KeyedPath using case")
+    {
+        bool ignore_case = false;
+        Cdd2::KeyedPath kp1a("/Path/One", ignore_case);
+        Cdd2::KeyedPath kp1b("/path/one", ignore_case);
+        Cdd2::KeyedPath kp2("/PATH/TWO", ignore_case);
+
+        REQUIRE(kp1a != kp1b);
+        REQUIRE(kp1a != kp2);
+        REQUIRE(((kp1a < kp1b) && (kp1b > kp1a)));
+
+        REQUIRE(kp1a.get_dir_key() == "/Path/One");
+        REQUIRE(kp1b.get_dir_key() == "/path/one");
+        REQUIRE(kp2.get_dir_key() == "/PATH/TWO");
+
+        // std::cout << "(case yes) kp1a: " << kp1a << std::endl;
+        // std::cout << "(case yes) kp1b: " << kp1b << std::endl;
+        // std::cout << "(case yes) kp2:  " << kp2 << std::endl;
+    }
+
+    SECTION("class constructors")
+    {
+        bool ignore_case = true;
+        Cdd2::KeyedPath kp1("/Path/One", ignore_case);
+        auto kp2 = kp1; // copy constructor
+        REQUIRE(kp1 == kp2);
+        auto kp3 = std::move(kp2); // move constructor
+        REQUIRE(kp1 == kp3);
+        std::swap(kp1, kp3); // fundamental for sorting algorithms
+        REQUIRE(kp1 == kp3);
+
+        Cdd2::CommonPath cp1(5, 1, kp1);
+        auto cp2 = cp1; // copy constructor
+        REQUIRE(cp1 == cp2);
+        auto cp3 = std::move(cp2); // move constructor
+        REQUIRE(cp1 == cp3);
+        std::swap(cp1, cp3); // fundamental for sorting algorithms
+        REQUIRE(cp1 == cp3);
+    }
+
+    SECTION("Cdd2 internals")
+    {
+        auto cdd = cdd_test({"_cdd", "--ignore-case"}, "", "/current/working/dir", R"(
+            /path/one
+            /path/two
+            /path/Three
+            /path/TWO
+        )");
+
+        auto dirs_last_to_first = cdd.get_dirs_last_to_first();
+        REQUIRE(dirs_last_to_first.size() == 3);
+        REQUIRE(dirs_last_to_first[0] == "/path/one");
+        REQUIRE(dirs_last_to_first[1] == "/path/two");
+        REQUIRE(dirs_last_to_first[2] == "/path/Three");
+
+        auto dirs_first_to_last = cdd.get_dirs_first_to_last();
+        REQUIRE(dirs_first_to_last.size() == 3);
+        REQUIRE(dirs_first_to_last[0] == "/path/TWO");
+        REQUIRE(dirs_first_to_last[1] == "/path/Three");
+        REQUIRE(dirs_first_to_last[2] == "/path/one");
+
+        auto dirs_most_to_least = cdd.get_dirs_most_to_least();
+        REQUIRE(dirs_most_to_least.size() == 3);
+
+        // for (auto i = 0; i < dirs_most_to_least.size(); ++i)
+        // {
+        //     std::cout << "dir " << i << ": " << dirs_most_to_least[i] << std::endl;
+        // }
+
+        // dir 0: CommonPath(2,1,"KeyedPath(""/path/two"", "/path/two")")
+        // dir 1: CommonPath(1,0,"KeyedPath(""/path/one"", "/path/one")")
+        // dir 2: CommonPath(1,2,"KeyedPath(""/path/Three"", "/path/three")")
+
+        REQUIRE(dirs_most_to_least[0].get_keyed_path().get_dir_path() == "/path/two");
+        REQUIRE(dirs_most_to_least[1].get_keyed_path().get_dir_path() == "/path/one");
+        REQUIRE(dirs_most_to_least[2].get_keyed_path().get_dir_path() == "/path/Three");
+    }
+
+    SECTION("back_none")
+    {
+        auto cdd = cdd_test({"_cdd", "-"}, "", "/current/working/dir", "");
+        cdd.process();
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("No history of directories\n" == cdd.get_err_str());
+    }
+
+    SECTION("back_dash_zero")
+    {
+        auto cdd = cdd_test({"_cdd", "-0"}, "", "/current/working/dir", "");
+        cdd.process();
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("No history of directories\n" == cdd.get_err_str());
+    }
+
+    SECTION("cdd_to_dir")
+    {
+        auto cdd = cdd_test({"_cdd", "/tmp/z"}, "", "/current/working/dir", "");
+        cdd._is_directory = true;
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/z'\n" == cdd.get_out_str());
+#endif
+    }
+
+    SECTION("cdd_to_dots")
+    {
+        auto cdd = cdd_test({"_cdd", "..."}, "", "/current/working/dir", "");
+        cdd._is_directory = true;
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '../..'\n" == cdd.get_out_str());
+        REQUIRE("cdd: ../..\n" == cdd.get_err_str());
+#endif
+    }
+
+    SECTION("cdd_to_file")
+    {
+        auto cdd = cdd_test({"_cdd", "/tmp/z.tmp"}, "", "/current/working/dir", "");
+        cdd._is_regular_file = true;
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp'\n" == cdd.get_out_str());
+        REQUIRE("cdd: /tmp\n" == cdd.get_err_str());
+#endif
+    }
+
+    //----------------------------------------------------------------------
+
+    SECTION("back_one_dash")
+    {
+        auto cdd = cdd_test({"_cdd", "-"}, "", "/tmp/a", R"(
+            /tmp/a
+            /tmp/b
+            /tmp/c
+        )");
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("back_dash_one")
+    {
+        auto cdd = cdd_test({"_cdd", "-1"}, "", "/tmp/a", R"(
+            /tmp/a
+            /tmp/b
+            /tmp/c
+        )");
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("back_two_dash")
+    {
+        auto cdd = cdd_test({"_cdd", "--"}, "", "/tmp/a", R"(
+            /tmp/a
+            /tmp/b
+            /tmp/c
+        )");
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+    }
+
+    SECTION("back_dash_two")
+    {
+        auto cdd = cdd_test({"_cdd", "-2"}, "", "/tmp/a", R"(
+            /tmp/a
+            /tmp/b
+            /tmp/c
+        )");
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+    }
+
+    SECTION("back_dash_three")
+    {
+        auto cdd = cdd_test({"_cdd", "-3"}, "", "/tmp/a", R"(
+            /tmp/a
+            /tmp/b
+            /tmp/c
+        )");
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE("No directory at -3\n" == cdd.get_err_str());
+    }
+
+    //----------------------------------------------------------------------
+
+    SECTION("forward_plus_zero")
+    {
+        auto cdd = cdd_test({"_cdd", "+0"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_one_plus")
+    {
+        auto cdd = cdd_test({"_cdd", "+"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_plus_one")
+    {
+        auto cdd = cdd_test({"_cdd", "+1"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_two_plus")
+    {
+        auto cdd = cdd_test({"_cdd", "++"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_plus_two")
+    {
+        auto cdd = cdd_test({"_cdd", "+2"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_three_plus")
+    {
+        auto cdd = cdd_test({"_cdd", "+++"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(false); // TODO
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_plus_three")
+    {
+        auto cdd = cdd_test({"_cdd", "+3"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("No directory at +3\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_four_plus")
+    {
+        auto cdd = cdd_test({"_cdd", "++++"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("No directory at +3\n" == cdd.get_err_str());
+    }
+
+    //----------------------------------------------------------------------
+
+    SECTION("common_comma_and_zero")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.direction.assign(",");
+        // cdd.opt_path = "0";
+
+        auto cdd = cdd_test({"_cdd", ","}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/b\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_comma_zero")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",0";
+
+        auto cdd = cdd_test({"_cdd", ",0"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/b\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_one_comma")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",";
+
+        auto cdd = cdd_test({"_cdd", ","}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/b\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_comma_one")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",1";
+
+        auto cdd = cdd_test({"_cdd", ",1"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/c\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_two_commas")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",,";
+
+        auto cdd = cdd_test({"_cdd", ",,"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/c\n" == cdd.get_out_str())
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_comma_two")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",2";
+
+        auto cdd = cdd_test({"_cdd", ",2"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/a\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_three_commas")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",,,";
+
+        auto cdd = cdd_test({"_cdd", ",,,"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/a\n" == cdd.get_out_str.str());
+#else
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_comma_three")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",3";
+
+        auto cdd = cdd_test({"_cdd", ",3"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("No directory at ,3\n" == cdd.get_err_str());
+    }
+
+    SECTION("common_four_commas")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+        // cdd.opt_path = ",,,,";
+
+        auto cdd = cdd_test({"_cdd", ",,,,"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("No directory at ,3\n" == cdd.get_err_str());
+    }
+}

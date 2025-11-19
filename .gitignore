@@ -13,10 +13,6 @@
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
 *.lai
 *.la
@@ -31,6 +27,9 @@
 # VS miscellaneous
 .vs/
 *.vcxproj.user
+
+# local helper files
+tags
 
 # Build directories
 Debug

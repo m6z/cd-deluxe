@@ -37,7 +37,7 @@ SECTION("options_default")
     REQUIRE(true == rc);
     REQUIRE(true == cdd.opt_history);
     REQUIRE(false == cdd.direction.is_assigned());
-    REQUIRE("-" == cdd.direction._direction);
+    REQUIRE(cdd.direction.is_backwards());
 }
 
 //----------------------------------------------------------------------
@@ -76,7 +76,7 @@ SECTION("options_direction_plus")
     const char *av[] = {"_cdd", "--history", "--direction=+"};
     bool rc = cdd.options(countof(av), av);
     REQUIRE(true == rc);
-    REQUIRE("+" == cdd.direction._direction);
+    REQUIRE(cdd.direction.is_forwards());
 }
 
 SECTION("options_direction_minus")
@@ -85,7 +85,7 @@ SECTION("options_direction_minus")
     const char *av[] = {"_cdd", "--history", "--direction", "-"};
     bool rc = cdd.options(countof(av), av);
     REQUIRE(true == rc);
-    REQUIRE("-" == cdd.direction._direction);
+    REQUIRE(cdd.direction.is_backwards());
 }
 
 SECTION("options_direction_error")

@@ -1,0 +1,76 @@
+Three vectors:
+    history of directories visited
+        in reverse order: minus ('-')
+        in forward order: plus ('+')
+    most commonly visited directories
+        comma (',')
+
+New vector:
+    parent directories of current directory
+        dot dot ('..') or caret ('^')
+        caret
+
+#----------------------------------------------------------------------
+
+=> cd --help
+Usage:
+
+  cdd [NAMED_OPTIONS] [FREEFORM_OPTIONS]
+
+NAMED_OPTIONS consist of:
+
+  --history               Show directory history depending on the direction
+  --path=PATH_SPEC        Change to path specification (number or regular expression pattern)
+  --direction={-|+|,}     Specify direction (backwards, forwards, most common) for history or PATH_SPEC
+  --limit-backwards=n     Show at most n directories for last to first history
+  --limit-forwards=n      Show at most n directories for first to last history
+  --limit-common=n        Show at most n directories for most to least visited directories
+  --path-separator=n      Force path separator to be a specific character
+  --all                   Show all directories (overriding any 'limit' options)
+  --action                Default freeform option to use when nothing else specified
+  --gc                    Do garbage collection by minimizing directory stack
+  --del=PATH_SPEC         Remove from history the directory matching PATH_SPEC
+  --reset                 Reset the directory stack which clears all history
+  --help                  Show help (this information)
+  --version               Show version number
+
+FREEFORM_OPTIONS:
+
+  {-|+|,|?}?              Show directory history (backwards '-', forwards '+' or most common ',' or '?')
+  {-|+|,|?}? n            Show history limited by n amount (n == 0 means show all history)
+  PATH_SPEC               Change to PATH_SPEC using the default direction
+  {-|+|,} PATH_SPEC       Change to PATH_SPEC using the specified direction
+
+PATH_SPEC can be a number, a repeated direction, or a direction and a pattern.
+
+See http://www.plan10.com/cdd for more information.
+Copyright 2010-2021 Michael Graz
+
+#----------------------------------------------------------------------
+
+Simplified parameters spec
+
+    deprecate --path-separator
+
+    remove '?' as a placeholder for "common"
+
+    rename --limit-backwards -> --max-backwards, -mb  (* intended for CDD_OPTIONS)
+    rename --limit-forwards  -> --max-forwards,  -mf  (* intended for CDD_OPTIONS)
+    rename --limit-common    -> --max-common,    -mc  (* intended for CDD_OPTIONS)
+    use    --limit-upwards   -> --max-up,        -mu  (* intended for CDD_OPTIONS)
+
+    add --max=n which applies to all directions
+    the --all overrides any --max- options
+
+    add --ignore-case which applies to pattern matching, default to true
+
+    Rename --history to --list or -l
+        works from default direction
+        can add directory as a parameter: --list= --list=- --list=+ --list=.. --list=^
+
+    --action - intended for CDD_OPTIONS environment variable when no parameters are given
+    --direction - intended for CDD_OPTIONS environment variable when no direction is given
+
+    PATH_SPEC always comes at the end
+        like +2, -3, ,4, ..5, ^6, abc.*def
+
