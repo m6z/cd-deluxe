@@ -241,8 +241,7 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
         return go_common(amount - 1, path_found, path_error);
     }
 
-    // TODO ...
-    return false; // should return true if no errors
+    return process_match(target, path_found, path_extra);
 }
 
 bool Cdd2::is_directory(const fs::path& path)
@@ -361,4 +360,9 @@ void Cdd2::show_history_most_to_least(void)
     {
         strm_err << " ... showing top " << count << " of " << dirs_most_to_least.size() << endl;
     }
+}
+
+bool Cdd2::process_match(const string& target, fs::path& path_found, vector<string>& path_extra)
+{
+    return false; // TODO
 }

@@ -67,12 +67,14 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
     // Allow arguments that don't match any defined option
     // options.allow_unrecognised_options();
 
-    options.add_options()                                                                          //
-        ("h,help", "Show this help message", cxxopts::value(show_help)->implicit_value("true"))    //
-        ("l,list", "List history", cxxopts::value(list_history)->implicit_value("true"))           //
-        ("default", "Default action (intended for CDD_OPTIONS)", cxxopts::value(default_action))   //
-        ("d,direction", "Default direction (intended for CDD_OPTIONS)", cxxopts::value(direction)) //
-        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(ignore_case))         //
+    // removing default action for now
+    // ("default", "Default action (intended for CDD_OPTIONS)", cxxopts::value(default_action))   //
+
+    options.add_options()                                                                                          //
+        ("h,help", "Show this help message", cxxopts::value(show_help)->implicit_value("true"))                    //
+        ("l,list", "List history", cxxopts::value(list_history)->implicit_value("true"))                           //
+        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(ignore_case)->implicit_value("true")) //
+        ("d,direction", "Default direction (intended for CDD_OPTIONS)", cxxopts::value(direction))                 //
 
         ("m,max", "Max history", cxxopts::value(max_history))                              //
         ("max-backwards", "Max backwards history", cxxopts::value(max_backwards))          //

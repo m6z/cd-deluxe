@@ -123,12 +123,13 @@ TEST_CASE("cdd_options_test", "[options]")
             REQUIRE(options.error_message.find("Invalid direction: \"%\"") == 0);
         }
 
-        // command line, long opts
-        {
-            CddOptions options({"./_cdd", "--default", "cdd ,0", "--direction=,"});
-            REQUIRE(options.default_action == "cdd ,0");
-            REQUIRE(options.direction == ",");
-        }
+        // Not implementing default action for now
+        // // command line, long opts
+        // {
+        //     CddOptions options({"./_cdd", "--default", "cdd ,0", "--direction=,"});
+        //     REQUIRE(options.default_action == "cdd ,0");
+        //     REQUIRE(options.direction == ",");
+        // }
 
         // command line, short opts
         {
@@ -138,9 +139,8 @@ TEST_CASE("cdd_options_test", "[options]")
 
         // env opts, long opts
         {
-            std::string env_opts = "--default \"cdd ,2\" --direction=+";
+            std::string env_opts = "--direction=+";
             CddOptions options({"./_cdd"}, env_opts);
-            REQUIRE(options.default_action == "cdd ,2");
             REQUIRE(options.direction == "+");
         }
     }
