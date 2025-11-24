@@ -85,6 +85,16 @@ TEST_CASE("util_test")
 
         // TODO add tests for path_separator
     }
+
+    SECTION("special_dash_param")
+    {
+        REQUIRE(is_special_dash_parameter("-") == false);
+        REQUIRE(is_special_dash_parameter("--") == true);
+        REQUIRE(is_special_dash_parameter("----") == true);
+        REQUIRE(is_special_dash_parameter("-123") == true);
+        REQUIRE(is_special_dash_parameter("-1") == true);
+        REQUIRE(is_special_dash_parameter("45") == false);
+    }
 }
 
 // vim:ff=unix

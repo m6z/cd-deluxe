@@ -30,6 +30,9 @@
 
 # local helper files
 tags
+breakpoints.lldb
+.lldbinit
+*.tmp
 
 # Build directories
 Debug

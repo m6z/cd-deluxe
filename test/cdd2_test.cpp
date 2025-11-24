@@ -254,6 +254,7 @@ TEST_CASE("cdd2_test")
             /tmp/c
         )");
         cdd.process();
+        // cdd.get_options().output();
 #ifdef WIN32
         REQUIRE(false); // TODO
 #else
@@ -451,10 +452,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_comma_and_zero")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.direction.assign(",");
-        // cdd.opt_path = "0";
-
         auto cdd = cdd_test({"_cdd", ","}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -473,9 +470,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_comma_zero")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",0";
-
         auto cdd = cdd_test({"_cdd", ",0"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -494,9 +488,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_one_comma")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",";
-
         auto cdd = cdd_test({"_cdd", ","}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -515,9 +506,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_comma_one")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",1";
-
         auto cdd = cdd_test({"_cdd", ",1"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -536,9 +524,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_two_commas")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",,";
-
         auto cdd = cdd_test({"_cdd", ",,"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -557,9 +542,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_comma_two")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",2";
-
         auto cdd = cdd_test({"_cdd", ",2"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -578,9 +560,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_three_commas")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",,,";
-
         auto cdd = cdd_test({"_cdd", ",,,"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -599,9 +578,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_comma_three")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",3";
-
         auto cdd = cdd_test({"_cdd", ",3"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -616,9 +592,6 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_four_commas")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-        // cdd.opt_path = ",,,,";
-
         auto cdd = cdd_test({"_cdd", ",,,,"}, "", "/tmp/a",
                             {
                                 "/tmp/b", // fourth visited
@@ -630,4 +603,74 @@ TEST_CASE("cdd2_test")
         REQUIRE("" == cdd.get_out_str());
         REQUIRE("No directory at ,3\n" == cdd.get_err_str());
     }
+
+    SECTION("list_forward")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=+"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        // cdd.get_options().output();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == "  0: /a\n"
+                                     "  1: /b\n"
+                                     "  2: /c\n"
+                                     "  3: /d\n"
+                                     "  4: /e\n");
+    }
+
+    SECTION("list_backwards")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "-d", "-"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        // cdd.get_options().output();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == " -1: /d\n"
+                                     " -2: /b\n"
+                                     " -3: /e\n"
+                                     " -4: /c\n"
+                                     " -5: /a\n");
+    }
+
+    SECTION("list_common")
+    {
+        auto cdd = cdd_test({"_cdd", "-l", "--direction", ","}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == " ,0: ( 2) /d\n"
+                                     " ,1: ( 2) /b\n"
+                                     " ,2: ( 1) /e\n"
+                                     " ,3: ( 1) /c\n"
+                                     " ,4: ( 1) /a\n");
+    }
 }
+
+//----------------------------------------------------------------------
+
+static vector<string> arr_test_dirs = {
+    "/cc/dd", // sixth visited
+    "/bb/ee", // fifth visited
+    "/aa/bb", // fourth visited
+    "/cc/dd", // third visited
+    "/bb/cc", // second visited
+    "/aa/bb", // first visited
+};
+
+// TEST_CASE("match_test")
+// {
+//     SECTION("simple_match")
+//     {
+//         // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
+//         // cdd.opt_path = "ee";
+//
+//         auto cdd = cdd_test({"_cdd", "ee"}, "", "/current/dir", arr_test_dirs);
+//         cdd.process();
+// #ifdef WIN32
+//         REQUIRE("pushd /bb/ee\n" == cdd.get_out_str());
+// #else
+//         REQUIRE("pushd '/bb/ee'\n" == cdd.get_out_str());
+// #endif
+//         REQUIRE("cdd: /bb/ee\n" == cdd.get_err_str());
+//     }
+// }

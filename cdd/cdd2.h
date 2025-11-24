@@ -17,6 +17,7 @@ public:
     Cdd2(const CddOptions& options, const fs::path& cwd, const vector<string> dirs) : options(options), cwd(cwd), dirs(dirs) { initialize(); }
 
     void process(void);
+    const CddOptions& get_options() const { return options; }
     string get_out_str() const { return strm_out.str(); }
     string get_err_str() const { return strm_err.str(); }
 
@@ -109,30 +110,31 @@ private:
     stringstream strm_out;
     stringstream strm_err;
 
-    struct Direction
-    {
-        string _direction;
-        bool _direction_assigned;
-        // default direction is backwards
-        Direction(const string& direction = "-") : _direction(direction), _direction_assigned(false) {}
-        static bool is_valid_direction(string s) { return s == "+" || s == "-" || s == ","; }
-        void assign(string direction)
-        {
-            if (!is_valid_direction(direction))
-            {
-                stringstream strm;
-                strm << "Unknown direction '" << direction << "'";
-                throw Exception(strm.str());
-            }
-            _direction = direction;
-            _direction_assigned = true;
-        }
-        bool is_forwards() { return _direction == "+"; }
-        bool is_backwards() { return _direction == "-"; }
-        bool is_common() { return _direction == ","; }
-        bool is_assigned() { return _direction_assigned; }
-    };
-    Direction direction;
+    // TODO - old - remove
+    // struct Direction
+    // {
+    //     string _direction;
+    //     bool _direction_assigned;
+    //     // default direction is backwards
+    //     Direction(const string& direction = "-") : _direction(direction), _direction_assigned(false) {}
+    //     static bool is_valid_direction(string s) { return s == "+" || s == "-" || s == ","; }
+    //     void assign(string direction)
+    //     {
+    //         if (!is_valid_direction(direction))
+    //         {
+    //             stringstream strm;
+    //             strm << "Unknown direction '" << direction << "'";
+    //             throw Exception(strm.str());
+    //         }
+    //         _direction = direction;
+    //         _direction_assigned = true;
+    //     }
+    //     bool is_forwards() { return _direction == "+"; }
+    //     bool is_backwards() { return _direction == "-"; }
+    //     bool is_common() { return _direction == ","; }
+    //     bool is_assigned() { return _direction_assigned; }
+    // };
+    // Direction direction;
 
     void assign(vector<string>& vec_pushd, string current_path);
     void assign(string arr_pushd[], int count, string current_path = string());
@@ -157,10 +159,12 @@ private:
     bool go_common(unsigned amount, fs::path& path_found, stringstream& path_error);
 
     bool process_match(string& path_found, vector<string>& path_extra, stringstream& path_error);
+
     void show_history(void);
     void show_history_first_to_last(void);
     void show_history_last_to_first(void);
     void show_history_most_to_least(void);
+
     void garbage_collect(void);
     void process_delete(void);
     void process_reset(void);

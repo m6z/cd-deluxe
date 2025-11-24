@@ -11,7 +11,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 # ---- Test executable ----
-file(GLOB test_sources CONFIGURE_DEPENDS "*.cpp")
+# file(GLOB test_sources CONFIGURE_DEPENDS "*.cpp")
+set(test_sources
+    cdd2_test.cpp
+    cdd_options_test.cpp
+    util_test.cpp
+)
 
 add_executable(testmain ${test_sources})
 

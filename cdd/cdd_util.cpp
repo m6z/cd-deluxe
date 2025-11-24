@@ -23,20 +23,20 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 
 #ifdef _WIN32
-    #include <io.h>
-    #include <direct.h>
-    #define MAX_PATH_LENGTH _MAX_PATH
-    #define getcwd _getcwd
+#include <direct.h>
+#include <io.h>
+#define MAX_PATH_LENGTH _MAX_PATH
+#define getcwd _getcwd
 #else
-    #include <unistd.h>
-    #include <sys/param.h>
-    #define MAX_PATH_LENGTH MAXPATHLEN
+#include <sys/param.h>
+#include <unistd.h>
+#define MAX_PATH_LENGTH MAXPATHLEN
 #endif
 
 std::string get_working_path()
 {
-   char temp[MAX_PATH_LENGTH];
-   return ( getcwd(temp, sizeof(temp)) ? std::string( temp ) : std::string("") );
+    char temp[MAX_PATH_LENGTH];
+    return (getcwd(temp, sizeof(temp)) ? std::string(temp) : std::string(""));
 }
 
 std::string get_environment(std::string var_name)
@@ -52,8 +52,8 @@ std::string get_environment(std::string var_name)
         free(buffer);
     }
 #else
-    char *var_value = getenv(var_name.c_str());
-    if ( var_value != nullptr )
+    char* var_value = getenv(var_name.c_str());
+    if (var_value != nullptr)
     {
         result = var_value;
     }
@@ -85,4 +85,20 @@ std::string expand_dots(std::string path)
         return std::string(what.prefix()) + s_start + dots + expand_dots(s_end + std::string(what.suffix()));
     }
     return path;
+}
+
+bool is_special_dash_parameter(const std::string& s)
+{
+    // Regex Explanation:
+    // ^         : Start of string
+    // (         : Start of group
+    //   -{2,}   : Match 2 or more dashes (and nothing else)
+    //   |       : OR
+    //   -[0-9]+ : Match 1 dash followed by at least one digit
+    // )         : End of group
+    // $         : End of string
+
+    static const std::regex pattern("^(-{2,}|-[0-9]+)$");
+
+    return std::regex_match(s, pattern);
 }

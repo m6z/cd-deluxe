@@ -2,13 +2,37 @@
 
 #include "cxxopts.hpp"
 
-#include <iomanip> // For std::quoted
+#include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-CddOptions::CddOptions(const std::vector<std::string>& args, const std::string& env_options)
+#include "cdd_util.h"
+
+namespace
+{
+
+bool is_valid_direction(const std::string& s)
+{
+    return s == CddOptions::direction_forwards ||  //
+           s == CddOptions::direction_backwards || //
+           s == CddOptions::direction_common;      //
+}
+
+std::string get_valid_directions_as_string()
+{
+    return "\"" + std::string(CddOptions::direction_forwards) + "\" (forwards), \"" + //
+           std::string(CddOptions::direction_backwards) + "\" (backwards), \"" +      //
+           std::string(CddOptions::direction_common) + "\" (common)";                 //
+}
+
+} // namespace
+
+//----------------------------------------------------------------------
+
+bool CddOptions::initialize(const std::vector<std::string>& args, const std::string& env_options)
 {
 #ifdef _WIN32
     ignore_case = true;
@@ -16,23 +40,22 @@ CddOptions::CddOptions(const std::vector<std::string>& args, const std::string& 
 
     if (args.empty())
     {
-        parse_error = true;
         error_message = "Argument vector cannot be empty.";
-        return;
+        return false;
     }
 
     // The program name is the first argument
     std::string program_name = args[0];
     cxxopts::Options options(program_name, " - A C++ Deluxe CD-ROM cataloger");
 
-    // do special preprocessing since cxxopts does not handle '--' as a standalone argument
-    bool double_dash_present = false;
+    // do special preprocessing since cxxopts does not handle '--' or longer as a standalone argument
     std::vector<std::string> preprocessed_args;
+    std::vector<std::string> special_dashed_args;
     for (const auto& arg : args)
     {
-        if (arg == "--")
+        if (is_special_dash_parameter(arg))
         {
-            double_dash_present = true;
+            special_dashed_args.push_back(arg);
         }
         else
         {
@@ -42,7 +65,7 @@ CddOptions::CddOptions(const std::vector<std::string>& args, const std::string& 
 
     // 1. Define all the command-line options we accept
     // Allow arguments that don't match any defined option
-    options.allow_unrecognised_options();
+    // options.allow_unrecognised_options();
 
     options.add_options()                                                                          //
         ("h,help", "Show this help message", cxxopts::value(show_help)->implicit_value("true"))    //
@@ -59,11 +82,8 @@ CddOptions::CddOptions(const std::vector<std::string>& args, const std::string& 
         ("a,all", "Show all history", cxxopts::value(all_history)->implicit_value("true")) //
         ;
 
-    // Store the generated help text for later use
-    help_text = options.help();
-
     // 2. Combine environment options and command-line arguments
-    auto combined_args = combine_arguments(args, env_options);
+    auto combined_args = combine_arguments(preprocessed_args, env_options);
 
     // 3. Convert vector<string> back to (argc, argv) for cxxopts
     std::vector<const char*> argv_c;
@@ -78,18 +98,34 @@ CddOptions::CddOptions(const std::vector<std::string>& args, const std::string& 
     try
     {
         auto result = options.parse(argc_c, argv_ptr);
+        if (show_help)
+        {
+            std::cerr << "Usage: " << program_name << " [options]" << std::endl;
+            std::cerr << options.help() << std::endl;
+            // Help was requested; no further processing needed
+            return true;
+        }
+
+        if (!direction.empty() && !is_valid_direction(direction))
+        {
+            error_message = "Invalid direction: \"" + direction + "\". Valid directions are: " + get_valid_directions_as_string();
+            return false;
+        }
+
         unmatched_args = result.unmatched();
-        if (double_dash_present)
+        if (!special_dashed_args.empty())
         {
             // insert at front of unmatched_args due to special meaning
-            unmatched_args.insert(unmatched_args.begin(), "--");
+            unmatched_args.insert(unmatched_args.begin(), special_dashed_args.begin(), special_dashed_args.end());
         }
     }
     catch (const cxxopts::exceptions::exception& e)
     {
-        parse_error = true;
         error_message = e.what();
+        return false;
     }
+
+    return true;
 }
 
 std::vector<std::string> CddOptions::combine_arguments(const std::vector<std::string>& args, const std::string& env_options)
@@ -123,4 +159,34 @@ std::vector<std::string> CddOptions::combine_arguments(const std::vector<std::st
     combined.insert(combined.end(), args.begin() + 1, args.end());
 
     return combined;
+}
+
+void CddOptions::output(std::ostream& os) const
+{
+    os << "CddOptions:" << std::endl;
+    os << "  show_help: " << std::boolalpha << show_help << std::endl;
+    os << "  list_history: " << std::boolalpha << list_history << std::endl;
+    os << "  default_action: " << default_action << std::endl;
+    os << "  direction: " << direction << std::endl;
+    os << "  max_history: " << max_history << std::endl;
+    os << "  max_backwards: " << max_backwards << std::endl;
+    os << "  max_forwards: " << max_forwards << std::endl;
+    os << "  max_common: " << max_common << std::endl;
+    os << "  max_upwards: " << max_upwards << std::endl;
+    os << "  all_history: " << std::boolalpha << all_history << std::endl;
+    os << "  ignore_case: " << std::boolalpha << ignore_case << std::endl;
+
+    os << "  unmatched_args: [";
+    for (size_t i = 0; i < unmatched_args.size(); ++i)
+    {
+        os << "\"" << unmatched_args[i] << "\"";
+        if (i < unmatched_args.size() - 1)
+        {
+            os << ", ";
+        }
+    }
+    os << "]" << std::endl;
+
+    os << "  has_error: " << std::boolalpha << has_error << std::endl;
+    os << "  error_message: " << error_message << std::endl;
 }

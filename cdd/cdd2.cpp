@@ -28,7 +28,7 @@ void Cdd2::initialize()
 #ifdef WIN32
     if (!cwd.empty())
     {
-        vec_dir_stack.insert(vec_dir_stack.begin(), current_path);
+        dirs_stack.insert(dirs_stack.begin(), current_path);
         current_path_added = true;
     }
 #endif
@@ -99,6 +99,12 @@ void Cdd2::initialize()
 
 void Cdd2::process(void)
 {
+    if (options.list_history)
+    {
+        show_history();
+        return;
+    }
+
     if (!options.unmatched_args.empty())
     {
         change_to_path_spec();
@@ -184,13 +190,18 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
     if (std::regex_match(target, match, re_num))
     {
         int amount = std::stoi(match[1]);
-        if (direction.is_backwards())
+        if (options.direction == CddOptions::direction_backwards)
+        {
             return go_backwards(amount, path_found, path_error);
-        // TODO put back
-        // if (direction.is_forwards())
-        //     return go_forwards(amount, path_found, path_error);
-        // if (direction.is_common())
-        //     return go_common(amount, path_found, path_error);
+        }
+        if (options.direction == CddOptions::direction_forwards)
+        {
+            return go_forwards(amount, path_found, path_error);
+        }
+        if (options.direction == CddOptions::direction_common)
+        {
+            return go_common(amount, path_found, path_error);
+        }
         return false;
     }
 
@@ -275,4 +286,79 @@ bool Cdd2::go_common(unsigned amount, fs::path& path_found, stringstream& path_e
     }
     path_found = dirs_most_to_least[amount].get_keyed_path().get_dir_path();
     return true;
+}
+
+void Cdd2::show_history(void)
+{
+    if (options.direction == CddOptions::direction_backwards)
+    {
+        show_history_last_to_first();
+    }
+    else if (options.direction == CddOptions::direction_forwards)
+    {
+        show_history_first_to_last();
+    }
+    else if (options.direction == CddOptions::direction_common)
+    {
+        show_history_most_to_least();
+    }
+}
+
+void Cdd2::show_history_last_to_first(void)
+{
+    size_t count = 0;
+    int number = -1;
+    size_t entry_count = std::min(options.max_history, options.max_backwards);
+    for (const auto& dir : dirs_last_to_first)
+    {
+        strm_err << setw(3) << number-- << ": " << dir << endl;
+        if (++count >= entry_count && entry_count > 0 && !options.all_history)
+            break;
+    }
+    if (count < dirs_last_to_first.size())
+    {
+        strm_err << " ... showing last " << count << " of " << dirs_last_to_first.size() << endl;
+    }
+}
+
+void Cdd2::show_history_first_to_last(void)
+{
+    size_t count = 0;
+    int number = 0;
+    size_t entry_count = std::min(options.max_history, options.max_forwards);
+    for (const auto& dir : dirs_first_to_last)
+    {
+        strm_err << setw(3) << number++ << ": " << dir << endl;
+        if (++count >= entry_count && entry_count > 0 && !options.all_history)
+        {
+            break;
+        }
+    }
+    if (count < dirs_first_to_last.size())
+    {
+        strm_err << " ... showing first " << count << " of " << dirs_first_to_last.size() << endl;
+    }
+}
+
+void Cdd2::show_history_most_to_least(void)
+{
+    size_t count = 0;
+    int number = 0;
+    size_t entry_count = std::min(options.max_history, options.max_common);
+    for (const auto& common_path : dirs_most_to_least)
+    {
+        if (number < 10)
+        {
+            strm_err << " ";
+        }
+        strm_err << "," << number++ << ": (" << setw(2) << common_path.count << ") " << common_path.get_keyed_path().get_dir_path().string() << endl;
+        if (++count >= entry_count && entry_count > 0 && !options.all_history)
+        {
+            break;
+        }
+    }
+    if (count < dirs_most_to_least.size())
+    {
+        strm_err << " ... showing top " << count << " of " << dirs_most_to_least.size() << endl;
+    }
 }

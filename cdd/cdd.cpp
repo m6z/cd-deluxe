@@ -499,11 +499,17 @@ bool Cdd::go_common(unsigned amount, string& path_found, stringstream& path_erro
 void Cdd::show_history(void)
 {
     if (direction.is_backwards())
+    {
         show_history_last_to_first();
+    }
     else if (direction.is_forwards())
+    {
         show_history_first_to_last();
+    }
     else if (direction.is_common())
+    {
         show_history_most_to_least();
+    }
 }
 
 void Cdd::show_history_first_to_last(void)
@@ -511,7 +517,7 @@ void Cdd::show_history_first_to_last(void)
     vector<string>::iterator it;
     unsigned count = 0;
     int number = 0;
-    for (it=vec_dir_first_to_last.begin(); it!=vec_dir_first_to_last.end(); ++it)
+    for (it = vec_dir_first_to_last.begin(); it != vec_dir_first_to_last.end(); ++it)
     {
         strm_err << setw(3) << number++ << ": " << *it << endl;
         if (++count >= opt_limit_forwards && opt_limit_forwards > 0 && !opt_all)
@@ -531,7 +537,7 @@ void Cdd::show_history_last_to_first(void)
     vector<string>::iterator it;
     unsigned count = 0;
     int number = -1;
-    for (it=vec_dir_last_to_first.begin(); it!=vec_dir_last_to_first.end(); ++it)
+    for (it = vec_dir_last_to_first.begin(); it != vec_dir_last_to_first.end(); ++it)
     {
         strm_err << setw(3) << number-- << ": " << *it << endl;
         if (++count >= opt_limit_backwards && opt_limit_backwards > 0 && !opt_all)
@@ -546,7 +552,7 @@ void Cdd::show_history_most_to_least(void)
     vector<Common>::iterator it;
     unsigned count = 0;
     int number = 0;
-    for (it=vec_dir_most_to_least.begin(); it!=vec_dir_most_to_least.end(); ++it)
+    for (it = vec_dir_most_to_least.begin(); it != vec_dir_most_to_least.end(); ++it)
     {
         if (number < 10)
             strm_err << " ";
@@ -593,15 +599,15 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
         bool truncated = false;
         int number = -1;
         vector<string>::iterator it;
-        for (it=vec_dir_last_to_first.begin(); it!=vec_dir_last_to_first.end(); ++it)
+        for (it = vec_dir_last_to_first.begin(); it != vec_dir_last_to_first.end(); ++it)
         {
             string dir = *it;
             if (std::regex_search(dir, what, re))
             {
-                count ++;
+                count++;
                 if (path_found.empty())
                     path_found = dir;
-                else if ( opt_all || opt_limit_backwards == 0 || count <= opt_limit_backwards )
+                else if (opt_all || opt_limit_backwards == 0 || count <= opt_limit_backwards)
                 {
                     stringstream strm;
                     strm << setw(3) << number << ": " << dir;
@@ -612,7 +618,7 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
             }
             number--;
         }
-        if ( truncated )
+        if (truncated)
         {
             stringstream strm;
             strm << " ... showing last " << opt_limit_backwards << " matching of " << count;
@@ -626,15 +632,15 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
         bool truncated = false;
         int number = 0;
         vector<string>::iterator it;
-        for (it=vec_dir_first_to_last.begin(); it!=vec_dir_first_to_last.end(); ++it)
+        for (it = vec_dir_first_to_last.begin(); it != vec_dir_first_to_last.end(); ++it)
         {
             string dir = *it;
             if (std::regex_search(dir, what, re))
             {
-                count ++;
+                count++;
                 if (path_found.empty())
                     path_found = dir;
-                else if ( opt_all || opt_limit_forwards == 0 || count <= opt_limit_forwards )
+                else if (opt_all || opt_limit_forwards == 0 || count <= opt_limit_forwards)
                 {
                     stringstream strm;
                     strm << setw(3) << number << ": " << dir;
@@ -645,7 +651,7 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
             }
             number++;
         }
-        if ( truncated )
+        if (truncated)
         {
             stringstream strm;
             strm << " ... showing first " << opt_limit_forwards << " matching of " << count;
@@ -659,15 +665,15 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
         bool truncated = false;
         int number = 0;
         vector<Common>::iterator it;
-        for (it=vec_dir_most_to_least.begin(); it!=vec_dir_most_to_least.end(); ++it)
+        for (it = vec_dir_most_to_least.begin(); it != vec_dir_most_to_least.end(); ++it)
         {
             string dir = it->dir;
             if (std::regex_search(dir, what, re))
             {
-                count ++;
+                count++;
                 if (path_found.empty())
                     path_found = dir;
-                else if ( opt_all || opt_limit_common == 0 || count <= opt_limit_common )
+                else if (opt_all || opt_limit_common == 0 || count <= opt_limit_common)
                 {
                     stringstream strm;
                     if (number < 10)
@@ -680,7 +686,7 @@ bool Cdd::process_match(string& path_found, vector<string>& path_extra, stringst
             }
             number++;
         }
-        if ( truncated )
+        if (truncated)
         {
             stringstream strm;
             strm << " ... showing top " << opt_limit_common << " matching of " << count;
@@ -705,7 +711,7 @@ void Cdd::garbage_collect(void)
 bool has_string(vector<string>& vec, string str)
 {
     vector<string>::iterator it;
-    for (it=vec.begin(); it!=vec.end(); ++it)
+    for (it = vec.begin(); it != vec.end(); ++it)
     {
         if (*it == str)
             return true;
@@ -718,7 +724,7 @@ void Cdd::process_delete(void)
     string path_found;
     vector<string> path_extra;
     stringstream path_error;
-    if (! process_path_spec(path_found, path_extra, path_error))
+    if (!process_path_spec(path_found, path_extra, path_error))
     {
         // Here: error
         string error_msg = path_error.str();
@@ -729,7 +735,7 @@ void Cdd::process_delete(void)
         return;
     }
 
-    if (! has_string(vec_dir_stack, path_found))
+    if (!has_string(vec_dir_stack, path_found))
     {
         strm_err << "** Could not delete from history: " << path_found << endl;
         return;
@@ -762,7 +768,7 @@ void Cdd::command_generator_win32(vector<string>& vec_dir, const string& dir_del
     strm_out << "for /l %%i in (1,1," << pushd_count() << ") do popd" << endl;
     int count = 0;
     vector<string>::iterator it;
-    for (it=vec_dir.begin(); it!=vec_dir.end(); ++it)
+    for (it = vec_dir.begin(); it != vec_dir.end(); ++it)
     {
         string dir = *it;
         if (dir == dir_delete)
@@ -778,7 +784,7 @@ void Cdd::command_generator_bash(vector<string>& vec_dir, const string& dir_dele
     strm_out << "dirs -c" << endl;
     int count = 0;
     vector<string>::iterator it;
-    for (it=vec_dir.begin(); it!=vec_dir.end(); ++it)
+    for (it = vec_dir.begin(); it != vec_dir.end(); ++it)
     {
         string dir = *it;
         if (dir == dir_delete)
@@ -803,7 +809,7 @@ void Cdd::set_opt_path(const string& opt_path)
     {
         ivalue = std::stoi(opt_path);
     }
-    catch (std::logic_error &)
+    catch (std::logic_error&)
     {
         // Not an int, so give up
         return;
@@ -853,50 +859,46 @@ std::istream& operator>>(std::istream& is, OptionDirection& obj)
 {
     // read obj from stream
     is >> obj.direction;
-//     if( /* T could not be constructed */ )
-//         is.setstate(std::ios::failbit);
+    //     if( /* T could not be constructed */ )
+    //         is.setstate(std::ios::failbit);
     return is;
 }
 
-template<typename T>
-T get_value(const char *opt_name, const cxxopts::ParseResult& opts_cmd, const cxxopts::ParseResult& opts_env)
+template <typename T> T get_value(const char* opt_name, const cxxopts::ParseResult& opts_cmd, const cxxopts::ParseResult& opts_env)
 {
-    if ( opts_cmd.count(opt_name) > 0 )
+    if (opts_cmd.count(opt_name) > 0)
         return opts_cmd[opt_name].as<T>();
-    if ( opts_env.count(opt_name) > 0 )
+    if (opts_env.count(opt_name) > 0)
         return opts_env[opt_name].as<T>();
     return {};
 }
 
-bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
+bool Cdd::options(std::size_t ac, const char* av[], const string& env_options)
 {
     if (ac > 0)
     {
         // handle special cases which conflict with tradition option parsing
-        if ( is_valid_path_spec(av[ac-1]) )
+        if (is_valid_path_spec(av[ac - 1]))
             opt_path = av[--ac];
     }
 
-//     std::cout << "xx opt_path: >" << opt_path.c_str() << "<\n";
-//     std::cout << "xx direction._direction: >" << direction._direction << "<\n";
-//     for(int i=0; i<ac; i++)
-//         std::cout << "xx options ac[" << i << "]: >" << av[i] << "<\n";
+    //     std::cout << "xx opt_path: >" << opt_path.c_str() << "<\n";
+    //     std::cout << "xx direction._direction: >" << direction._direction << "<\n";
+    //     for(int i=0; i<ac; i++)
+    //         std::cout << "xx options ac[" << i << "]: >" << av[i] << "<\n";
 
     string opts_src;
     try
     {
         cxxopts::Options options("cdd", "cd Deluxe options");
         // First, parse the options string with a limited set of options
-        options.add_options()
-            ("action", "Specify freeform action", cxxopts::value<string>())
+        options.add_options()("action", "Specify freeform action", cxxopts::value<string>())
             // ("direction", "Direction of search and history", cxxopts::value<OptionDirection>()->default_value(&option_direction))
-            ("direction", "Direction of search and history", cxxopts::value<string>()->default_value(direction._direction))
-            ("limit-backwards", "Limit of history (last to first) to display", cxxopts::value(opt_limit_backwards))
-            ("limit-forwards", "Limit of history (first to last) to display", cxxopts::value(opt_limit_forwards))
-            ("limit-common", "Limit of history (most to least) to display", cxxopts::value(opt_limit_common))
-            ("path-separator", "Custom path separator", cxxopts::value(opt_separator))
-            ("all", "Show all, do not limit listing")
-            ;
+            ("direction", "Direction of search and history",
+             cxxopts::value<string>()->default_value(direction._direction))("limit-backwards", "Limit of history (last to first) to display", cxxopts::value(opt_limit_backwards))(
+                "limit-forwards", "Limit of history (first to last) to display", cxxopts::value(opt_limit_forwards))("limit-common", "Limit of history (most to least) to display",
+                                                                                                                     cxxopts::value(opt_limit_common))(
+                "path-separator", "Custom path separator", cxxopts::value(opt_separator))("all", "Show all, do not limit listing");
 
         auto vec_env_options = split(env_options);
         // The options package is expecting the program name to be in zeroth position.
@@ -904,29 +906,22 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
         vec_env_options.insert(vec_env_options.begin(), "dummy");
 
         // need to turn this into an array of char pointers for cxxopts
-        char *argv_env_options[32];  // choose a suitably large number
+        char* argv_env_options[32]; // choose a suitably large number
         auto argc_env_options = vec_env_options.size();
-        if ( argc_env_options > countof(argv_env_options) )
+        if (argc_env_options > countof(argv_env_options))
             argc_env_options = countof(argv_env_options);
-        for(std::size_t i=0; i<argc_env_options; i++)
-            argv_env_options[i] = const_cast<char *>(vec_env_options[i].c_str());
+        for (std::size_t i = 0; i < argc_env_options; i++)
+            argv_env_options[i] = const_cast<char*>(vec_env_options[i].c_str());
 
         opts_src = "in environment variable";
-        char **argv_env_options_ptr = argv_env_options;
+        char** argv_env_options_ptr = argv_env_options;
         auto opts_env = options.parse(argc_env_options, argv_env_options_ptr);
 
         std::vector<std::string> vec_action;
 
-        options.add_options()
-            ("help", "Program help")
-            ("version", "Version information")
-            ("path", "Change to path number|string", cxxopts::value<string>())
-            ("history", "Show history")
-            ("gc", "Garbage collect")
-            ("del", "Delete from history")
-            ("delete", "Delete from history")
-            ("reset", "Reset (erase) all history")
-            ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(vec_action))
+        options.add_options()("help", "Program help")("version", "Version information")("path", "Change to path number|string", cxxopts::value<string>())(
+            "history", "Show history")("gc", "Garbage collect")("del", "Delete from history")("delete", "Delete from history")("reset", "Reset (erase) all history")(
+            "positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(vec_action))
 #if !defined(NDEBUG)
             (param_debug_input, "Directory stack to use, parsed from a file", cxxopts::value<string>())
 #endif
@@ -935,15 +930,15 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
         options.parse_positional({"positional"});
 
         // need to turn this into an array of char pointers for cxxopts
-        char *argv_cmd_options[32];  // choose a suitably large number
+        char* argv_cmd_options[32]; // choose a suitably large number
         auto argc_cmd_options = ac;
-        if ( argc_cmd_options > countof(argv_cmd_options) )
+        if (argc_cmd_options > countof(argv_cmd_options))
             argc_cmd_options = countof(argv_cmd_options);
-        for(std::size_t i=0; i<argc_cmd_options; i++)
-            argv_cmd_options[i] = const_cast<char *>(av[i]);
+        for (std::size_t i = 0; i < argc_cmd_options; i++)
+            argv_cmd_options[i] = const_cast<char*>(av[i]);
 
         opts_src = "on command line";
-        char **argv_cmd_options_ptr = argv_cmd_options;
+        char** argv_cmd_options_ptr = argv_cmd_options;
         auto opts_cmd = options.parse(argc_cmd_options, argv_cmd_options_ptr);
 
         if (opts_cmd.count("help"))
@@ -958,7 +953,7 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
         }
 
 #if !defined(NDEBUG)
-        if ( opts_cmd.count(param_debug_input) )
+        if (opts_cmd.count(param_debug_input))
             assign_debug_input(opts_cmd[param_debug_input].as<string>());
 #endif
 
@@ -972,13 +967,13 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
             opt_reset = true;
         string opt_direction;
         opt_direction = get_value<string>("direction", opts_cmd, opts_env);
-        if ( ! opt_direction.empty() )
+        if (!opt_direction.empty())
         {
             try
             {
                 direction.assign(opt_direction);
             }
-            catch(exception& e)
+            catch (exception& e)
             {
                 strm_err << "** Options error: " << e.what() << endl;
                 help_tip();
@@ -992,7 +987,7 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
             set_opt_path(opts_cmd["path"].as<string>());
 
         // opt_path may be assigned later from vec_action
-        if ( opt_delete && opt_path.empty() && vec_action.empty() )
+        if (opt_delete && opt_path.empty() && vec_action.empty())
         {
             strm_err << "** No path indicated for delete" << endl;
             return false;
@@ -1001,16 +996,16 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
         if (vec_action.empty())
         {
             // Need at least history or path or one of the commands
-            if (opt_history || (! opt_path.empty()) || opt_gc || opt_delete || opt_reset)
+            if (opt_history || (!opt_path.empty()) || opt_gc || opt_delete || opt_reset)
                 return true;
             // Here: no actions specified, look in the 'action' option parameter
             string action = get_value<string>("action", opts_cmd, opts_env);
-            if ( ! action.empty() )
+            if (!action.empty())
             {
                 try
                 {
                     std::istringstream iss(action);
-                    for(std::string s; iss >> s; )
+                    for (std::string s; iss >> s;)
                         vec_action.push_back(s);
                 }
                 catch (exception& e)
@@ -1054,10 +1049,9 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
                 {
                     amount = std::stoi(vec_action[1]);
                 }
-                catch (std::logic_error &)
+                catch (std::logic_error&)
                 {
-                    strm_err << "** Options error: expecting number for second option: "
-                        << vec_action[0] << " " << vec_action[1] << endl;
+                    strm_err << "** Options error: expecting number for second option: " << vec_action[0] << " " << vec_action[1] << endl;
                     help_tip();
                     return false;
                 }
@@ -1081,9 +1075,8 @@ bool Cdd::options(std::size_t ac, const char *av[], const string& env_options)
         strm_err << "** Options error: unable to interpret options" << endl;
         help_tip();
         return false;
-
     }
-    catch(const cxxopts::exceptions::exception& e)
+    catch (const cxxopts::exceptions::exception& e)
     {
         strm_err << "** Options error " << opts_src.c_str() << ": " << e.what() << endl;
         help_tip();
@@ -1098,8 +1091,7 @@ void Cdd::help_tip(void)
 
 void Cdd::help(void)
 {
-
-  // clang-format off
+    // clang-format off
 cerr <<
 "Usage:\n"
 "\n"
@@ -1134,7 +1126,7 @@ cerr <<
 "See http://www.plan10.com/cdd for more information.\n"
 "Copyright 2010-2021 Michael Graz\n"
 ;
-  // clang-format on
+    // clang-format on
 }
 
 void Cdd::version(void)

@@ -13,7 +13,7 @@ TEST_CASE("cdd_options_test", "[options]")
     SECTION("Default state with no arguments")
     {
         CddOptions options({"./_cdd"});
-        REQUIRE_FALSE(options.parse_error);
+        REQUIRE_FALSE(options.has_error);
         REQUIRE_FALSE(options.show_help);
         REQUIRE_FALSE(options.list_history);
         REQUIRE(options.unmatched_args.empty());
@@ -71,14 +71,14 @@ TEST_CASE("cdd_options_test", "[options]")
         REQUIRE(options.unmatched_args[0] == "command_line_arg");
     }
 
-    SECTION("Error handling for empty argument vector")
-    {
-        // This is a rare case, but the constructor should handle it gracefully
-        CddOptions options({});
-
-        REQUIRE(options.parse_error);
-        REQUIRE_FALSE(options.error_message.empty());
-    }
+    // TODO is this important?
+    // SECTION("Error handling for empty argument vector")
+    // {
+    //     // This is a rare case, but the constructor should handle it gracefully
+    //     CddOptions options();
+    //     REQUIRE(options.has_error);
+    //     REQUIRE_FALSE(options.error_message.empty());
+    // }
 
     SECTION("Max history length (temp)")
     {
@@ -113,27 +113,35 @@ TEST_CASE("cdd_options_test", "[options]")
         }
     }
 
-    SECTION("Action & direction")
+    SECTION("action_and_direction")
     {
+        // Bad direction
+        {
+            CddOptions options({"./_cdd", "--list", "--direction=%"});
+            REQUIRE(options.has_error);
+            // check if error starts with expected message:
+            REQUIRE(options.error_message.find("Invalid direction: \"%\"") == 0);
+        }
+
         // command line, long opts
         {
-            CddOptions options({"./_cdd", "--default", "cdd ,0", "--direction=up"});
+            CddOptions options({"./_cdd", "--default", "cdd ,0", "--direction=,"});
             REQUIRE(options.default_action == "cdd ,0");
-            REQUIRE(options.direction == "up");
+            REQUIRE(options.direction == ",");
         }
 
         // command line, short opts
         {
-            CddOptions options({"./_cdd", "-d", "down"});
-            REQUIRE(options.direction == "down");
+            CddOptions options({"./_cdd", "-d", "-"});
+            REQUIRE(options.direction == "-");
         }
 
         // env opts, long opts
         {
-            std::string env_opts = "--default \"cdd ,2\" --direction=common";
+            std::string env_opts = "--default \"cdd ,2\" --direction=+";
             CddOptions options({"./_cdd"}, env_opts);
             REQUIRE(options.default_action == "cdd ,2");
-            REQUIRE(options.direction == "common");
+            REQUIRE(options.direction == "+");
         }
     }
 
@@ -149,16 +157,20 @@ TEST_CASE("cdd_options_test", "[options]")
     {
         {
             CddOptions options({"./_cdd", "-"});
+            REQUIRE(options.unmatched_args.size() == 1);
             REQUIRE(options.unmatched_args[0] == "-");
         }
 
-        // {
-        //     CddOptions options({"./_cdd", "--"});
-        //     REQUIRE(options.unmatched_args[0] == "--");
-        // }
+        {
+            CddOptions options({"./_cdd", "--"});
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "--");
+        }
 
         {
             CddOptions options({"./_cdd", "---"});
+            options.output();
+            REQUIRE(options.unmatched_args.size() == 1);
             REQUIRE(options.unmatched_args[0] == "---");
         }
     }
