@@ -123,8 +123,7 @@ bool Cdd2::change_to_path_spec(void)
 
     fs::path path_found;
     vector<string> path_extra;
-    stringstream path_error;
-    if (process_path_spec(path_target, path_found, path_extra, path_error))
+    if (process_path_spec(path_target, path_found, path_extra))
     {
 #ifdef WIN32
         strm_out << "pushd " << path_found << endl;
@@ -144,13 +143,10 @@ bool Cdd2::change_to_path_spec(void)
         }
         rc = true;
     }
-    string error_msg = path_error.str();
-    if (!error_msg.empty())
-        strm_err << error_msg;
     return rc;
 }
 
-bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>& path_extra, stringstream& path_error)
+bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>& path_extra)
 {
     // Process any '...' sequences in the path
     target = expand_dots(target);
@@ -174,7 +170,7 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
 
     if (dirs.empty())
     {
-        path_error << "No history of directories" << endl;
+        strm_err << "No history of directories" << endl;
         return false;
     }
 
@@ -192,15 +188,15 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
         int amount = std::stoi(match[1]);
         if (options.direction == CddOptions::direction_backwards)
         {
-            return go_backwards(amount, path_found, path_error);
+            return go_backwards(amount, path_found);
         }
         if (options.direction == CddOptions::direction_forwards)
         {
-            return go_forwards(amount, path_found, path_error);
+            return go_forwards(amount, path_found);
         }
         if (options.direction == CddOptions::direction_common)
         {
-            return go_common(amount, path_found, path_error);
+            return go_common(amount, path_found);
         }
         return false;
     }
@@ -209,36 +205,36 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
     if (std::regex_match(target, match, re_dash_num))
     {
         int amount = std::stoi(match[1]);
-        return go_backwards(amount, path_found, path_error);
+        return go_backwards(amount, path_found);
     }
     if (std::regex_match(target, match, re_dashes))
     {
         int amount = match[0].str().size();
-        return go_backwards(amount, path_found, path_error);
+        return go_backwards(amount, path_found);
     }
 
     // forwards
     if (std::regex_match(target, match, re_plus_num))
     {
         int amount = std::stoi(match[1]);
-        return go_forwards(amount, path_found, path_error);
+        return go_forwards(amount, path_found);
     }
     if (std::regex_match(target, match, re_pluses))
     {
         int amount = match[0].str().size();
-        return go_forwards(amount - 1, path_found, path_error);
+        return go_forwards(amount - 1, path_found);
     }
 
     // common (comma)
     if (std::regex_match(target, match, re_comma_num))
     {
         int amount = std::stoi(match[1]);
-        return go_common(amount, path_found, path_error);
+        return go_common(amount, path_found);
     }
     if (std::regex_match(target, match, re_commas))
     {
         int amount = match[0].str().size();
-        return go_common(amount - 1, path_found, path_error);
+        return go_common(amount - 1, path_found);
     }
 
     return process_match(target, path_found, path_extra);
@@ -254,33 +250,33 @@ bool Cdd2::is_regular_file(const fs::path& path)
     return fs::is_regular_file(path);
 }
 
-bool Cdd2::go_backwards(unsigned amount, fs::path& path_found, stringstream& path_error)
+bool Cdd2::go_backwards(unsigned amount, fs::path& path_found)
 {
     if (amount < 1 || amount > dirs_last_to_first.size())
     {
-        path_error << "No directory at -" << amount << endl;
+        strm_err << "No directory at -" << amount << endl;
         return false;
     }
     path_found = dirs_last_to_first[amount - 1];
     return true;
 }
 
-bool Cdd2::go_forwards(unsigned amount, fs::path& path_found, stringstream& path_error)
+bool Cdd2::go_forwards(unsigned amount, fs::path& path_found)
 {
     if (amount < 0 || amount >= dirs_first_to_last.size())
     {
-        path_error << "No directory at +" << amount << endl;
+        strm_err << "No directory at +" << amount << endl;
         return false;
     }
     path_found = dirs_first_to_last[amount];
     return true;
 }
 
-bool Cdd2::go_common(unsigned amount, fs::path& path_found, stringstream& path_error)
+bool Cdd2::go_common(unsigned amount, fs::path& path_found)
 {
     if (amount < 0 || amount >= dirs_most_to_least.size())
     {
-        path_error << "No directory at ," << amount << endl;
+        strm_err << "No directory at ," << amount << endl;
         return false;
     }
     path_found = dirs_most_to_least[amount].get_keyed_path().get_dir_path();

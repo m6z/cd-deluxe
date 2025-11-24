@@ -152,11 +152,11 @@ private:
     int pushd_count();
 
     bool change_to_path_spec(void);
-    bool process_path_spec(string target, fs::path& path_found, vector<string>& path_extra, stringstream& path_error);
+    bool process_path_spec(string target, fs::path& path_found, vector<string>& path_extra);
 
-    bool go_backwards(unsigned amount, fs::path& path_found, stringstream& path_error);
-    bool go_forwards(unsigned amount, fs::path& path_found, stringstream& path_error);
-    bool go_common(unsigned amount, fs::path& path_found, stringstream& path_error);
+    bool go_backwards(unsigned amount, fs::path& path_found);
+    bool go_forwards(unsigned amount, fs::path& path_found);
+    bool go_common(unsigned amount, fs::path& path_found);
 
     bool process_match(const string& target, fs::path& path_found, vector<string>& path_extra);
 
