@@ -657,20 +657,67 @@ static vector<string> arr_test_dirs = {
     "/aa/bb", // first visited
 };
 
-// TEST_CASE("match_test")
-// {
-//     SECTION("simple_match")
-//     {
-//         // Cdd cdd(arr_test_dirs, countof(arr_test_dirs));
-//         // cdd.opt_path = "ee";
-//
-//         auto cdd = cdd_test({"_cdd", "ee"}, "", "/current/dir", arr_test_dirs);
-//         cdd.process();
-// #ifdef WIN32
-//         REQUIRE("pushd /bb/ee\n" == cdd.get_out_str());
-// #else
-//         REQUIRE("pushd '/bb/ee'\n" == cdd.get_out_str());
-// #endif
-//         REQUIRE("cdd: /bb/ee\n" == cdd.get_err_str());
-//     }
-// }
+TEST_CASE("match_test")
+{
+    SECTION("simple_match_backwards")
+    {
+        auto cdd = cdd_test({"_cdd", "ee"}, "", "/current/dir", arr_test_dirs);
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /bb/ee\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/bb/ee'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /bb/ee\n" == cdd.get_err_str());
+    }
+
+    SECTION("simple_multimatch_backwards")
+    {
+        auto cdd = cdd_test({"_cdd", "cc$"}, "", "/current/dir", arr_test_dirs);
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(0 == 1); // TODO
+#else
+        REQUIRE("pushd '/cc/dd'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: /cc/dd\n"
+                                     " -4: /bb/cc\n");
+    }
+
+    SECTION("simple_match_tail_backwards")
+    {
+        auto cdd = cdd_test({"_cdd", "bb/"}, "", "/current/dir", arr_test_dirs);
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(0 == 1); // TODO
+#else
+        REQUIRE("pushd '/aa/bb'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: /aa/bb\n");
+    }
+
+    SECTION("simple_match_forward")
+    {
+        auto cdd = cdd_test({"_cdd", "dd"}, "", "/current/dir", arr_test_dirs);
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /cc/dd\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/cc/dd'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /cc/dd\n" == cdd.get_err_str());
+    }
+
+    SECTION("simple_match_common")
+    {
+        auto cdd = cdd_test({"_cdd", "-d,", "cc$"}, "", "/current/dir", arr_test_dirs);
+        cdd.process();
+#ifdef WIN32
+        REQUIRE(0 == 1); // TODO
+#else
+        REQUIRE("pushd '/cc/dd'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: /cc/dd\n"
+                                     " ,3: ( 1) /bb/cc\n");
+    }
+}

@@ -3,10 +3,19 @@
 # This script calls Catch2 executable directly
 
 # section=action_and_direction
-section=list_forward
+# section=list_forward
 
-# cmake --build build1-debug/ && lldb ./build1-debug/test/testmain -- -c ${section}
+test_case=match_test
+
+build_dir=build1-debug
 
 set -x
 
-cmake --build build1-debug/ && lldb ./build1-debug/main/cd-deluxe
+# All tests
+# cmake --build ${build_dir} && lldb ./${build_dir}/main/cd-deluxe
+
+# By TEST_CASE
+cmake --build ${build_dir} && lldb ./${build_dir}/test/testmain -- ${test_case}
+
+# By SECTION
+# cmake --build ${build_dir} && lldb ./${build_dir}/test/testmain -- -c ${section}

@@ -96,11 +96,11 @@ private:
 
     // The vector of pushed directories,
     // stored in last visited to first visited order
-    vector<string> dirs_last_to_first;
+    vector<fs::path> dirs_last_to_first;
 
     // The vector of set of directories visited (duplicates removed),
     // stored in first visited to last visited order
-    vector<string> dirs_first_to_last;
+    vector<fs::path> dirs_first_to_last;
 
     // This tracks the most common directories
     vector<CommonPath> dirs_most_to_least;

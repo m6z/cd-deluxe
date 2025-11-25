@@ -306,7 +306,7 @@ void Cdd2::show_history_last_to_first(void)
     size_t entry_count = std::min(options.max_history, options.max_backwards);
     for (const auto& dir : dirs_last_to_first)
     {
-        strm_err << setw(3) << number-- << ": " << dir << endl;
+        strm_err << setw(3) << number-- << ": " << dir.string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
             break;
     }
@@ -323,7 +323,7 @@ void Cdd2::show_history_first_to_last(void)
     size_t entry_count = std::min(options.max_history, options.max_forwards);
     for (const auto& dir : dirs_first_to_last)
     {
-        strm_err << setw(3) << number++ << ": " << dir << endl;
+        strm_err << setw(3) << number++ << ": " << dir.string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
         {
             break;
@@ -358,7 +358,147 @@ void Cdd2::show_history_most_to_least(void)
     }
 }
 
+//----------------------------------------------------------------------
+
+template <typename TElement, typename Projector = std::identity>
+std::vector<int> find_matching_indices(std::regex& re,                        //
+                                       bool check_all_parts,                  //
+                                       const std::vector<TElement>& elements, //
+                                       const Projector& get_path = {})        //
+{
+    // consider adding in map of matched parts to optimize repeated calls
+    std::vector<int> matching_indices;
+    for (size_t i = 0; i < elements.size(); ++i)
+    {
+        const auto path = get_path(elements[i]);
+        if (check_all_parts)
+        {
+            for (const auto& part : path)
+            {
+                if (std::regex_search(part.string(), re))
+                {
+                    // Found a match
+                    matching_indices.push_back(static_cast<int>(i));
+                    break; // No need to check other parts of this path
+                }
+            }
+        }
+        else
+        {
+            // only check the last part
+            if (path.has_filename() && std::regex_search(path.filename().string(), re))
+            {
+                // Found a match
+                matching_indices.push_back(static_cast<int>(i));
+            }
+        }
+    }
+    return matching_indices;
+}
+
 bool Cdd2::process_match(const string& target, fs::path& path_found, vector<string>& path_extra)
 {
-    return false; // TODO
+    bool check_all_parts = true;
+    std::regex re;
+    try
+    {
+        auto pattern = target;
+        // if pattern ends with path separator, match full directory names only
+        if (!pattern.empty() && (pattern.back() == fs::path::preferred_separator))
+        {
+            // remove last character
+            pattern.pop_back();
+            check_all_parts = false;
+            // pattern = pattern + "$"; // anchor to end
+        }
+        if (options.ignore_case)
+        {
+            re = std::regex(pattern, std::regex_constants::icase);
+        }
+        else
+        {
+            re = std::regex(pattern);
+        }
+    }
+    catch (std::regex_error& e)
+    {
+        strm_err << "Cannot process pattern: '" << target << "'" << endl << e.what() << endl;
+        return false;
+    }
+
+    if (options.direction == CddOptions::direction_backwards)
+    {
+        auto indices = find_matching_indices(re, check_all_parts, dirs_last_to_first);
+        for (size_t i = 0; i < indices.size(); ++i)
+        {
+            int index = indices[i];
+            if (i == 0)
+            {
+                path_found = dirs_last_to_first[index];
+            }
+            else
+            {
+                stringstream strm;
+                int number = -index - 1;
+                strm << setw(3) << number << ": " << dirs_last_to_first[index].string();
+                path_extra.push_back(strm.str());
+            }
+        }
+    }
+    else if (options.direction == CddOptions::direction_forwards)
+    {
+        auto indices = find_matching_indices(re, check_all_parts, dirs_first_to_last);
+        for (size_t i = 0; i < indices.size(); ++i)
+        {
+            int index = indices[i];
+            if (i == 0)
+            {
+                path_found = dirs_first_to_last[index];
+            }
+            else
+            {
+                stringstream strm;
+                int number = index;
+                strm << setw(3) << number << ": " << dirs_first_to_last[index].string();
+                path_extra.push_back(strm.str());
+            }
+        }
+    }
+    else if (options.direction == CddOptions::direction_common)
+    {
+        auto indices = find_matching_indices(re, check_all_parts, dirs_most_to_least, //
+                                             [](const CommonPath& cp) { return cp.get_keyed_path().get_dir_path(); });
+        for (size_t i = 0; i < indices.size(); ++i)
+        {
+            int index = indices[i];
+            const auto& common_path = dirs_most_to_least[index];
+            if (i == 0)
+            {
+                path_found = common_path.get_keyed_path().get_dir_path();
+            }
+            else
+            {
+                stringstream strm;
+                int number = index;
+                if (number < 10)
+                {
+                    strm << " ";
+                }
+                strm << "," << number << ": (" << setw(2) << common_path.count << ") " << common_path.get_keyed_path().get_dir_path().string();
+                path_extra.push_back(strm.str());
+            }
+        }
+    }
+    else
+    {
+        strm_err << "Cannot process direction: " << options.direction << endl;
+        return false;
+    }
+
+    if (path_found.empty())
+    {
+        strm_err << "Cannot match pattern: '" << target << "'" << endl;
+        return false;
+    }
+    return true;
 }
