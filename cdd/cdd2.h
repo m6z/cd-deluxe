@@ -110,37 +110,12 @@ private:
     stringstream strm_out;
     stringstream strm_err;
 
-    // TODO - old - remove
-    // struct Direction
-    // {
-    //     string _direction;
-    //     bool _direction_assigned;
-    //     // default direction is backwards
-    //     Direction(const string& direction = "-") : _direction(direction), _direction_assigned(false) {}
-    //     static bool is_valid_direction(string s) { return s == "+" || s == "-" || s == ","; }
-    //     void assign(string direction)
-    //     {
-    //         if (!is_valid_direction(direction))
-    //         {
-    //             stringstream strm;
-    //             strm << "Unknown direction '" << direction << "'";
-    //             throw Exception(strm.str());
-    //         }
-    //         _direction = direction;
-    //         _direction_assigned = true;
-    //     }
-    //     bool is_forwards() { return _direction == "+"; }
-    //     bool is_backwards() { return _direction == "-"; }
-    //     bool is_common() { return _direction == ","; }
-    //     bool is_assigned() { return _direction_assigned; }
-    // };
-    // Direction direction;
-
     void assign(vector<string>& vec_pushd, string current_path);
     void assign(string arr_pushd[], int count, string current_path = string());
     void assign_debug_input(const string& input_path);
     // void initialize(void);
     // bool options(int ac, const char* av[], const string& options = string());
+
     void help_tip(void);
     static void help(void);
     static void version(void);

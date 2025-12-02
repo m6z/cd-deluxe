@@ -85,6 +85,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         ;
 
     // 2. Combine environment options and command-line arguments
+    // TODO before adding the environment options, parse them once as dry run to catch and identify any errors early
     auto combined_args = combine_arguments(preprocessed_args, env_options);
 
     // 3. Convert vector<string> back to (argc, argv) for cxxopts

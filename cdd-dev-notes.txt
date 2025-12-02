@@ -74,3 +74,5 @@ Simplified parameters spec
     PATH_SPEC always comes at the end
         like +2, -3, ,4, ..5, ^6, abc.*def
 
+For --list with a pattern, filter the results by the pattern
+
