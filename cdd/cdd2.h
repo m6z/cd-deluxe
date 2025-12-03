@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <filesystem>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -82,10 +83,19 @@ public:
         KeyedPath kp;
     };
 
+    class FilteredPath
+    {
+    public:
+        string prefix;
+        fs::path path;
+        FilteredPath(string prefix, fs::path path) : prefix(prefix), path(path) {}
+    };
+
 protected:
-    const auto& get_dirs_last_to_first() const { return dirs_last_to_first; }
-    const auto& get_dirs_first_to_last() const { return dirs_first_to_last; }
-    const auto& get_dirs_most_to_least() const { return dirs_most_to_least; }
+    // Creation methods (Migrated from initialize)
+    std::vector<fs::path> create_dirs_last_to_first();
+    std::vector<fs::path> create_dirs_first_to_last();
+    std::vector<CommonPath> create_dirs_most_to_least();
 
 private:
     void initialize();
@@ -94,27 +104,22 @@ private:
     fs::path cwd;        // Current working directory
     vector<string> dirs; // The raw list of pushed directories
 
-    // The vector of pushed directories,
-    // stored in last visited to first visited order
-    vector<fs::path> dirs_last_to_first;
-
-    // The vector of set of directories visited (duplicates removed),
-    // stored in first visited to last visited order
-    vector<fs::path> dirs_first_to_last;
-
-    // This tracks the most common directories
-    vector<CommonPath> dirs_most_to_least;
-
     bool has_directory_stack = false;
 
     stringstream strm_out;
     stringstream strm_err;
 
+    // Filter methods (Migrated from process_match)
+    std::vector<FilteredPath> filter_dirs_last_to_first(const string& target);
+    std::vector<FilteredPath> filter_dirs_first_to_last(const string& target);
+    std::vector<FilteredPath> filter_dirs_most_to_least(const string& target);
+
+    // Helper to compile regex and determine if we check all parts
+    std::regex compile_regex(string target, bool& check_all_parts);
+
     void assign(vector<string>& vec_pushd, string current_path);
     void assign(string arr_pushd[], int count, string current_path = string());
     void assign_debug_input(const string& input_path);
-    // void initialize(void);
-    // bool options(int ac, const char* av[], const string& options = string());
 
     void help_tip(void);
     static void help(void);

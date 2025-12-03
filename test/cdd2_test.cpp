@@ -40,9 +40,9 @@ public:
     bool _is_regular_file = false;
 
     using Cdd2::Cdd2;
-    using Cdd2::get_dirs_first_to_last;
-    using Cdd2::get_dirs_last_to_first;
-    using Cdd2::get_dirs_most_to_least;
+    using Cdd2::create_dirs_first_to_last;
+    using Cdd2::create_dirs_last_to_first;
+    using Cdd2::create_dirs_most_to_least;
 
     virtual bool is_directory(const fs::path& /*path*/) { return _is_directory; }
     virtual bool is_regular_file(const fs::path& /*path*/) { return _is_regular_file; }
@@ -145,19 +145,19 @@ TEST_CASE("cdd2_test")
             /path/TWO
         )");
 
-        auto dirs_last_to_first = cdd.get_dirs_last_to_first();
+        auto dirs_last_to_first = cdd.create_dirs_last_to_first();
         REQUIRE(dirs_last_to_first.size() == 3);
         REQUIRE(dirs_last_to_first[0] == "/path/one");
         REQUIRE(dirs_last_to_first[1] == "/path/two");
         REQUIRE(dirs_last_to_first[2] == "/path/Three");
 
-        auto dirs_first_to_last = cdd.get_dirs_first_to_last();
+        auto dirs_first_to_last = cdd.create_dirs_first_to_last();
         REQUIRE(dirs_first_to_last.size() == 3);
         REQUIRE(dirs_first_to_last[0] == "/path/TWO");
         REQUIRE(dirs_first_to_last[1] == "/path/Three");
         REQUIRE(dirs_first_to_last[2] == "/path/one");
 
-        auto dirs_most_to_least = cdd.get_dirs_most_to_least();
+        auto dirs_most_to_least = cdd.create_dirs_most_to_least();
         REQUIRE(dirs_most_to_least.size() == 3);
 
         // for (auto i = 0; i < dirs_most_to_least.size(); ++i)

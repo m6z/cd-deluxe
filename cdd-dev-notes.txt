@@ -76,3 +76,13 @@ Simplified parameters spec
 
 For --list with a pattern, filter the results by the pattern
 
+#----------------------------------------------------------------------
+
+process
+    show_history
+        process the pattern if it exists
+    change_to_path_spec
+        process the pattern if it exists
+
+get_target
+get_target_regex

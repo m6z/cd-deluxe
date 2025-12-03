@@ -5,5 +5,5 @@
 test_pattern=match_test
 
 set -x
-# cmake --build build1 && ctest --test-dir build1
-cmake --build build1 && ctest --test-dir build1 -R ${test_pattern}
+cmake --build build1 && ctest --test-dir build1
+# cmake --build build1 && ctest --test-dir build1 -R ${test_pattern}
