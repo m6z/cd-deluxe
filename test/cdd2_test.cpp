@@ -618,6 +618,15 @@ TEST_CASE("cdd2_test")
                                      "  4: /e\n");
     }
 
+    SECTION("list_forward_pattern")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=+", "b"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == "  1: /b\n");
+    }
+
     SECTION("list_backwards")
     {
         auto cdd = cdd_test({"_cdd", "--list", "-d", "-"}, "", "/tmp/a", //
@@ -632,6 +641,15 @@ TEST_CASE("cdd2_test")
                                      " -5: /a\n");
     }
 
+    SECTION("list_backwards_pattern")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "-d", "-", "e"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == " -3: /e\n");
+    }
+
     SECTION("list_common")
     {
         auto cdd = cdd_test({"_cdd", "-l", "--direction", ","}, "", "/tmp/a", //
@@ -643,6 +661,15 @@ TEST_CASE("cdd2_test")
                                      " ,2: ( 1) /e\n"
                                      " ,3: ( 1) /c\n"
                                      " ,4: ( 1) /a\n");
+    }
+
+    SECTION("list_common_pattern")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "-d,", "b"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) /b\n");
     }
 }
 

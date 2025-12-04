@@ -116,6 +116,43 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
 // Filter Helper Logic
 //----------------------------------------------------------------------
 
+bool Cdd2::get_target(string& target)
+{
+    if (options.unmatched_args.empty())
+    {
+        return false;
+    }
+    target = options.unmatched_args[0];
+    return true;
+}
+
+std::optional<Cdd2::RegexFilter> Cdd2::get_target_regex_filter()
+{
+    string target;
+    if (!get_target(target))
+    {
+        return std::nullopt;
+    }
+
+    RegexFilter rf;
+    // if pattern ends with path separator, match full directory names only
+    if (!target.empty() && (target.back() == fs::path::preferred_separator))
+    {
+        target.pop_back();
+        rf.check_all_parts = false;
+    }
+
+    if (options.ignore_case)
+    {
+        rf.re = std::regex(target, std::regex_constants::icase);
+    }
+    else
+    {
+        rf.re = std::regex(target);
+    }
+    return rf;
+}
+
 // Helper function to match paths against regex
 // TElement can be fs::path or CommonPath
 template <typename TElement, typename Projector = std::identity>
@@ -142,48 +179,17 @@ bool check_match(const std::regex& re, bool check_all_parts, const TElement& ele
     return false;
 }
 
-std::regex Cdd2::compile_regex(string target, bool& check_all_parts)
-{
-    check_all_parts = true;
-    // if pattern ends with path separator, match full directory names only
-    if (!target.empty() && (target.back() == fs::path::preferred_separator))
-    {
-        target.pop_back();
-        check_all_parts = false;
-    }
-
-    if (options.ignore_case)
-    {
-        return std::regex(target, std::regex_constants::icase);
-    }
-    else
-    {
-        return std::regex(target);
-    }
-}
-
 //----------------------------------------------------------------------
 // Filter Methods (Refactored from process_match)
 //----------------------------------------------------------------------
 
-std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_last_to_first(const string& target)
+std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_last_to_first(const std::optional<RegexFilter>& rf)
 {
     std::vector<FilteredPath> results;
-    bool check_all_parts;
-    std::regex re;
-    try
-    {
-        re = compile_regex(target, check_all_parts);
-    }
-    catch (std::regex_error&)
-    {
-        throw;
-    } // Propagate to caller
-
     auto dirs = create_dirs_last_to_first();
     for (size_t i = 0; i < dirs.size(); ++i)
     {
-        if (check_match(re, check_all_parts, dirs[i]))
+        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, dirs[i]))
         {
             stringstream strm;
             int number = -static_cast<int>(i) - 1;
@@ -194,24 +200,13 @@ std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_last_to_first(const string& ta
     return results;
 }
 
-std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_first_to_last(const string& target)
+std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_first_to_last(const std::optional<RegexFilter>& rf)
 {
     std::vector<FilteredPath> results;
-    bool check_all_parts;
-    std::regex re;
-    try
-    {
-        re = compile_regex(target, check_all_parts);
-    }
-    catch (std::regex_error&)
-    {
-        throw;
-    }
-
     auto dirs = create_dirs_first_to_last();
     for (size_t i = 0; i < dirs.size(); ++i)
     {
-        if (check_match(re, check_all_parts, dirs[i]))
+        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, dirs[i]))
         {
             stringstream strm;
             strm << setw(3) << i << ": ";
@@ -221,26 +216,15 @@ std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_first_to_last(const string& ta
     return results;
 }
 
-std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_most_to_least(const string& target)
+std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_most_to_least(const std::optional<RegexFilter>& rf)
 {
     std::vector<FilteredPath> results;
-    bool check_all_parts;
-    std::regex re;
-    try
-    {
-        re = compile_regex(target, check_all_parts);
-    }
-    catch (std::regex_error&)
-    {
-        throw;
-    }
-
     auto commons = create_dirs_most_to_least();
     auto projector = [](const CommonPath& cp) { return cp.get_keyed_path().get_dir_path(); };
 
     for (size_t i = 0; i < commons.size(); ++i)
     {
-        if (check_match(re, check_all_parts, commons[i], projector))
+        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, commons[i], projector))
         {
             stringstream strm;
             if (i < 10)
@@ -268,6 +252,9 @@ void Cdd2::process(void)
     {
         change_to_path_spec();
     }
+
+    // default action is to show history
+    // show_history();
 }
 
 bool Cdd2::change_to_path_spec(void)
@@ -331,17 +318,6 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
     static std::regex re_comma_num(",(\\d+)");
 
     std::smatch match;
-
-    // TODO - old - remove
-    //     // ... [Original Regex checks for direct navigation go here] ...
-    //     // Note: Re-insert the original regex checking logic here from your previous code
-    //     // For brevity of the answer I am focusing on the refactored process_match call
-    //
-    //     if (std::regex_match(target, match, re_num))
-    //     {
-    //         return go_backwards(std::stoi(match[1]), path_found);
-    //     }
-    //     // ... (include other original checks here) ...
 
     if (std::regex_match(target, match, re_num))
     {
@@ -408,19 +384,24 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
 {
     vector<FilteredPath> matches;
 
+    size_t entry_count = options.max_history;
     try
     {
+        auto rf = get_target_regex_filter();
         if (options.direction == CddOptions::direction_backwards)
         {
-            matches = filter_dirs_last_to_first(target);
+            matches = filter_dirs_last_to_first(rf);
+            entry_count = std::min(entry_count, options.max_backwards);
         }
         else if (options.direction == CddOptions::direction_forwards)
         {
-            matches = filter_dirs_first_to_last(target);
+            matches = filter_dirs_first_to_last(rf);
+            entry_count = std::min(entry_count, options.max_forwards);
         }
         else if (options.direction == CddOptions::direction_common)
         {
-            matches = filter_dirs_most_to_least(target);
+            matches = filter_dirs_most_to_least(rf);
+            entry_count = std::min(entry_count, options.max_common);
         }
         else
         {
@@ -444,10 +425,21 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
     path_found = matches[0].path;
 
     // Remaining matches (if any) are added to info output
-    // Note: We skip index 0 in the formatting loop because index 0 is the jump target
-    for (size_t i = 1; i < matches.size(); ++i)
+    // Note: Skip index 0 in the formatting loop because index 0 is the jump target
+    size_t count = 0;
+    if (options.all_history)
+    {
+        entry_count = matches.size();
+    }
+    entry_count = std::min(entry_count, matches.size());
+    for (size_t i = 1; i < entry_count; ++i)
     {
         path_extra.push_back(matches[i].prefix + matches[i].path.string());
+        count++;
+    }
+    if (count + 1 < matches.size())
+    {
+        path_extra.push_back(" ... showing first " + std::to_string(count) + " of " + std::to_string(matches.size()));
     }
 
     return true;
@@ -515,61 +507,61 @@ void Cdd2::show_history(void)
 
 void Cdd2::show_history_last_to_first(void)
 {
-    auto dirs = create_dirs_last_to_first();
+    auto rf = get_target_regex_filter();
+    auto matches = filter_dirs_last_to_first(rf);
+    size_t entry_count = std::min(options.max_history, options.max_forwards);
     size_t count = 0;
-    int number = -1;
-    size_t entry_count = std::min(options.max_history, options.max_backwards);
-    for (const auto& dir : dirs)
+    for (const auto& filtered_path : matches)
     {
-        strm_err << setw(3) << number-- << ": " << dir.string() << endl;
+        strm_err << filtered_path.prefix << filtered_path.path.string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
+        {
             break;
+        }
     }
-    if (count < dirs.size())
+    if (count < matches.size())
     {
-        strm_err << " ... showing last " << count << " of " << dirs.size() << endl;
+        strm_err << " ... showing first " << count << " of " << matches.size() << endl;
     }
 }
 
 void Cdd2::show_history_first_to_last(void)
 {
-    auto dirs = create_dirs_first_to_last();
-    size_t count = 0;
-    int number = 0;
+    auto rf = get_target_regex_filter();
+    auto matches = filter_dirs_first_to_last(rf);
     size_t entry_count = std::min(options.max_history, options.max_forwards);
-    for (const auto& dir : dirs)
+    size_t count = 0;
+    for (const auto& filtered_path : matches)
     {
-        strm_err << setw(3) << number++ << ": " << dir.string() << endl;
+        strm_err << filtered_path.prefix << filtered_path.path.string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
         {
             break;
         }
     }
-    if (count < dirs.size())
+    if (count < matches.size())
     {
-        strm_err << " ... showing first " << count << " of " << dirs.size() << endl;
+        strm_err << " ... showing first " << count << " of " << matches.size() << endl;
     }
 }
 
 void Cdd2::show_history_most_to_least(void)
 {
-    auto dirs = create_dirs_most_to_least();
-    size_t count = 0;
-    int number = 0;
+    auto rf = get_target_regex_filter();
+    auto matches = filter_dirs_most_to_least(rf);
     size_t entry_count = std::min(options.max_history, options.max_common);
-    for (const auto& common_path : dirs)
+    size_t count = 0;
+    for (const auto& filtered_path : matches)
     {
-        if (number < 10)
-            strm_err << " ";
-        strm_err << "," << number++ << ": (" << setw(2) << common_path.count << ") " << common_path.get_keyed_path().get_dir_path().string() << endl;
+        strm_err << filtered_path.prefix << filtered_path.path.string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
         {
             break;
         }
     }
-    if (count < dirs.size())
+    if (count < matches.size())
     {
-        strm_err << " ... showing top " << count << " of " << dirs.size() << endl;
+        strm_err << " ... showing top " << count << " of " << matches.size() << endl;
     }
 }
 

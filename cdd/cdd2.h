@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <filesystem>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -83,9 +84,14 @@ public:
         KeyedPath kp;
     };
 
-    class FilteredPath
+    struct RegexFilter
     {
-    public:
+        std::regex re;
+        bool check_all_parts = true;
+    };
+
+    struct FilteredPath
+    {
         string prefix;
         fs::path path;
         FilteredPath(string prefix, fs::path path) : prefix(prefix), path(path) {}
@@ -109,14 +115,19 @@ private:
     stringstream strm_out;
     stringstream strm_err;
 
-    // Filter methods (Migrated from process_match)
-    std::vector<FilteredPath> filter_dirs_last_to_first(const string& target);
-    std::vector<FilteredPath> filter_dirs_first_to_last(const string& target);
-    std::vector<FilteredPath> filter_dirs_most_to_least(const string& target);
-
     // Helper to compile regex and determine if we check all parts
     std::regex compile_regex(string target, bool& check_all_parts);
 
+    // new
+    std::vector<FilteredPath> filter_dirs_last_to_first(const std::optional<RegexFilter>& rf);
+    std::vector<FilteredPath> filter_dirs_first_to_last(const std::optional<RegexFilter>& rf);
+    std::vector<FilteredPath> filter_dirs_most_to_least(const std::optional<RegexFilter>& rf);
+
+    bool get_target(string& target);
+    bool get_target_regex(std::regex& re, bool& check_all_parts);
+    std::optional<RegexFilter> get_target_regex_filter();
+
+    // old
     void assign(vector<string>& vec_pushd, string current_path);
     void assign(string arr_pushd[], int count, string current_path = string());
     void assign_debug_input(const string& input_path);
