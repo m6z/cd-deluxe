@@ -12,11 +12,15 @@ public:
     static constexpr const char* direction_backwards = "-";
     static constexpr const char* direction_common = ",";
 
+    static constexpr const char* direction_default = direction_backwards;
+
+    static constexpr const char* environment_variable_name = "CDD_OPTIONS";
+
     // --- Parsed Results ---
     bool show_help = false;
     bool list_history = false;
     std::string default_action;
-    std::string direction = direction_backwards;
+    std::string direction = direction_default;
     std::size_t max_history = 10;
     std::size_t max_backwards = 10;
     std::size_t max_forwards = 10;
@@ -43,7 +47,4 @@ public:
     bool initialize(const std::vector<std::string>& args, const std::string& env_options);
 
     void output(std::ostream& os = std::cout) const;
-
-private:
-    std::vector<std::string> combine_arguments(const std::vector<std::string>& args, const std::string& env_options);
 };

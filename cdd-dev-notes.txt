@@ -87,4 +87,25 @@ process
 get_target
 get_target_regex
 
+#----------------------------------------------------------------------
+
+Multiple options sets
+
+CddOptionsForSetup
+CddOptions - main options
+
+When run from the command line with no stdin,
+    present the init args
+
+After that, split normal mode args into two parts
+    environment options
+    command line options
+
+parse the environment options first
+then parse the command line options
+
+validate each time
+for unrecognized environment options, warn and ignore
+for unrecognized command line options, error and exit
+
 

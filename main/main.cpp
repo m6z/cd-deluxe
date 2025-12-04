@@ -37,7 +37,7 @@ int main(int argc, const char* argv[])
         // convert argv to vector<string>
         std::vector<std::string> args(argv, argv + argc);
         CddOptions options;
-        if (!options.initialize(args, get_environment("CDD_OPTIONS")))
+        if (!options.initialize(args, get_environment(CddOptions::environment_variable_name)))
         {
             cerr << options.error_message << endl;
             return 1;

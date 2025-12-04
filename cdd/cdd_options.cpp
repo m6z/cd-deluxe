@@ -28,6 +28,63 @@ std::string get_valid_directions_as_string()
            std::string(CddOptions::direction_common) + "\" (common)";                 //
 }
 
+// Helper to split the environment string into a vector of arguments
+std::vector<std::string> tokenize_environment_variable(const std::string& env_options)
+{
+    std::vector<std::string> tokens;
+    if (env_options.empty())
+    {
+        return tokens;
+    }
+
+    // Add a dummy program name so cxxopts parsing aligns with argv[0] expectations
+    tokens.push_back("cdd_env");
+
+    std::istringstream iss(env_options);
+    std::string field;
+
+    while (iss >> std::ws) // Consume leading whitespace
+    {
+        char nextChar = iss.peek();
+        if (nextChar == '"')
+        {
+            iss >> std::quoted(field);
+        }
+        else
+        {
+            iss >> field;
+        }
+        tokens.push_back(field);
+    }
+    return tokens;
+}
+
+// Helper to define the subset of options allowed in the environment variable
+void add_common_options(CddOptions& x, cxxopts::Options& options)
+{
+    options.add_options()                                                                                            //
+        ("l,list", "List history", cxxopts::value(x.list_history)->implicit_value("true"))                           //
+        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(x.ignore_case)->implicit_value("true")) //
+        ("d,direction", "Default direction", cxxopts::value(x.direction))                                            //
+        ("m,max", "Max history", cxxopts::value(x.max_history))                                                      //
+        ("max-backwards", "Max backwards history", cxxopts::value(x.max_backwards))                                  //
+        ("max-forwards", "Max forwards history", cxxopts::value(x.max_forwards))                                     //
+        ("max-common", "Max common history", cxxopts::value(x.max_common))                                           //
+        ("max-upwards", "Max upwards history", cxxopts::value(x.max_upwards))                                        //
+        ("a,all", "Show all history", cxxopts::value(x.all_history)->implicit_value("true"))                         //
+        ;
+}
+
+// Helper to define the full set of options (includes common options)
+void add_full_options(CddOptions& x, cxxopts::Options& options)
+{
+    add_common_options(x, options);
+
+    options.add_options()                                                                         //
+        ("h,help", "Show this help message", cxxopts::value(x.show_help)->implicit_value("true")) //
+        ;
+}
+
 } // namespace
 
 //----------------------------------------------------------------------
@@ -44,15 +101,65 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         return false;
     }
 
+    //-------------------------------------------------------------------------
+    // 1. Parse Environment Variable (Subset of options)
+    //-------------------------------------------------------------------------
+    if (!env_options.empty())
+    {
+        try
+        {
+            cxxopts::Options env_parser("env", "Environment options");
+            add_common_options(*this, env_parser);
+
+            auto env_args = tokenize_environment_variable(env_options);
+
+            // Convert to C-style argv for cxxopts
+            std::vector<const char*> argv_env;
+            for (const auto& arg : env_args)
+            {
+                argv_env.push_back(arg.c_str());
+            }
+            int argc_env = static_cast<int>(argv_env.size());
+            const char** argv_env_ptr = argv_env.data();
+
+            env_parser.parse(argc_env, argv_env_ptr);
+
+            // Validate direction from environment immediately
+            // If invalid, warn and reset logic (optional, or just keep invalid and let CLI fail later)
+            // Here we warn and continue as requested.
+            if (!direction.empty() && !is_valid_direction(direction))
+            {
+                std::cerr << "Warning: Invalid direction in environment variable " << environment_variable_name //
+                          << ": \"" << direction << "\". Ignoring." << std::endl;
+                direction = direction_default; // reset direction
+            }
+        }
+        catch (const cxxopts::exceptions::exception& e)
+        {
+            // Requirement: "If there are any errors... print a warning to stderr and continue"
+            std::cerr << "Warning: Failed to parse environment variable " << environment_variable_name << ": " << e.what() << std::endl;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // 2. Parse Command Line Arguments (Full set of options)
+    //-------------------------------------------------------------------------
+
     // The program name is the first argument
     std::string program_name = args[0];
-    cxxopts::Options options(program_name, " - A C++ Deluxe CD-ROM cataloger");
+    cxxopts::Options cmd_parser(program_name, " - A C++ Deluxe CD-ROM cataloger");
+    add_full_options(*this, cmd_parser);
 
-    // do special preprocessing since cxxopts does not handle '--' or longer as a standalone argument
+    // Special preprocessing for custom dash parameters (same as original logic)
     std::vector<std::string> preprocessed_args;
     std::vector<std::string> special_dashed_args;
-    for (const auto& arg : args)
+
+    // Ensure program name is in preprocessed args
+    preprocessed_args.push_back(args[0]);
+
+    for (size_t i = 1; i < args.size(); ++i)
     {
+        const auto& arg = args[i];
         if (is_special_dash_parameter(arg))
         {
             special_dashed_args.push_back(arg);
@@ -63,52 +170,27 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         }
     }
 
-    // 1. Define all the command-line options we accept
-    // Allow arguments that don't match any defined option
-    // options.allow_unrecognised_options();
-
-    // removing default action for now
-    // ("default", "Default action (intended for CDD_OPTIONS)", cxxopts::value(default_action))   //
-
-    options.add_options()                                                                                          //
-        ("h,help", "Show this help message", cxxopts::value(show_help)->implicit_value("true"))                    //
-        ("l,list", "List history", cxxopts::value(list_history)->implicit_value("true"))                           //
-        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(ignore_case)->implicit_value("true")) //
-        ("d,direction", "Default direction (intended for CDD_OPTIONS)", cxxopts::value(direction))                 //
-
-        ("m,max", "Max history", cxxopts::value(max_history))                              //
-        ("max-backwards", "Max backwards history", cxxopts::value(max_backwards))          //
-        ("max-forwards", "Max forwards history", cxxopts::value(max_forwards))             //
-        ("max-common", "Max common history", cxxopts::value(max_common))                   //
-        ("max-upwards", "Max upwards history", cxxopts::value(max_upwards))                //
-        ("a,all", "Show all history", cxxopts::value(all_history)->implicit_value("true")) //
-        ;
-
-    // 2. Combine environment options and command-line arguments
-    // TODO before adding the environment options, parse them once as dry run to catch and identify any errors early
-    auto combined_args = combine_arguments(preprocessed_args, env_options);
-
-    // 3. Convert vector<string> back to (argc, argv) for cxxopts
+    // Convert vector<string> back to (argc, argv) for cxxopts
     std::vector<const char*> argv_c;
-    for (const auto& arg : combined_args)
+    for (const auto& arg : preprocessed_args)
     {
         argv_c.push_back(arg.c_str());
     }
     int argc_c = static_cast<int>(argv_c.size());
     const char** argv_ptr = argv_c.data();
 
-    // 4. Parse the options, catching any errors
     try
     {
-        auto result = options.parse(argc_c, argv_ptr);
+        auto result = cmd_parser.parse(argc_c, argv_ptr);
+
         if (show_help)
         {
             std::cerr << "Usage: " << program_name << " [options]" << std::endl;
-            std::cerr << options.help() << std::endl;
-            // Help was requested; no further processing needed
+            std::cerr << cmd_parser.help() << std::endl;
             return true;
         }
 
+        // Validate direction (Fatal error if invalid here)
         if (!direction.empty() && !is_valid_direction(direction))
         {
             error_message = "Invalid direction: \"" + direction + "\". Valid directions are: " + get_valid_directions_as_string();
@@ -124,44 +206,12 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
     }
     catch (const cxxopts::exceptions::exception& e)
     {
+        // Requirement: "Any options parsing errors are considered to be errors."
         error_message = e.what();
         return false;
     }
 
     return true;
-}
-
-std::vector<std::string> CddOptions::combine_arguments(const std::vector<std::string>& args, const std::string& env_options)
-{
-    std::vector<std::string> combined;
-    // First, add the program name
-    combined.push_back(args[0]);
-
-    // Second, add the parsed environment options
-    if (!env_options.empty())
-    {
-        std::istringstream iss(env_options);
-        std::string field;
-
-        while (iss >> std::ws) // Consume leading whitespace
-        {
-            char nextChar = iss.peek();
-            if (nextChar == '"')
-            {
-                iss >> std::quoted(field);
-            }
-            else
-            {
-                iss >> field;
-            }
-            combined.push_back(field);
-        }
-    }
-
-    // Finally, add the original command-line arguments (skipping program name)
-    combined.insert(combined.end(), args.begin() + 1, args.end());
-
-    return combined;
 }
 
 void CddOptions::output(std::ostream& os) const
