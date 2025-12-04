@@ -251,10 +251,11 @@ void Cdd2::process(void)
     if (!options.unmatched_args.empty())
     {
         change_to_path_spec();
+        return;
     }
 
     // default action is to show history
-    // show_history();
+    show_history();
 }
 
 bool Cdd2::change_to_path_spec(void)
@@ -384,6 +385,7 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
 {
     vector<FilteredPath> matches;
 
+    std::string showing_direction;
     size_t entry_count = options.max_history;
     try
     {
@@ -391,16 +393,19 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
         if (options.direction == CddOptions::direction_backwards)
         {
             matches = filter_dirs_last_to_first(rf);
+            showing_direction = "last";
             entry_count = std::min(entry_count, options.max_backwards);
         }
         else if (options.direction == CddOptions::direction_forwards)
         {
             matches = filter_dirs_first_to_last(rf);
+            showing_direction = "first";
             entry_count = std::min(entry_count, options.max_forwards);
         }
         else if (options.direction == CddOptions::direction_common)
         {
             matches = filter_dirs_most_to_least(rf);
+            showing_direction = "top";
             entry_count = std::min(entry_count, options.max_common);
         }
         else
@@ -431,7 +436,7 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
     {
         entry_count = matches.size();
     }
-    entry_count = std::min(entry_count, matches.size());
+    entry_count = std::min(entry_count + 1, matches.size());
     for (size_t i = 1; i < entry_count; ++i)
     {
         path_extra.push_back(matches[i].prefix + matches[i].path.string());
@@ -439,7 +444,7 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
     }
     if (count + 1 < matches.size())
     {
-        path_extra.push_back(" ... showing first " + std::to_string(count) + " of " + std::to_string(matches.size()));
+        path_extra.push_back(" ... showing " + showing_direction + " " + std::to_string(count) + " of " + std::to_string(matches.size()));
     }
 
     return true;
@@ -509,7 +514,7 @@ void Cdd2::show_history_last_to_first(void)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_last_to_first(rf);
-    size_t entry_count = std::min(options.max_history, options.max_forwards);
+    size_t entry_count = std::min(options.max_history, options.max_backwards);
     size_t count = 0;
     for (const auto& filtered_path : matches)
     {
@@ -521,7 +526,7 @@ void Cdd2::show_history_last_to_first(void)
     }
     if (count < matches.size())
     {
-        strm_err << " ... showing first " << count << " of " << matches.size() << endl;
+        strm_err << " ... showing last " << count << " of " << matches.size() << endl;
     }
 }
 
