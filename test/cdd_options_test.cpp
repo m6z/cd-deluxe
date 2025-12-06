@@ -13,7 +13,6 @@ TEST_CASE("cdd_options_test", "[options]")
     SECTION("Default state with no arguments")
     {
         CddOptions options({"./_cdd"});
-        REQUIRE_FALSE(options.has_error);
         REQUIRE_FALSE(options.show_help);
         REQUIRE_FALSE(options.list_history);
         REQUIRE(options.unmatched_args.empty());
@@ -76,7 +75,6 @@ TEST_CASE("cdd_options_test", "[options]")
     // {
     //     // This is a rare case, but the constructor should handle it gracefully
     //     CddOptions options();
-    //     REQUIRE(options.has_error);
     //     REQUIRE_FALSE(options.error_message.empty());
     // }
 
@@ -118,9 +116,8 @@ TEST_CASE("cdd_options_test", "[options]")
         // Bad direction
         {
             CddOptions options({"./_cdd", "--list", "--direction=%"});
-            REQUIRE(options.has_error);
             // check if error starts with expected message:
-            REQUIRE(options.error_message.find("Invalid direction: \"%\"") == 0);
+            REQUIRE(options.error_message.find("** Invalid direction: \"%\"") == 0);
         }
 
         // Not implementing default action for now
@@ -172,6 +169,29 @@ TEST_CASE("cdd_options_test", "[options]")
             options.output();
             REQUIRE(options.unmatched_args.size() == 1);
             REQUIRE(options.unmatched_args[0] == "---");
+        }
+    }
+
+    SECTION("cleanup")
+    {
+        {
+            // missing spec
+            CddOptions options({"./_cdd", "--del"});
+            REQUIRE(options.error_message == "** Delete option requires an argument (the entry to delete).");
+        }
+
+        {
+            // short form
+            CddOptions options({"./_cdd", "--del", "abc"});
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "abc");
+        }
+
+        {
+            // long form
+            CddOptions options({"./_cdd", "--delete", "-5"});
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "-5");
         }
     }
 }

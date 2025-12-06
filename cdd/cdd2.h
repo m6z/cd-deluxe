@@ -109,6 +109,7 @@ private:
     CddOptions options;  // The options for cdd2
     fs::path cwd;        // Current working directory
     vector<string> dirs; // The raw list of pushed directories
+    bool current_path_added = false;
 
     bool has_directory_stack = false;
 
@@ -132,15 +133,15 @@ private:
     void assign(string arr_pushd[], int count, string current_path = string());
     void assign_debug_input(const string& input_path);
 
-    void help_tip(void);
-    static void help(void);
-    static void version(void);
-    string normalize_path(const string& path);
-    string windowize_path(const string& path);
-    string get_parent_path(const string& path);
-    static bool paths_equal(const string& path1, int inode1, const string& path2);
-    static int get_inode(const string& path);
-    int pushd_count();
+    // TODO - old - remove
+    // void help_tip(void);
+    // static void help(void);
+    // static void version(void);
+    // string normalize_path(const string& path);
+    // string windowize_path(const string& path);
+    // string get_parent_path(const string& path);
+    // static bool paths_equal(const string& path1, int inode1, const string& path2);
+    // static int get_inode(const string& path);
 
     bool change_to_path_spec(void);
     bool process_path_spec(string target, fs::path& path_found, vector<string>& path_extra);
@@ -159,11 +160,11 @@ private:
     void garbage_collect(void);
     void process_delete(void);
     void process_reset(void);
-    void command_generator(vector<string>& vec_dir, const string& dir_delete = string());
-    void command_generator_win32(vector<string>& vec_dir, const string& dir_delete = string());
-    void command_generator_bash(vector<string>& vec_dir, const string& dir_delete = string());
-    void set_opt_path(const string& opt_path);
-    bool set_history_direction(const string& spec);
+
+    void command_generator(const vector<fs::path>& paths_remaining, const fs::path& path_delete = {});
+    void command_generator_win32(const vector<fs::path>& paths_remaining, const fs::path& path_delete);
+    void command_generator_bash(const vector<fs::path>& paths_remaining, const fs::path& path_delete);
+    std::size_t pushd_count() const;
 
     virtual bool is_directory(const fs::path& path);
     virtual bool is_regular_file(const fs::path& path);

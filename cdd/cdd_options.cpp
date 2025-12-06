@@ -80,8 +80,12 @@ void add_full_options(CddOptions& x, cxxopts::Options& options)
 {
     add_common_options(x, options);
 
-    options.add_options()                                                                         //
-        ("h,help", "Show this help message", cxxopts::value(x.show_help)->implicit_value("true")) //
+    options.add_options()                                                                                            //
+        ("h,help", "Show this help message", cxxopts::value(x.show_help)->implicit_value("true"))                    //
+        ("del", "Delete an entry", cxxopts::value(x.delete_entry)->implicit_value("true"))                           //
+        ("delete", "Delete an entry", cxxopts::value(x.delete_entry)->implicit_value("true"))                        //
+        ("reset", "Reset history", cxxopts::value(x.reset_history)->implicit_value("true"))                          //
+        ("gc,garbage-collect", "Garbage collect history", cxxopts::value(x.garbage_collect)->implicit_value("true")) //
         ;
 }
 
@@ -97,7 +101,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
 
     if (args.empty())
     {
-        error_message = "Argument vector cannot be empty.";
+        set_error("Argument vector cannot be empty.");
         return false;
     }
 
@@ -193,7 +197,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         // Validate direction (Fatal error if invalid here)
         if (!direction.empty() && !is_valid_direction(direction))
         {
-            error_message = "Invalid direction: \"" + direction + "\". Valid directions are: " + get_valid_directions_as_string();
+            set_error("Invalid direction: \"" + direction + "\". Valid directions are: " + get_valid_directions_as_string());
             return false;
         }
 
@@ -203,11 +207,20 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
             // insert at front of unmatched_args due to special meaning
             unmatched_args.insert(unmatched_args.begin(), special_dashed_args.begin(), special_dashed_args.end());
         }
+
+        if (delete_entry)
+        {
+            if (unmatched_args.empty())
+            {
+                set_error("Delete option requires an argument (the entry to delete).");
+                return false;
+            }
+        }
     }
     catch (const cxxopts::exceptions::exception& e)
     {
         // Requirement: "Any options parsing errors are considered to be errors."
-        error_message = e.what();
+        set_error(e.what());
         return false;
     }
 
@@ -240,6 +253,6 @@ void CddOptions::output(std::ostream& os) const
     }
     os << "]" << std::endl;
 
-    os << "  has_error: " << std::boolalpha << has_error << std::endl;
+    os << "  has_error: " << std::boolalpha << has_error() << std::endl;
     os << "  error_message: " << error_message << std::endl;
 }

@@ -28,23 +28,19 @@ public:
     std::size_t max_upwards = 10;
     bool all_history = false;
     bool ignore_case = false;
+    bool delete_entry = false;
+    bool reset_history = false;
+    bool garbage_collect = false;
+    std::string error_message;
 
     std::vector<std::string> unmatched_args;
 
-    // --- Status Information ---
-    bool has_error = false;
-    std::string error_message;
-    // std::string help_text;
-
     CddOptions() {}
-    CddOptions(const std::vector<std::string>& args, const std::string& env_options = "")
-    {
-        if (!initialize(args, env_options))
-        {
-            has_error = true;
-        }
-    }
+    CddOptions(const std::vector<std::string>& args, const std::string& env_options = "") { initialize(args, env_options); }
     bool initialize(const std::vector<std::string>& args, const std::string& env_options);
+
+    bool has_error() const { return !error_message.empty(); }
+    void set_error(const std::string& msg) { error_message = "** " + msg; }
 
     void output(std::ostream& os = std::cout) const;
 };

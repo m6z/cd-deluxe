@@ -33,6 +33,8 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_PATH_LENGTH MAXPATHLEN
 #endif
 
+namespace fs = std::filesystem;
+
 std::string get_working_path()
 {
     char temp[MAX_PATH_LENGTH];
@@ -74,7 +76,7 @@ std::string expand_dots(std::string path)
         int dot_len = what[1].second - what[1].first;
         for (int i = 2; i < dot_len; i++)
         {
-            dots += std::filesystem::path::preferred_separator;
+            dots += fs::path::preferred_separator;
             dots += "..";
             // #ifdef WIN32
             //             dots += "\\..";

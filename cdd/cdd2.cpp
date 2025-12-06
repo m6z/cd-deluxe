@@ -31,10 +31,9 @@ void Cdd2::initialize()
     if (!cwd.empty())
     {
         // Logic to manipulate dirs_stack or similar if needed
-        // current_path_added = true;
+        current_path_added = true;
     }
 #endif
-    // Logic from initialize has been moved to create_* methods
 }
 
 //----------------------------------------------------------------------
@@ -245,6 +244,12 @@ void Cdd2::process(void)
     if (options.list_history)
     {
         show_history();
+        return;
+    }
+
+    if (options.reset_history)
+    {
+        process_reset();
         return;
     }
 
@@ -578,4 +583,61 @@ bool Cdd2::is_directory(const fs::path& path)
 bool Cdd2::is_regular_file(const fs::path& path)
 {
     return fs::is_regular_file(path);
+}
+
+void Cdd2::process_reset(void)
+{
+    vector<fs::path> empty_paths;
+    command_generator(empty_paths);
+    strm_err << "cdd reset" << endl;
+}
+
+void Cdd2::command_generator(const vector<fs::path>& paths_remaining, const fs::path& path_delete)
+{
+#ifdef WIN32
+    command_generator_win32(paths_remaining, path_delete);
+#else
+    command_generator_bash(paths_remaining, path_delete);
+#endif
+}
+
+void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining, const fs::path& path_delete)
+{
+    strm_out << "for /l %%i in (1,1," << pushd_count() << ") do popd" << endl;
+    int count = 0;
+    for (const auto& path_remaining : paths_remaining)
+    {
+        if (path_remaining == path_delete)
+        {
+            continue;
+        }
+        strm_out << (count++ ? "pushd " : "chdir/d ") << path_remaining << " 2>nul" << endl;
+    }
+    if (current_path_added)
+    {
+        strm_out << (count ? "pushd " : "chdir/d ") << cwd << endl;
+    }
+}
+
+void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining, const fs::path& path_delete)
+{
+    strm_out << "dirs -c" << endl;
+    int count = 0;
+
+    for (const auto& path_remaining : paths_remaining)
+    {
+        if (path_remaining == path_delete)
+        {
+            continue;
+        }
+        strm_out << (count++ ? "pushd" : "\\cd") << " '" << path_remaining.string() << "'" << endl;
+    }
+}
+
+size_t Cdd2::pushd_count() const
+{
+    auto count = dirs.size();
+    if (current_path_added)
+        count--;
+    return count;
 }

@@ -16,6 +16,8 @@ set(test_sources
     cdd2_test.cpp
     cdd_options_test.cpp
     util_test.cpp
+    cleanup_test.cpp
+    test_helpers.cpp
 )
 
 add_executable(testmain ${test_sources})
