@@ -12,10 +12,10 @@ FetchContent_MakeAvailable(cxxopts)
 #----------------------------------------------------------------------
 
 add_library(cdd STATIC
-    cdd.cpp
     cdd2.cpp
     cdd_util.cpp
     cdd_options.cpp
+    cdd_options_init.cpp
 )
 
 # This command automatically adds the include directories and other

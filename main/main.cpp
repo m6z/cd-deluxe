@@ -20,6 +20,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+#include "cdd/cdd_options_init.h"
 #include "stdafx.h"
 
 #ifdef _WIN32
@@ -34,6 +35,26 @@ int main(int argc, const char* argv[])
 {
     try
     {
+        if (isatty(fileno(stdin)))
+        {
+            // cerr << "stdin is a terminal, expecting piped directory stack" << endl;
+            // // TODO show better help
+            // // Cdd::help();
+            // return 1;
+
+            CddOptionsInit options_init;
+            if (options_init.parse(argc, const_cast<char**>(argv)))
+            {
+                return 0; // Handled init/help
+            }
+            else
+            {
+                cerr << "Error: stdin is a terminal, expecting piped directory stack" << endl;
+                // CddOptionInit::help();
+                return 1;
+            }
+        }
+
         // convert argv to vector<string>
         std::vector<std::string> args(argv, argv + argc);
         CddOptions options;
@@ -49,14 +70,6 @@ int main(int argc, const char* argv[])
         }
 
         // options.output();
-
-        if (isatty(fileno(stdin)))
-        {
-            cerr << "stdin is a terminal, expecting piped directory stack" << endl;
-            // TODO show better help
-            // Cdd::help();
-            return 1;
-        }
 
         // read output of directory stack from stdin
         vector<string> dirs;
