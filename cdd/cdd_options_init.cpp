@@ -21,11 +21,6 @@ bool CddOptionsInit::parse(int argc, char* argv[])
             // --init bash   -> "bash"
             ("init", "Print shell integration code", cxxopts::value<std::string>(init_shell_type)->implicit_value("auto"));
 
-        // TODO - old - remove
-        // We allow unrecognized options because we might be parsing a full command line
-        // meant for the main program, but we only care if --init or --help is present specifically.
-        // options.allow_unrecognised_options();
-
         auto result = options.parse(argc, argv);
 
         if (result.count("help"))
@@ -119,6 +114,7 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
         // To be safe for strictly POSIX shells that might not like 'function',
         // 'cd() { ... }' is safer, but the prompt specifically requested the 'function cd' style.
         std::cout << "  function cd { while read x; do eval $x >/dev/null; done < <(dirs -l -p | \"" << safe_exe_path << "\" \"$@\"); }\n";
+        std::cout << "  echo \"-- cd-deluxe shell integration loaded. Use 'cd' as usual.\"\n";
 
         std::cout << "fi\n";
     }

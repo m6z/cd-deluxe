@@ -127,27 +127,35 @@ bool Cdd2::get_target(string& target)
 
 std::optional<Cdd2::RegexFilter> Cdd2::get_target_regex_filter()
 {
-    string target;
-    if (!get_target(target))
+    RegexFilter rf;
+    if (!get_target(rf.target))
     {
         return std::nullopt;
     }
 
-    RegexFilter rf;
     // if pattern ends with path separator, match full directory names only
-    if (!target.empty() && (target.back() == fs::path::preferred_separator))
+    if (!rf.target.empty() && (rf.target.back() == fs::path::preferred_separator))
     {
-        target.pop_back();
+        rf.target.pop_back();
         rf.check_all_parts = false;
     }
 
-    if (options.ignore_case)
+    try
     {
-        rf.re = std::regex(target, std::regex_constants::icase);
+        if (options.ignore_case)
+        {
+            rf.re = std::regex(rf.target, std::regex_constants::icase);
+        }
+        else
+        {
+            rf.re = std::regex(rf.target);
+        }
     }
-    else
+    catch (std::regex_error& e)
     {
-        rf.re = std::regex(target);
+        // print error to std::cerr and return nullopt
+        cerr << "Regex error: " << e.what() << std::endl;
+        return std::nullopt;
     }
     return rf;
 }
@@ -253,6 +261,12 @@ void Cdd2::process(void)
         return;
     }
 
+    if (options.delete_entry)
+    {
+        process_delete();
+        return;
+    }
+
     if (!options.unmatched_args.empty())
     {
         change_to_path_spec();
@@ -266,11 +280,17 @@ void Cdd2::process(void)
 bool Cdd2::change_to_path_spec(void)
 {
     bool rc = false;
-    fs::path path_target = options.unmatched_args[0];
+    string target;
+    if (!get_target(target))
+    {
+        strm_err << "cdd: no target specified" << endl;
+        return rc;
+    }
+    fs::path path_target = target;
     fs::path path_found;
     vector<string> path_extra;
 
-    if (process_path_spec(path_target, path_found, path_extra))
+    if (process_path_spec_including_filesystem(path_target, path_found, path_extra))
     {
 #ifdef WIN32
         strm_out << "pushd " << path_found << endl;
@@ -290,7 +310,7 @@ bool Cdd2::change_to_path_spec(void)
     return rc;
 }
 
-bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>& path_extra)
+bool Cdd2::process_path_spec_including_filesystem(string target, fs::path& path_found, vector<string>& path_extra)
 {
     target = expand_dots(target);
 
@@ -307,7 +327,11 @@ bool Cdd2::process_path_spec(string target, fs::path& path_found, vector<string>
             return true;
         }
     }
+    return process_path_spec_only_from_history(target, path_found, path_extra);
+}
 
+bool Cdd2::process_path_spec_only_from_history(string target, fs::path& path_found, vector<string>& path_extra)
+{
     if (dirs.empty())
     {
         strm_err << "No history of directories" << endl;
@@ -515,10 +539,32 @@ void Cdd2::show_history(void)
     }
 }
 
+bool Cdd2::verify_history_matches(const std::vector<FilteredPath>& matches, const std::optional<RegexFilter>& rf)
+{
+    if (matches.empty())
+    {
+        if (rf.has_value())
+        {
+            strm_err << "** No history of directories matching: " << rf->target << endl;
+        }
+        else
+        {
+            strm_err << "** No history of directories" << endl;
+        }
+        return false;
+    }
+    return true;
+}
+
 void Cdd2::show_history_last_to_first(void)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_last_to_first(rf);
+    if (!verify_history_matches(matches, rf))
+    {
+        return;
+    }
+
     size_t entry_count = std::min(options.max_history, options.max_backwards);
     size_t count = 0;
     for (const auto& filtered_path : matches)
@@ -539,6 +585,11 @@ void Cdd2::show_history_first_to_last(void)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_first_to_last(rf);
+    if (!verify_history_matches(matches, rf))
+    {
+        return;
+    }
+
     size_t entry_count = std::min(options.max_history, options.max_forwards);
     size_t count = 0;
     for (const auto& filtered_path : matches)
@@ -559,6 +610,11 @@ void Cdd2::show_history_most_to_least(void)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_most_to_least(rf);
+    if (!verify_history_matches(matches, rf))
+    {
+        return;
+    }
+
     size_t entry_count = std::min(options.max_history, options.max_common);
     size_t count = 0;
     for (const auto& filtered_path : matches)
@@ -592,25 +648,58 @@ void Cdd2::process_reset(void)
     strm_err << "cdd reset" << endl;
 }
 
-void Cdd2::command_generator(const vector<fs::path>& paths_remaining, const fs::path& path_delete)
+void Cdd2::process_delete(void)
+{
+    string target;
+    if (!get_target(target))
+    {
+        strm_err << "cdd: delete requires a target" << endl;
+        return;
+    }
+
+    fs::path path_found;
+    vector<string> path_extra;
+    if (!process_path_spec_only_from_history(target, path_found, path_extra))
+    {
+        // Here: error
+        strm_err << "** Could not resolve for delete: " << target << endl;
+        return;
+    }
+
+    // reverse copy excluding path_found
+    vector<fs::path> reversed;
+    for (auto rit = dirs.rbegin(); rit != dirs.rend(); ++rit)
+    {
+        auto dir = *rit;
+        if (dir != path_found)
+        {
+            reversed.push_back(dir);
+        }
+    }
+    if (reversed.size() == dirs.size())
+    {
+        strm_err << "** Could not delete from history: " << path_found << endl;
+        return;
+    }
+    command_generator(reversed);
+    strm_err << "cdd del: " << path_found.string() << endl;
+}
+
+void Cdd2::command_generator(const vector<fs::path>& paths_remaining)
 {
 #ifdef WIN32
-    command_generator_win32(paths_remaining, path_delete);
+    command_generator_win32(paths_remaining);
 #else
-    command_generator_bash(paths_remaining, path_delete);
+    command_generator_bash(paths_remaining);
 #endif
 }
 
-void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining, const fs::path& path_delete)
+void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining)
 {
     strm_out << "for /l %%i in (1,1," << pushd_count() << ") do popd" << endl;
     int count = 0;
     for (const auto& path_remaining : paths_remaining)
     {
-        if (path_remaining == path_delete)
-        {
-            continue;
-        }
         strm_out << (count++ ? "pushd " : "chdir/d ") << path_remaining << " 2>nul" << endl;
     }
     if (current_path_added)
@@ -619,17 +708,14 @@ void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining, cons
     }
 }
 
-void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining, const fs::path& path_delete)
+void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
 {
     strm_out << "dirs -c" << endl;
+
     int count = 0;
 
     for (const auto& path_remaining : paths_remaining)
     {
-        if (path_remaining == path_delete)
-        {
-            continue;
-        }
         strm_out << (count++ ? "pushd" : "\\cd") << " '" << path_remaining.string() << "'" << endl;
     }
 }

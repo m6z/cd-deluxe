@@ -86,6 +86,7 @@ public:
 
     struct RegexFilter
     {
+        std::string target;
         std::regex re;
         bool check_all_parts = true;
     };
@@ -144,7 +145,8 @@ private:
     // static int get_inode(const string& path);
 
     bool change_to_path_spec(void);
-    bool process_path_spec(string target, fs::path& path_found, vector<string>& path_extra);
+    bool process_path_spec_including_filesystem(string target, fs::path& path_found, vector<string>& path_extra);
+    bool process_path_spec_only_from_history(string target, fs::path& path_found, vector<string>& path_extra);
 
     bool go_backwards(unsigned amount, fs::path& path_found);
     bool go_forwards(unsigned amount, fs::path& path_found);
@@ -156,14 +158,15 @@ private:
     void show_history_first_to_last(void);
     void show_history_last_to_first(void);
     void show_history_most_to_least(void);
+    bool verify_history_matches(const std::vector<FilteredPath>& matches, const std::optional<RegexFilter>& rf);
 
     void garbage_collect(void);
     void process_delete(void);
     void process_reset(void);
 
-    void command_generator(const vector<fs::path>& paths_remaining, const fs::path& path_delete = {});
-    void command_generator_win32(const vector<fs::path>& paths_remaining, const fs::path& path_delete);
-    void command_generator_bash(const vector<fs::path>& paths_remaining, const fs::path& path_delete);
+    void command_generator(const vector<fs::path>& paths_remaining);
+    void command_generator_win32(const vector<fs::path>& paths_remaining);
+    void command_generator_bash(const vector<fs::path>& paths_remaining);
     std::size_t pushd_count() const;
 
     virtual bool is_directory(const fs::path& path);

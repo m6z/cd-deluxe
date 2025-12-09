@@ -172,7 +172,7 @@ TEST_CASE("cdd_options_test", "[options]")
         }
     }
 
-    SECTION("cleanup")
+    SECTION("cleanup_options")
     {
         {
             // missing spec
@@ -185,13 +185,6 @@ TEST_CASE("cdd_options_test", "[options]")
             CddOptions options({"./_cdd", "--del", "abc"});
             REQUIRE(options.unmatched_args.size() == 1);
             REQUIRE(options.unmatched_args[0] == "abc");
-        }
-
-        {
-            // long form
-            CddOptions options({"./_cdd", "--delete", "-5"});
-            REQUIRE(options.unmatched_args.size() == 1);
-            REQUIRE(options.unmatched_args[0] == "-5");
         }
     }
 }

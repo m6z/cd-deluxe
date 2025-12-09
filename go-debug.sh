@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+# helper alias:
+#   alias deb='pushd ~/base/development/cd-deluxe_cpp20 >/dev/null && ./go-debug.sh'
+
 # This script calls Catch2 executable directly
 
 # section=action_and_direction
 # section=list_forward
 # section=forward_plus_two
-section=simple_match_forward
+# section=simple_match_forward
+section=delete_one
 
 # test_case=match_test
 

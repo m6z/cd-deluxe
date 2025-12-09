@@ -83,7 +83,6 @@ void add_full_options(CddOptions& x, cxxopts::Options& options)
     options.add_options()                                                                                            //
         ("h,help", "Show this help message", cxxopts::value(x.show_help)->implicit_value("true"))                    //
         ("del", "Delete an entry", cxxopts::value(x.delete_entry)->implicit_value("true"))                           //
-        ("delete", "Delete an entry", cxxopts::value(x.delete_entry)->implicit_value("true"))                        //
         ("reset", "Reset history", cxxopts::value(x.reset_history)->implicit_value("true"))                          //
         ("gc,garbage-collect", "Garbage collect history", cxxopts::value(x.garbage_collect)->implicit_value("true")) //
         ;

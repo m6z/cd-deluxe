@@ -57,33 +57,37 @@ TEST_CASE("cleanup_test")
     //         REQUIRE(exp == act);
     //         REQUIRE("cdd gc\n" == cdd.strm_err.str());
     //     }
-    //
-    //     SECTION("delete_one")
-    //     {
-    //         Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
-    //         cdd.opt_delete = true;
-    //         cdd.direction.assign("+");
-    //         cdd.opt_path = "1";
-    //         cdd.process();
-    //         vector<string> act = splitlines(cdd.strm_out);
-    //         vector<string> exp = {
-    // #ifdef WIN32
-    //             "for /l %%i in (1,1,4) do popd", //
-    //             "chdir/d aa 2>nul",              //
-    //             "pushd cc 2>nul",                //
-    //             "pushd aa 2>nul",                //
-    //             "pushd dd 2>nul",                //
-    //             "pushd dd",                      //
-    // #else
-    //             "dirs -c",    //
-    //             "\\cd 'aa'",  //
-    //             "pushd 'cc'", //
-    //             "pushd 'aa'", //
-    // #endif
-    //         };
-    //         REQUIRE(exp == act);
-    //         REQUIRE("cdd del: bb\n" == cdd.strm_err.str());
-    //     }
+
+    SECTION("delete_one")
+    {
+        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
+        // cdd.opt_delete = true;
+        // cdd.direction.assign("+");
+        // cdd.opt_path = "1";
+        // cdd.process();
+
+        auto cdd = cdd_test({"_cdd", "--del", "+1"}, "dd", "/current/working/dir", test_dirs);
+        cdd.process();
+
+        vector<string> act = split_text(cdd.get_out_str());
+        vector<string> exp = {
+#ifdef WIN32
+            "for /l %%i in (1,1,4) do popd", //
+            "chdir/d aa 2>nul",              //
+            "pushd cc 2>nul",                //
+            "pushd aa 2>nul",                //
+            "pushd dd 2>nul",                //
+            "pushd dd",                      //
+#else
+            "dirs -c",    //
+            "\\cd 'aa'",  //
+            "pushd 'cc'", //
+            "pushd 'aa'", //
+#endif
+        };
+        REQUIRE(exp == act);
+        REQUIRE("cdd del: bb\n" == cdd.get_err_str());
+    }
 
     SECTION("reset")
     {
