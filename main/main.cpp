@@ -80,8 +80,7 @@ int main(int argc, const char* argv[])
             dirs.push_back(line);
         }
 
-        // auto cwd = fs::current_path();
-        Cdd2 cdd(options, fs::current_path(), dirs);
+        Cdd2 cdd(options, dirs);
         cdd.process();
         cout << cdd.get_out_str();
         cerr << cdd.get_err_str();

@@ -29,11 +29,11 @@ vector<string> split_text(const string& dirs)
 Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const string& dirs)
 {
     CddOptions options(args, env);
-    return Cdd2_Test(options, cwd, split_text(dirs));
+    return Cdd2_Test(options, split_text(dirs), cwd);
 }
 
 Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const vector<string>& dirs)
 {
     CddOptions options(args, env);
-    return Cdd2_Test(options, cwd, dirs);
+    return Cdd2_Test(options, dirs, cwd);
 }

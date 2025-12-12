@@ -24,26 +24,18 @@ std::string Cdd2::KeyedPath::generate_key_from_path(const fs::path& p, bool igno
 }
 
 //----------------------------------------------------------------------
-
-void Cdd2::initialize()
-{
-#ifdef WIN32
-    if (!cwd.empty())
-    {
-        // Logic to manipulate dirs_stack or similar if needed
-        current_path_added = true;
-    }
-#endif
-}
-
-//----------------------------------------------------------------------
 // Creation Methods (Refactored from initialize)
 //----------------------------------------------------------------------
 
 std::vector<fs::path> Cdd2::create_dirs_last_to_first()
 {
     std::vector<fs::path> result;
-    KeyedPath kp_cwd(cwd, options.ignore_case);
+    fs::path cwd;
+    KeyedPath kp_cwd;
+    if (get_cwd_path(cwd))
+    {
+        kp_cwd = KeyedPath(cwd, options.ignore_case);
+    }
     set<KeyedPath> set_dir;
 
     for (const auto& dir : dirs)
@@ -114,6 +106,33 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
 //----------------------------------------------------------------------
 // Filter Helper Logic
 //----------------------------------------------------------------------
+
+bool Cdd2::get_cwd_path(fs::path& cwd)
+{
+    if (!cwd_assigned_ && !cwd_retrieved_)
+    {
+        // make sure to only try once
+        cwd_retrieved_ = true;
+        error_code ec;
+        cwd_ = fs::current_path(ec);
+        if (ec)
+        {
+            strm_err << "** cdd: error getting current working directory: " << ec.message() << endl;
+            return false;
+        }
+        cwd_assigned_ = true;
+    }
+
+    if (cwd_assigned_)
+    {
+        cwd = cwd_;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 bool Cdd2::get_target(string& target)
 {
@@ -702,10 +721,15 @@ void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining)
     {
         strm_out << (count++ ? "pushd " : "chdir/d ") << path_remaining << " 2>nul" << endl;
     }
-    if (current_path_added)
+#if WIN32
     {
-        strm_out << (count ? "pushd " : "chdir/d ") << cwd << endl;
+        fs::path cwd;
+        if (get_cwd_path(cwd))
+        {
+            strm_out << (count ? "pushd " : "chdir/d ") << cwd << endl;
+        }
     }
+#endif
 }
 
 void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
@@ -723,7 +747,8 @@ void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
 size_t Cdd2::pushd_count() const
 {
     auto count = dirs.size();
-    if (current_path_added)
-        count--;
+#if WIN32
+    count--;
+#endif
     return count;
 }

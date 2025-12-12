@@ -113,7 +113,8 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
         // Note: zsh supports 'function name', bash supports 'function name'.
         // To be safe for strictly POSIX shells that might not like 'function',
         // 'cd() { ... }' is safer, but the prompt specifically requested the 'function cd' style.
-        std::cout << "  function cd { while read x; do eval $x >/dev/null; done < <(dirs -l -p | \"" << safe_exe_path << "\" \"$@\"); }\n";
+        std::cout << "  function cdd { while read x; do eval $x >/dev/null; done < <(dirs -l -p | \"" << safe_exe_path << "\" \"$@\"); }\n";
+        std::cout << "  alias cd='cdd'\n";
         std::cout << "  echo \"-- cd-deluxe shell integration loaded. Use 'cd' as usual.\"\n";
 
         std::cout << "fi\n";

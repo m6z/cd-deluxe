@@ -16,7 +16,13 @@ namespace fs = std::filesystem;
 class Cdd2
 {
 public:
-    Cdd2(const CddOptions& options, const fs::path& cwd, const vector<string> dirs) : options(options), cwd(cwd), dirs(dirs) { initialize(); }
+    Cdd2(const CddOptions& options, const vector<string> dirs, fs::path cwd = {}) : options(options), dirs(dirs), cwd_(cwd)
+    {
+        if (!cwd.empty())
+        {
+            cwd_assigned_ = true;
+        }
+    }
 
     void process(void);
     const CddOptions& get_options() const { return options; }
@@ -34,6 +40,7 @@ public:
     class KeyedPath
     {
     public:
+        KeyedPath() = default;
         KeyedPath(const fs::path& p, bool ignore_case) : dir_path(p), dir_key(generate_key_from_path(p, ignore_case)) {}
 
         const string& get_dir_key() const { return dir_key; }
@@ -107,12 +114,11 @@ protected:
 private:
     void initialize();
 
-    CddOptions options;  // The options for cdd2
-    fs::path cwd;        // Current working directory
-    vector<string> dirs; // The raw list of pushed directories
-    bool current_path_added = false;
-
-    bool has_directory_stack = false;
+    CddOptions options;          // The options for cdd2
+    vector<string> dirs;         // The raw list of pushed directories
+    fs::path cwd_;               // Current working directory (use get_cwd() to access)
+    bool cwd_assigned_ = false;  // Whether cwd has been assigned
+    bool cwd_retrieved_ = false; // Whether cwd has been retrieved
 
     stringstream strm_out;
     stringstream strm_err;
@@ -125,6 +131,7 @@ private:
     std::vector<FilteredPath> filter_dirs_first_to_last(const std::optional<RegexFilter>& rf);
     std::vector<FilteredPath> filter_dirs_most_to_least(const std::optional<RegexFilter>& rf);
 
+    bool get_cwd_path(fs::path& cwd);
     bool get_target(string& target);
     bool get_target_regex(std::regex& re, bool& check_all_parts);
     std::optional<RegexFilter> get_target_regex_filter();
