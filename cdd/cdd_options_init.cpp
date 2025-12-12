@@ -93,7 +93,7 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
     if (shell_type == "fish")
     {
         // Fish shell syntax is significantly different
-        std::cout << "function cd\n";
+        std::cout << "function cdd\n";
         std::cout << "  if test -x \"" << safe_exe_path << "\"\n";
         std::cout << "    set -l output (dirs -p | \"" << safe_exe_path << "\" $argv)\n";
         std::cout << "    for x in $output\n";
@@ -103,6 +103,8 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
         std::cout << "    echo \"cdd executable not found at: " << safe_exe_path << "\"\n";
         std::cout << "  end\n";
         std::cout << "end\n";
+        std::cout << "alias cd cdd\n";
+        std::cout << "echo \"-- cd-deluxe shell integration loaded for fish. See: cd --help.\"\n";
     }
     else
     {
@@ -115,7 +117,7 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
         // 'cd() { ... }' is safer, but the prompt specifically requested the 'function cd' style.
         std::cout << "  function cdd { while read x; do eval $x >/dev/null; done < <(dirs -l -p | \"" << safe_exe_path << "\" \"$@\"); }\n";
         std::cout << "  alias cd='cdd'\n";
-        std::cout << "  echo \"-- cd-deluxe shell integration loaded. Use 'cd' as usual.\"\n";
+        std::cout << "  echo \"-- cd-deluxe shell integration loaded. See: cd --help.\"\n";
 
         std::cout << "fi\n";
     }
