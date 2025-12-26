@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <format>
 
 namespace fs = std::filesystem;
 
@@ -85,6 +86,24 @@ std::string CddOptionsInit::detect_shell() const
     return p.filename().string();
 }
 
+static constexpr const char* _bash_init = R"(
+function cdd {{
+    _cdd_exe="{}"
+    if [ ! -f "${{_cdd_exe}}" ]; then
+        echo "Error: cd-deluxe executable not found at ${{_cdd_exe}}" >&2
+        echo "Remove cdd function or unalias cd until the issue is resolved." >&2
+        return 1
+    fi
+    while read x
+    do
+        eval $x > /dev/null
+    done < <(dirs -l -p | "${{_cdd_exe}}" "$@")
+}}
+
+alias cd=cdd
+echo "-- cd-deluxe shell integration loaded. See: cd --help."
+)";
+
 void CddOptionsInit::print_init_script(const std::string& shell_type, const std::string& exe_path) const
 {
     // Normalize path separators for shell usage (generic_string uses forward slashes)
@@ -108,17 +127,6 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
     }
     else
     {
-        // Default to Bash/Zsh syntax (as provided in prompt)
-        // We wrap the path in quotes to handle spaces in directory names
-        std::cout << "if [[ -x \"" << safe_exe_path << "\" ]]; then\n";
-
-        // Note: zsh supports 'function name', bash supports 'function name'.
-        // To be safe for strictly POSIX shells that might not like 'function',
-        // 'cd() { ... }' is safer, but the prompt specifically requested the 'function cd' style.
-        std::cout << "  function cdd { while read x; do eval $x >/dev/null; done < <(dirs -l -p | \"" << safe_exe_path << "\" \"$@\"); }\n";
-        std::cout << "  alias cd='cdd'\n";
-        std::cout << "  echo \"-- cd-deluxe shell integration loaded. See: cd --help.\"\n";
-
-        std::cout << "fi\n";
+        std::cout << std::format(_bash_init, safe_exe_path);
     }
 }
