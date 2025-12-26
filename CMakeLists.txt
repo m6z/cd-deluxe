@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.28)
 project(cd-deluxe VERSION 2.0 LANGUAGES CXX)
 
 # Enforce modern C++ standard
