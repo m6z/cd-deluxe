@@ -517,7 +517,7 @@ bool Cdd2::go_backwards(unsigned amount, fs::path& path_found)
 bool Cdd2::go_forwards(unsigned amount, fs::path& path_found)
 {
     auto dirs = create_dirs_first_to_last();
-    if (amount < 0 || amount >= dirs.size())
+    if (amount >= dirs.size())
     {
         strm_err << "No directory at +" << amount << endl;
         return false;
@@ -529,7 +529,7 @@ bool Cdd2::go_forwards(unsigned amount, fs::path& path_found)
 bool Cdd2::go_common(unsigned amount, fs::path& path_found)
 {
     auto dirs = create_dirs_most_to_least();
-    if (amount < 0 || amount >= dirs.size())
+    if (amount >= dirs.size())
     {
         strm_err << "No directory at ," << amount << endl;
         return false;
