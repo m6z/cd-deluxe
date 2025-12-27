@@ -108,4 +108,11 @@ validate each time
 for unrecognized environment options, warn and ignore
 for unrecognized command line options, error and exit
 
+#----------------------------------------------------------------------
 
+Put in help for how to configure, like the zsh command for example
+
+cd-deluxe needs to be configured.
+Add the following to ~/.zshrc or else execute directly in the shell:
+
+source <(/home/mike/base/cdd_v2/cd-deluxe/build1/main/cd-deluxe --init)

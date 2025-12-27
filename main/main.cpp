@@ -24,11 +24,11 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 
 #ifdef _WIN32
-#include <direct.h>
-#define isatty _isatty
-#define fileno _fileno
+#    include <direct.h>
+#    define isatty _isatty
+#    define fileno _fileno
 #else
-#include <unistd.h>
+#    include <unistd.h>
 #endif
 
 int main(int argc, const char* argv[])
@@ -37,22 +37,27 @@ int main(int argc, const char* argv[])
     {
         if (isatty(fileno(stdin)))
         {
-            // cerr << "stdin is a terminal, expecting piped directory stack" << endl;
+            // cerr << "stdin is a terminal, expecting piped directory stack" <<
+            // endl;
             // // TODO show better help
             // // Cdd::help();
             // return 1;
 
             CddOptionsInit options_init;
-            if (options_init.parse(argc, const_cast<char**>(argv)))
-            {
-                return 0; // Handled init/help
-            }
-            else
-            {
-                cerr << "Error: stdin is a terminal, expecting piped directory stack" << endl;
-                // CddOptionInit::help();
-                return 1;
-            }
+            return options_init.parse(argc, const_cast<char**>(argv));
+
+            // TODO - old - remove
+            // if (options_init.parse(argc, const_cast<char**>(argv)))
+            // {
+            //     return 0; // Handled init/help
+            // }
+            // else
+            // {
+            //     cerr << "Error: stdin is a terminal, expecting piped
+            //     directory stack" << endl;
+            //     // CddOptionInit::help();
+            //     return 1;
+            // }
         }
 
         // convert argv to vector<string>
@@ -87,15 +92,15 @@ int main(int argc, const char* argv[])
 
         //         TODO - old - remove
         //         Cdd cdd;
-        //         if (cdd.options(argc, argv, get_environment(Cdd::env_options_name)))
+        //         if (cdd.options(argc, argv,
+        //         get_environment(Cdd::env_options_name)))
         //         {
         //             if ( ! cdd.has_directory_stack )
         //             {
         //                 if (isatty(fileno(stdin)))
         //                 {
-        //                     cout << "stdin is a terminal, expecting piped directory stack" << endl;
-        //                     Cdd::help();
-        //                     return 1;
+        //                     cout << "stdin is a terminal, expecting piped
+        //                     directory stack" << endl; Cdd::help(); return 1;
         //                 }
         //                 vector<string> vec_pushd;
         //                 string line;
