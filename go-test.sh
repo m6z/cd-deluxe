@@ -9,11 +9,13 @@
 # test_pattern=match_test
 test_pattern=cleanup_test
 
+# Note: ctest does not support selection by SECTION, only by TEST_CASE
+
 #----------------------------------------------------------------------
 set -x
 
 # All tests
-cmake --build build1 && ctest --test-dir build1
+# cmake --build build1 && ctest --test-dir build1
 
 # Filtered tests
-# cmake --build build1 && ctest --test-dir build1 -R ${test_pattern}
+cmake --build build1 && ctest --test-dir build1 -R ${test_pattern}

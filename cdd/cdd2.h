@@ -167,9 +167,9 @@ private:
     void show_history_most_to_least(void);
     bool verify_history_matches(const std::vector<FilteredPath>& matches, const std::optional<RegexFilter>& rf);
 
+    void process_reset(void);
     void garbage_collect(void);
     void process_delete(void);
-    void process_reset(void);
 
     void command_generator(const vector<fs::path>& paths_remaining);
     void command_generator_win32(const vector<fs::path>& paths_remaining);

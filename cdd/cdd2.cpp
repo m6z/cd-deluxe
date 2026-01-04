@@ -280,6 +280,12 @@ void Cdd2::process(void)
         return;
     }
 
+    if (options.garbage_collect)
+    {
+        garbage_collect();
+        return;
+    }
+
     if (options.delete_entry)
     {
         process_delete();
@@ -665,6 +671,18 @@ void Cdd2::process_reset(void)
     vector<fs::path> empty_paths;
     command_generator(empty_paths);
     strm_err << "cdd reset" << endl;
+}
+
+void Cdd2::garbage_collect(void)
+{
+    auto dirs = create_dirs_first_to_last();
+    if (dirs.empty() || dirs.size() == this->dirs.size())
+    {
+        strm_err << "** Nothing to gc" << endl;
+        return;
+    }
+    command_generator(dirs);
+    strm_err << "cdd reduced dirs: from " << this->dirs.size() << " to " << dirs.size() << endl;
 }
 
 void Cdd2::process_delete(void)

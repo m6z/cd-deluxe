@@ -9,7 +9,8 @@
 # section=list_forward
 # section=forward_plus_two
 # section=simple_match_forward
-section=delete_one
+# section=delete_one
+section=garbage_collect
 
 # test_case=match_test
 

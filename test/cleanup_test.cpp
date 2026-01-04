@@ -38,34 +38,32 @@ static vector<string> test_dirs = {
 
 TEST_CASE("cleanup_test")
 {
-    //     SECTION("garbage_collect")
-    //     {
-    //         Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
-    //         cdd.opt_gc = true;
-    //         cdd.process();
-    //         vector<string> act = splitlines(cdd.strm_out);
-    //         vector<string> exp = {
-    // #ifdef WIN32
-    //             "for /l %%i in (1,1,4) do popd", "chdir/d aa 2>nul", "pushd bb 2>nul", "pushd cc 2>nul", "pushd dd 2>nul", "pushd dd",
-    // #else
-    //             "dirs -c",
-    //             "\\cd 'aa'",
-    //             "pushd 'bb'",
-    //             "pushd 'cc'",
-    // #endif
-    //         };
-    //         REQUIRE(exp == act);
-    //         REQUIRE("cdd gc\n" == cdd.strm_err.str());
-    //     }
+    SECTION("garbage_collect")
+    {
+        auto cdd = cdd_test({"_cdd", "--gc"}, "dd", "/current/working/dir", test_dirs);
+        cdd.process();
+
+        vector<string> act = split_text(cdd.get_out_str());
+        vector<string> exp = {
+#ifdef WIN32
+            "for /l %%i in (1,1,4) do popd", //
+            "chdir/d aa 2>nul",              //
+            "pushd cc 2>nul",                //
+            "pushd dd 2>nul",                //
+            "pushd dd",                      //
+#else
+            "dirs -c",    //
+            "\\cd 'aa'",  //
+            "pushd 'bb'", //
+            "pushd 'cc'", //
+#endif
+        };
+        REQUIRE(exp == act);
+        REQUIRE("cdd reduced dirs: from 4 to 3\n" == cdd.get_err_str());
+    }
 
     SECTION("delete_one")
     {
-        // Cdd cdd(arr_test_dirs, countof(arr_test_dirs), "dd");
-        // cdd.opt_delete = true;
-        // cdd.direction.assign("+");
-        // cdd.opt_path = "1";
-        // cdd.process();
-
         auto cdd = cdd_test({"_cdd", "--del", "+1"}, "dd", "/current/working/dir", test_dirs);
         cdd.process();
 
@@ -106,82 +104,6 @@ TEST_CASE("cleanup_test")
         REQUIRE(exp == act);
         REQUIRE("cdd reset\n" == cdd.get_err_str());
     }
-
-    //     SECTION("command_generator_1")
-    //     {
-    //         string arr_dir[] = {
-    //             "def", // second visited
-    //             "abc", // first visited
-    //         };
-    //         vector<string> vec_test_dirs(arr_dir, arr_dir + countof(arr_dir));
-    //         Cdd cdd(vec_test_dirs, "ghi");
-    //         vector<string> vec_dir;
-    //         vec_dir.assign(vec_test_dirs.rbegin(), vec_test_dirs.rend());
-    //         cdd.command_generator(vec_dir);
-    //         vector<string> act = splitlines(cdd.strm_out);
-    //         vector<string> exp = {
-    // #ifdef WIN32
-    //             "for /l %%i in (1,1,2) do popd",
-    //             "chdir/d abc 2>nul",
-    //             "pushd def 2>nul",
-    //             "pushd ghi",
-    // #else
-    //             "dirs -c",
-    //             "\\cd 'abc'",
-    //             "pushd 'def'",
-    // #endif
-    //         };
-    //         REQUIRE(exp == act);
-    //     }
-    //
-    //     SECTION("command_generator_2")
-    //     {
-    //         string arr_dir[] = {
-    //             "def", // second visited
-    //             "abc", // first visited
-    //         };
-    //         vector<string> vec_test_dirs(arr_dir, arr_dir + countof(arr_dir));
-    //         Cdd cdd(vec_test_dirs, "ghi");
-    //         vector<string> vec_dir;
-    //         vec_dir.assign(vec_test_dirs.rbegin(), vec_test_dirs.rend());
-    //         cdd.command_generator(vec_dir, "def");
-    //         vector<string> act = splitlines(cdd.strm_out);
-    //         vector<string> exp = {
-    // #ifdef WIN32
-    //             "for /l %%i in (1,1,2) do popd",
-    //             "chdir/d abc 2>nul",
-    //             "pushd ghi",
-    // #else
-    //             "dirs -c",
-    //             "\\cd 'abc'",
-    // #endif
-    //         };
-    //         REQUIRE(exp == act);
-    //     }
-    //
-    //     SECTION("command_generator_3")
-    //     {
-    //         string arr_dir[] = {
-    //             "def", // second visited
-    //             "abc", // first visited
-    //         };
-    //         vector<string> vec_test_dirs(arr_dir, arr_dir + countof(arr_dir));
-    //         Cdd cdd(vec_test_dirs, "ghi");
-    //         vector<string> vec_dir;
-    //         cdd.command_generator(vec_dir, "def");
-    //         vector<string> act = splitlines(cdd.strm_out);
-    //         vector<string> exp = {
-    // #ifdef WIN32
-    //             "for /l %%i in (1,1,2) do popd",
-    //             "chdir/d ghi",
-    // #else
-    //             "dirs -c",
-    // #endif
-    //         };
-    //         REQUIRE(exp == act);
-    //     }
-
-    //----------------------------------------------------------------------
 }
 
 // vim:ff=unix
