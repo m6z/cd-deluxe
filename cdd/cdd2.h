@@ -37,6 +37,14 @@ public:
         virtual const char* what() const throw() { return _msg.c_str(); }
     };
 
+    struct TaggedPath
+    {
+        string prefix;
+        fs::path path;
+        TaggedPath() = default;
+        TaggedPath(string prefix, fs::path path) : prefix(prefix), path(path) {}
+    };
+
     class KeyedPath
     {
     public:
@@ -67,6 +75,8 @@ public:
     {
     public:
         int count;
+        std::string tag_prefix;
+
         CommonPath(int count, int sequence, const KeyedPath& kp) : count(count), sequence(sequence), kp(kp) {}
 
         const KeyedPath& get_keyed_path() const { return kp; }
@@ -98,17 +108,10 @@ public:
         bool check_all_parts = true;
     };
 
-    struct FilteredPath
-    {
-        string prefix;
-        fs::path path;
-        FilteredPath(string prefix, fs::path path) : prefix(prefix), path(path) {}
-    };
-
 protected:
     // Creation methods (Migrated from initialize)
-    std::vector<fs::path> create_dirs_last_to_first();
-    std::vector<fs::path> create_dirs_first_to_last();
+    std::vector<TaggedPath> create_dirs_last_to_first();
+    std::vector<TaggedPath> create_dirs_first_to_last();
     std::vector<CommonPath> create_dirs_most_to_least();
 
 private:
@@ -127,9 +130,9 @@ private:
     std::regex compile_regex(string target, bool& check_all_parts);
 
     // new
-    std::vector<FilteredPath> filter_dirs_last_to_first(const std::optional<RegexFilter>& rf);
-    std::vector<FilteredPath> filter_dirs_first_to_last(const std::optional<RegexFilter>& rf);
-    std::vector<FilteredPath> filter_dirs_most_to_least(const std::optional<RegexFilter>& rf);
+    std::vector<TaggedPath> filter_dirs_last_to_first(const std::optional<RegexFilter>& rf);
+    std::vector<TaggedPath> filter_dirs_first_to_last(const std::optional<RegexFilter>& rf);
+    std::vector<TaggedPath> filter_dirs_most_to_least(const std::optional<RegexFilter>& rf);
 
     bool get_cwd_path(fs::path& cwd);
     bool get_target(string& target);
@@ -152,20 +155,20 @@ private:
     // static int get_inode(const string& path);
 
     bool change_to_path_spec(void);
-    bool process_path_spec_including_filesystem(string target, fs::path& path_found, vector<string>& path_extra);
-    bool process_path_spec_only_from_history(string target, fs::path& path_found, vector<string>& path_extra);
+    bool process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra);
+    bool process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra);
 
-    bool go_backwards(unsigned amount, fs::path& path_found);
-    bool go_forwards(unsigned amount, fs::path& path_found);
-    bool go_common(unsigned amount, fs::path& path_found);
+    bool go_backwards(unsigned amount, TaggedPath& tagged_path);
+    bool go_forwards(unsigned amount, TaggedPath& tagged_path);
+    bool go_common(unsigned amount, TaggedPath& tagged_path);
 
-    bool process_match(const string& target, fs::path& path_found, vector<string>& path_extra);
+    bool process_match(const string& target, TaggedPath& tagged_path, vector<string>& path_extra);
 
     void show_history(void);
     void show_history_first_to_last(void);
     void show_history_last_to_first(void);
     void show_history_most_to_least(void);
-    bool verify_history_matches(const std::vector<FilteredPath>& matches, const std::optional<RegexFilter>& rf);
+    bool verify_history_matches(const std::vector<TaggedPath>& matches, const std::optional<RegexFilter>& rf);
 
     void process_reset(void);
     void garbage_collect(void);

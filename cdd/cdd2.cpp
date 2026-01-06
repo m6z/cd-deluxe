@@ -27,9 +27,9 @@ std::string Cdd2::KeyedPath::generate_key_from_path(const fs::path& p, bool igno
 // Creation Methods (Refactored from initialize)
 //----------------------------------------------------------------------
 
-std::vector<fs::path> Cdd2::create_dirs_last_to_first()
+std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_last_to_first()
 {
-    std::vector<fs::path> result;
+    std::vector<TaggedPath> result;
     fs::path cwd;
     KeyedPath kp_cwd;
     if (get_cwd_path(cwd))
@@ -51,16 +51,22 @@ std::vector<fs::path> Cdd2::create_dirs_last_to_first()
                 continue;
             }
             // Directory has not been seen, add it to the vector
-            result.push_back(dir);
+
+            // generate the prefix
+            int number = -static_cast<int>(result.size() + 1);
+            stringstream strm;
+            strm << setw(3) << number << ": ";
+
+            result.emplace_back(strm.str(), dir);
             set_dir.insert(kp);
         }
     }
     return result;
 }
 
-std::vector<fs::path> Cdd2::create_dirs_first_to_last()
+std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_first_to_last()
 {
-    std::vector<fs::path> result;
+    std::vector<TaggedPath> result;
     set<KeyedPath> set_dir;
 
     // build up reverse unique list
@@ -70,7 +76,9 @@ std::vector<fs::path> Cdd2::create_dirs_first_to_last()
         KeyedPath kp(dir, options.ignore_case);
         if (set_dir.find(kp) == set_dir.end())
         {
-            result.push_back(dir);
+            stringstream strm;
+            strm << setw(3) << result.size() << ": ";
+            result.emplace_back(strm.str(), dir);
             set_dir.insert(kp);
         }
     }
@@ -100,6 +108,20 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
     std::transform(common_paths.begin(), common_paths.end(), std::back_inserter(result), //
                    [](auto& pair) { return std::move(pair.second); });
     sort(result.begin(), result.end());
+
+    // need to assign tag_prefixes
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        stringstream strm;
+        // relative offset
+        if (i < 10)
+            strm << " ";
+        strm << "," << i << ": ";
+        // count
+        strm << "(" << setw(2) << result[i].count << ") ";
+        result[i].tag_prefix = strm.str();
+    }
+
     return result;
 }
 
@@ -209,54 +231,82 @@ bool check_match(const std::regex& re, bool check_all_parts, const TElement& ele
 // Filter Methods (Refactored from process_match)
 //----------------------------------------------------------------------
 
-std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_last_to_first(const std::optional<RegexFilter>& rf)
+std::vector<Cdd2::TaggedPath> Cdd2::filter_dirs_last_to_first(const std::optional<RegexFilter>& rf)
 {
-    std::vector<FilteredPath> results;
-    auto dirs = create_dirs_last_to_first();
-    for (size_t i = 0; i < dirs.size(); ++i)
+    std::vector<TaggedPath> results;
+    auto tagged_paths = create_dirs_last_to_first();
+    for (const auto& tp : tagged_paths)
     {
-        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, dirs[i]))
+        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, tp.path))
         {
-            stringstream strm;
-            int number = -static_cast<int>(i) - 1;
-            strm << setw(3) << number << ": ";
-            results.emplace_back(strm.str(), dirs[i]);
+            results.push_back(tp);
+        }
+    }
+
+    // TODO - old - remove
+    // for (size_t i = 0; i < tagged_paths.size(); ++i)
+    // {
+    //     if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, tagged_paths[i].path))
+    //     {
+    //         stringstream strm;
+    //         int number = -static_cast<int>(i) - 1;
+    //         strm << setw(3) << number << ": ";
+    //         results.emplace_back(strm.str(), dirs[i]);
+    //     }
+    // }
+    return results;
+}
+
+std::vector<Cdd2::TaggedPath> Cdd2::filter_dirs_first_to_last(const std::optional<RegexFilter>& rf)
+{
+    std::vector<TaggedPath> results;
+
+    // TODO - old - remove
+    // auto dirs = create_dirs_first_to_last();
+    // for (size_t i = 0; i < dirs.size(); ++i)
+    // {
+    //     if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, dirs[i]))
+    //     {
+    //         stringstream strm;
+    //         strm << setw(3) << i << ": ";
+    //         results.emplace_back(strm.str(), dirs[i]);
+    //     }
+    // }
+
+    for (const auto& tp : create_dirs_first_to_last())
+    {
+        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, tp.path))
+        {
+            results.push_back(tp);
         }
     }
     return results;
 }
 
-std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_first_to_last(const std::optional<RegexFilter>& rf)
+std::vector<Cdd2::TaggedPath> Cdd2::filter_dirs_most_to_least(const std::optional<RegexFilter>& rf)
 {
-    std::vector<FilteredPath> results;
-    auto dirs = create_dirs_first_to_last();
-    for (size_t i = 0; i < dirs.size(); ++i)
-    {
-        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, dirs[i]))
-        {
-            stringstream strm;
-            strm << setw(3) << i << ": ";
-            results.emplace_back(strm.str(), dirs[i]);
-        }
-    }
-    return results;
-}
-
-std::vector<Cdd2::FilteredPath> Cdd2::filter_dirs_most_to_least(const std::optional<RegexFilter>& rf)
-{
-    std::vector<FilteredPath> results;
+    std::vector<TaggedPath> results;
     auto commons = create_dirs_most_to_least();
     auto projector = [](const CommonPath& cp) { return cp.get_keyed_path().get_dir_path(); };
 
-    for (size_t i = 0; i < commons.size(); ++i)
+    // TODO - old - remove
+    // for (size_t i = 0; i < commons.size(); ++i)
+    // {
+    //     if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, commons[i], projector))
+    //     {
+    //         stringstream strm;
+    //         if (i < 10)
+    //             strm << " ";
+    //         strm << "," << i << ": (" << setw(2) << commons[i].count << ") ";
+    //         results.emplace_back(strm.str(), projector(commons[i]));
+    //     }
+    // }
+
+    for (const auto& cp : commons)
     {
-        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, commons[i], projector))
+        if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, cp, projector))
         {
-            stringstream strm;
-            if (i < 10)
-                strm << " ";
-            strm << "," << i << ": (" << setw(2) << commons[i].count << ") ";
-            results.emplace_back(strm.str(), projector(commons[i]));
+            results.emplace_back(cp.tag_prefix, projector(cp));
         }
     }
     return results;
@@ -312,19 +362,20 @@ bool Cdd2::change_to_path_spec(void)
         return rc;
     }
     fs::path path_target = target;
-    fs::path path_found;
+    TaggedPath tagged_path;
     vector<string> path_extra;
 
-    if (process_path_spec_including_filesystem(path_target, path_found, path_extra))
+    if (process_path_spec_including_filesystem(path_target, tagged_path, path_extra))
     {
 #ifdef WIN32
-        strm_out << "pushd " << path_found << endl;
+        strm_out << "pushd " << tagged_path.path << endl;
 #else
-        strm_out << "pushd '" << path_found.string() << "'" << endl;
+        strm_out << "pushd '" << tagged_path.path.string() << "'" << endl;
 #endif
-        if (path_found != path_target || path_extra.size())
+        if (tagged_path.path != path_target || path_extra.size())
         {
-            strm_err << "cdd: " << path_found.string() << endl;
+            // explain the action taken
+            strm_err << "cdd: " << tagged_path.prefix << ' ' << tagged_path.path.string() << endl;
         }
         for (const auto& extra : path_extra)
         {
@@ -335,7 +386,7 @@ bool Cdd2::change_to_path_spec(void)
     return rc;
 }
 
-bool Cdd2::process_path_spec_including_filesystem(string target, fs::path& path_found, vector<string>& path_extra)
+bool Cdd2::process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
     target = expand_dots(target);
 
@@ -343,19 +394,19 @@ bool Cdd2::process_path_spec_including_filesystem(string target, fs::path& path_
     {
         if (is_directory(target))
         {
-            path_found = target;
+            tagged_path.path = target;
             return true;
         }
         if (is_regular_file(target))
         {
-            path_found = fs::path(target).parent_path();
+            tagged_path.path = fs::path(target).parent_path();
             return true;
         }
     }
-    return process_path_spec_only_from_history(target, path_found, path_extra);
+    return process_path_spec_only_from_history(target, tagged_path, path_extra);
 }
 
-bool Cdd2::process_path_spec_only_from_history(string target, fs::path& path_found, vector<string>& path_extra)
+bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
     if (dirs.empty())
     {
@@ -379,15 +430,15 @@ bool Cdd2::process_path_spec_only_from_history(string target, fs::path& path_fou
         int amount = std::stoi(match[1]);
         if (options.direction == CddOptions::direction_backwards)
         {
-            return go_backwards(amount, path_found);
+            return go_backwards(amount, tagged_path);
         }
         if (options.direction == CddOptions::direction_forwards)
         {
-            return go_forwards(amount, path_found);
+            return go_forwards(amount, tagged_path);
         }
         if (options.direction == CddOptions::direction_common)
         {
-            return go_common(amount, path_found);
+            return go_common(amount, tagged_path);
         }
         return false;
     }
@@ -396,48 +447,48 @@ bool Cdd2::process_path_spec_only_from_history(string target, fs::path& path_fou
     if (std::regex_match(target, match, re_dash_num))
     {
         int amount = std::stoi(match[1]);
-        return go_backwards(amount, path_found);
+        return go_backwards(amount, tagged_path);
     }
     if (std::regex_match(target, match, re_dashes))
     {
         int amount = match[0].str().size();
-        return go_backwards(amount, path_found);
+        return go_backwards(amount, tagged_path);
     }
 
     // forwards
     if (std::regex_match(target, match, re_plus_num))
     {
         int amount = std::stoi(match[1]);
-        return go_forwards(amount, path_found);
+        return go_forwards(amount, tagged_path);
     }
     if (std::regex_match(target, match, re_pluses))
     {
         int amount = match[0].str().size();
-        return go_forwards(amount - 1, path_found);
+        return go_forwards(amount - 1, tagged_path);
     }
 
     // common (comma)
     if (std::regex_match(target, match, re_comma_num))
     {
         int amount = std::stoi(match[1]);
-        return go_common(amount, path_found);
+        return go_common(amount, tagged_path);
     }
     if (std::regex_match(target, match, re_commas))
     {
         int amount = match[0].str().size();
-        return go_common(amount - 1, path_found);
+        return go_common(amount - 1, tagged_path);
     }
 
-    return process_match(target, path_found, path_extra);
+    return process_match(target, tagged_path, path_extra);
 }
 
 //----------------------------------------------------------------------
 // Refactored process_match
 //----------------------------------------------------------------------
 
-bool Cdd2::process_match(const string& target, fs::path& path_found, vector<string>& path_extra)
+bool Cdd2::process_match(const string& target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
-    vector<FilteredPath> matches;
+    vector<TaggedPath> matches;
 
     std::string showing_direction;
     size_t entry_count = options.max_history;
@@ -481,7 +532,7 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
     }
 
     // The first match is the target
-    path_found = matches[0].path;
+    tagged_path = matches[0];
 
     // Remaining matches (if any) are added to info output
     // Note: Skip index 0 in the formatting loop because index 0 is the jump target
@@ -508,7 +559,7 @@ bool Cdd2::process_match(const string& target, fs::path& path_found, vector<stri
 // Navigation Methods (Updated to use create_*)
 //----------------------------------------------------------------------
 
-bool Cdd2::go_backwards(unsigned amount, fs::path& path_found)
+bool Cdd2::go_backwards(unsigned amount, TaggedPath& tagged_path)
 {
     auto dirs = create_dirs_last_to_first();
     if (amount < 1 || amount > dirs.size())
@@ -516,11 +567,11 @@ bool Cdd2::go_backwards(unsigned amount, fs::path& path_found)
         strm_err << "No directory at -" << amount << endl;
         return false;
     }
-    path_found = dirs[amount - 1];
+    tagged_path = dirs[amount - 1];
     return true;
 }
 
-bool Cdd2::go_forwards(unsigned amount, fs::path& path_found)
+bool Cdd2::go_forwards(unsigned amount, TaggedPath& tagged_path)
 {
     auto dirs = create_dirs_first_to_last();
     if (amount >= dirs.size())
@@ -528,11 +579,11 @@ bool Cdd2::go_forwards(unsigned amount, fs::path& path_found)
         strm_err << "No directory at +" << amount << endl;
         return false;
     }
-    path_found = dirs[amount];
+    tagged_path = dirs[amount];
     return true;
 }
 
-bool Cdd2::go_common(unsigned amount, fs::path& path_found)
+bool Cdd2::go_common(unsigned amount, TaggedPath& tagged_path)
 {
     auto dirs = create_dirs_most_to_least();
     if (amount >= dirs.size())
@@ -540,7 +591,7 @@ bool Cdd2::go_common(unsigned amount, fs::path& path_found)
         strm_err << "No directory at ," << amount << endl;
         return false;
     }
-    path_found = dirs[amount].get_keyed_path().get_dir_path();
+    tagged_path = TaggedPath(dirs[amount].tag_prefix, dirs[amount].get_keyed_path().get_dir_path());
     return true;
 }
 
@@ -564,7 +615,7 @@ void Cdd2::show_history(void)
     }
 }
 
-bool Cdd2::verify_history_matches(const std::vector<FilteredPath>& matches, const std::optional<RegexFilter>& rf)
+bool Cdd2::verify_history_matches(const std::vector<TaggedPath>& matches, const std::optional<RegexFilter>& rf)
 {
     if (matches.empty())
     {
@@ -675,11 +726,17 @@ void Cdd2::process_reset(void)
 
 void Cdd2::garbage_collect(void)
 {
-    auto dirs = create_dirs_first_to_last();
-    if (dirs.empty() || dirs.size() == this->dirs.size())
+    auto tagged_paths = create_dirs_first_to_last();
+    if (tagged_paths.empty() || tagged_paths.size() == this->dirs.size())
     {
         strm_err << "** Nothing to gc" << endl;
         return;
+    }
+    vector<fs::path> dirs;
+    dirs.reserve(tagged_paths.size());
+    for (const auto& tp : tagged_paths)
+    {
+        dirs.push_back(tp.path);
     }
     command_generator(dirs);
     strm_err << "cdd reduced dirs: from " << this->dirs.size() << " to " << dirs.size() << endl;
@@ -694,32 +751,32 @@ void Cdd2::process_delete(void)
         return;
     }
 
-    fs::path path_found;
+    TaggedPath tagged_path;
     vector<string> path_extra;
-    if (!process_path_spec_only_from_history(target, path_found, path_extra))
+    if (!process_path_spec_only_from_history(target, tagged_path, path_extra))
     {
         // Here: error
         strm_err << "** Could not resolve for delete: " << target << endl;
         return;
     }
 
-    // reverse copy excluding path_found
+    // reverse copy excluding found path
     vector<fs::path> reversed;
     for (auto rit = dirs.rbegin(); rit != dirs.rend(); ++rit)
     {
         auto dir = *rit;
-        if (dir != path_found)
+        if (dir != tagged_path.path)
         {
             reversed.push_back(dir);
         }
     }
     if (reversed.size() == dirs.size())
     {
-        strm_err << "** Could not delete from history: " << path_found << endl;
+        strm_err << "** Could not delete from history: " << tagged_path.path.string() << endl;
         return;
     }
     command_generator(reversed);
-    strm_err << "cdd del: " << path_found.string() << endl;
+    strm_err << "cdd del: " << tagged_path.path.string() << endl;
 }
 
 void Cdd2::command_generator(const vector<fs::path>& paths_remaining)
@@ -739,15 +796,12 @@ void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining)
     {
         strm_out << (count++ ? "pushd " : "chdir/d ") << path_remaining << " 2>nul" << endl;
     }
-#if WIN32
+
+    fs::path cwd;
+    if (get_cwd_path(cwd))
     {
-        fs::path cwd;
-        if (get_cwd_path(cwd))
-        {
-            strm_out << (count ? "pushd " : "chdir/d ") << cwd << endl;
-        }
+        strm_out << (count ? "pushd " : "chdir/d ") << cwd << endl;
     }
-#endif
 }
 
 void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)

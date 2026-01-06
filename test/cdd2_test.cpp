@@ -89,15 +89,15 @@ TEST_CASE("cdd2_test")
 
         auto dirs_last_to_first = cdd.create_dirs_last_to_first();
         REQUIRE(dirs_last_to_first.size() == 3);
-        REQUIRE(dirs_last_to_first[0] == "/path/one");
-        REQUIRE(dirs_last_to_first[1] == "/path/two");
-        REQUIRE(dirs_last_to_first[2] == "/path/Three");
+        REQUIRE(dirs_last_to_first[0].path == "/path/one");
+        REQUIRE(dirs_last_to_first[1].path == "/path/two");
+        REQUIRE(dirs_last_to_first[2].path == "/path/Three");
 
         auto dirs_first_to_last = cdd.create_dirs_first_to_last();
         REQUIRE(dirs_first_to_last.size() == 3);
-        REQUIRE(dirs_first_to_last[0] == "/path/TWO");
-        REQUIRE(dirs_first_to_last[1] == "/path/Three");
-        REQUIRE(dirs_first_to_last[2] == "/path/one");
+        REQUIRE(dirs_first_to_last[0].path == "/path/TWO");
+        REQUIRE(dirs_first_to_last[1].path == "/path/Three");
+        REQUIRE(dirs_first_to_last[2].path == "/path/one");
 
         auto dirs_most_to_least = cdd.create_dirs_most_to_least();
         REQUIRE(dirs_most_to_least.size() == 3);

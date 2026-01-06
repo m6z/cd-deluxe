@@ -15,7 +15,7 @@ test_pattern=cleanup_test
 set -x
 
 # All tests
-# cmake --build build1 && ctest --test-dir build1
+cmake --build build1 && ctest --test-dir build1
 
 # Filtered tests
-cmake --build build1 && ctest --test-dir build1 -R ${test_pattern}
+# cmake --build build1 && ctest --test-dir build1 -R ${test_pattern}
