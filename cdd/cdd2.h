@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 class Cdd2
 {
 public:
-    Cdd2(const CddOptions& options, const vector<string> dirs, fs::path cwd = {}) : options(options), dirs(dirs), cwd_(cwd)
+    Cdd2(const CddOptions& options, const vector<string> dirs, fs::path cwd = {}) : options_(options), dirs_(dirs), cwd_(cwd)
     {
         if (!cwd.empty())
         {
@@ -25,9 +25,9 @@ public:
     }
 
     void process(void);
-    const CddOptions& get_options() const { return options; }
-    string get_out_str() const { return strm_out.str(); }
-    string get_err_str() const { return strm_err.str(); }
+    const CddOptions& get_options() const { return options_; }
+    string get_out_str() const { return strm_out_.str(); }
+    string get_err_str() const { return strm_err_.str(); }
 
     struct Exception : public exception
     {
@@ -130,19 +130,18 @@ protected:
 private:
     void initialize();
 
-    CddOptions options;          // The options for cdd2
-    vector<string> dirs;         // The raw list of pushed directories
+    CddOptions options_;         // The options_ for cdd2
+    vector<string> dirs_;        // The raw list of pushed directories
     fs::path cwd_;               // Current working directory (use get_cwd() to access)
     bool cwd_assigned_ = false;  // Whether cwd has been assigned
     bool cwd_retrieved_ = false; // Whether cwd has been retrieved
 
-    stringstream strm_out;
-    stringstream strm_err;
+    stringstream strm_out_;
+    stringstream strm_err_;
 
     // Helper to compile regex and determine if we check all parts
     std::regex compile_regex(string target, bool& check_all_parts);
 
-    // new
     std::vector<TaggedPath> filter_dirs_last_to_first(const std::optional<RegexFilter>& rf);
     std::vector<TaggedPath> filter_dirs_first_to_last(const std::optional<RegexFilter>& rf);
     std::vector<TaggedPath> filter_dirs_most_to_least(const std::optional<RegexFilter>& rf);
@@ -151,21 +150,6 @@ private:
     bool get_target(string& target);
     bool get_target_regex(std::regex& re, bool& check_all_parts);
     std::optional<RegexFilter> get_target_regex_filter();
-
-    // old
-    void assign(vector<string>& vec_pushd, string current_path);
-    void assign(string arr_pushd[], int count, string current_path = string());
-    void assign_debug_input(const string& input_path);
-
-    // TODO - old - remove
-    // void help_tip(void);
-    // static void help(void);
-    // static void version(void);
-    // string normalize_path(const string& path);
-    // string windowize_path(const string& path);
-    // string get_parent_path(const string& path);
-    // static bool paths_equal(const string& path1, int inode1, const string& path2);
-    // static int get_inode(const string& path);
 
     bool change_to_path_spec(void);
     bool process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra);
