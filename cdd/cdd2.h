@@ -39,10 +39,22 @@ public:
 
     struct TaggedPath
     {
-        string prefix;
         fs::path path;
+        string prefix1;
+        string prefix2;
         TaggedPath() = default;
-        TaggedPath(string prefix, fs::path path) : prefix(prefix), path(path) {}
+        TaggedPath(fs::path path, string prefix1 = {}, string prefix2 = {}) : path(path), prefix1(prefix1), prefix2(prefix2) {}
+        string to_string() const
+        {
+            stringstream strm;
+            strm << prefix1 << ": ";
+            if (!prefix2.empty())
+            {
+                strm << prefix2 << ' ';
+            }
+            strm << path.string();
+            return strm.str();
+        }
     };
 
     class KeyedPath
@@ -75,7 +87,8 @@ public:
     {
     public:
         int count;
-        std::string tag_prefix;
+        std::string tag_prefix1;
+        std::string tag_prefix2;
 
         CommonPath(int count, int sequence, const KeyedPath& kp) : count(count), sequence(sequence), kp(kp) {}
 

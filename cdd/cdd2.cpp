@@ -55,9 +55,9 @@ std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_last_to_first()
             // generate the prefix
             int number = -static_cast<int>(result.size() + 1);
             stringstream strm;
-            strm << setw(3) << number << ": ";
+            strm << setw(3) << number;
 
-            result.emplace_back(strm.str(), dir);
+            result.emplace_back(dir, strm.str());
             set_dir.insert(kp);
         }
     }
@@ -77,8 +77,8 @@ std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_first_to_last()
         if (set_dir.find(kp) == set_dir.end())
         {
             stringstream strm;
-            strm << setw(3) << result.size() << ": ";
-            result.emplace_back(strm.str(), dir);
+            strm << setw(3) << result.size();
+            result.emplace_back(dir, strm.str());
             set_dir.insert(kp);
         }
     }
@@ -112,14 +112,20 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
     // need to assign tag_prefixes
     for (size_t i = 0; i < result.size(); ++i)
     {
-        stringstream strm;
         // relative offset
-        if (i < 10)
-            strm << " ";
-        strm << "," << i << ": ";
+        {
+            stringstream strm;
+            if (i < 10)
+                strm << ' ';
+            strm << ',' << i;
+            result[i].tag_prefix1 = strm.str();
+        }
         // count
-        strm << "(" << setw(2) << result[i].count << ") ";
-        result[i].tag_prefix = strm.str();
+        {
+            stringstream strm;
+            strm << '(' << setw(2) << result[i].count << ')';
+            result[i].tag_prefix2 = strm.str();
+        }
     }
 
     return result;
@@ -306,7 +312,7 @@ std::vector<Cdd2::TaggedPath> Cdd2::filter_dirs_most_to_least(const std::optiona
     {
         if (!rf.has_value() || check_match(rf->re, rf->check_all_parts, cp, projector))
         {
-            results.emplace_back(cp.tag_prefix, projector(cp));
+            results.emplace_back(projector(cp), cp.tag_prefix1, cp.tag_prefix2);
         }
     }
     return results;
@@ -375,7 +381,13 @@ bool Cdd2::change_to_path_spec(void)
         if (tagged_path.path != path_target || path_extra.size())
         {
             // explain the action taken
-            strm_err << "cdd: " << tagged_path.prefix << ' ' << tagged_path.path.string() << endl;
+            // don't print prefix1 here
+            strm_err << "cdd:";
+            if (!tagged_path.prefix2.empty())
+            {
+                strm_err << ' ' << tagged_path.prefix2;
+            }
+            strm_err << ' ' << tagged_path.path.string() << endl;
         }
         for (const auto& extra : path_extra)
         {
@@ -544,7 +556,7 @@ bool Cdd2::process_match(const string& target, TaggedPath& tagged_path, vector<s
     entry_count = std::min(entry_count + 1, matches.size());
     for (size_t i = 1; i < entry_count; ++i)
     {
-        path_extra.push_back(matches[i].prefix + matches[i].path.string());
+        path_extra.push_back(matches[i].to_string());
         count++;
     }
     if (count + 1 < matches.size())
@@ -591,7 +603,7 @@ bool Cdd2::go_common(unsigned amount, TaggedPath& tagged_path)
         strm_err << "No directory at ," << amount << endl;
         return false;
     }
-    tagged_path = TaggedPath(dirs[amount].tag_prefix, dirs[amount].get_keyed_path().get_dir_path());
+    tagged_path = TaggedPath(dirs[amount].get_keyed_path().get_dir_path(), dirs[amount].tag_prefix1, dirs[amount].tag_prefix2);
     return true;
 }
 
@@ -645,7 +657,7 @@ void Cdd2::show_history_last_to_first(void)
     size_t count = 0;
     for (const auto& filtered_path : matches)
     {
-        strm_err << filtered_path.prefix << filtered_path.path.string() << endl;
+        strm_err << filtered_path.to_string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
         {
             break;
@@ -670,7 +682,7 @@ void Cdd2::show_history_first_to_last(void)
     size_t count = 0;
     for (const auto& filtered_path : matches)
     {
-        strm_err << filtered_path.prefix << filtered_path.path.string() << endl;
+        strm_err << filtered_path.to_string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
         {
             break;
@@ -695,7 +707,7 @@ void Cdd2::show_history_most_to_least(void)
     size_t count = 0;
     for (const auto& filtered_path : matches)
     {
-        strm_err << filtered_path.prefix << filtered_path.path.string() << endl;
+        strm_err << filtered_path.to_string() << endl;
         if (++count >= entry_count && entry_count > 0 && !options.all_history)
         {
             break;

@@ -407,7 +407,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 2) /tmp/b\n" == cdd.get_err_str());
     }
 
     SECTION("common_comma_zero")
@@ -425,7 +425,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 2) /tmp/b\n" == cdd.get_err_str());
     }
 
     SECTION("common_one_comma")
@@ -443,7 +443,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 2) /tmp/b\n" == cdd.get_err_str());
     }
 
     SECTION("common_comma_one")
@@ -461,7 +461,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 1) /tmp/c\n" == cdd.get_err_str());
     }
 
     SECTION("common_two_commas")
@@ -479,7 +479,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 1) /tmp/c\n" == cdd.get_err_str());
     }
 
     SECTION("common_comma_two")
@@ -497,7 +497,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 1) /tmp/a\n" == cdd.get_err_str());
     }
 
     SECTION("common_three_commas")
@@ -515,7 +515,7 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
 #endif
-        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 1) /tmp/a\n" == cdd.get_err_str());
     }
 
     SECTION("common_comma_three")
@@ -686,7 +686,7 @@ TEST_CASE("match_test")
 #else
         REQUIRE("pushd '/cc/dd'\n" == cdd.get_out_str());
 #endif
-        REQUIRE(cdd.get_err_str() == "cdd: /cc/dd\n"
+        REQUIRE(cdd.get_err_str() == "cdd: ( 2) /cc/dd\n"
                                      " ,3: ( 1) /bb/cc\n");
     }
 }
