@@ -104,3 +104,43 @@ bool is_special_dash_parameter(const std::string& s)
 
     return std::regex_match(s, pattern);
 }
+
+bool is_parent_of(fs::path parent, fs::path child)
+{
+    parent = fs::absolute(parent).lexically_normal();
+    child = fs::absolute(child).lexically_normal();
+
+    // Calculate the path to get from parent to child
+    fs::path rel = fs::relative(child, parent);
+
+    // If the result is empty, they are the same path.
+    // If the result starts with "..", child is outside parent.
+    // Otherwise, child is inside parent.
+    return !rel.empty() && rel.string().find("..") != 0;
+}
+
+std::vector<std::tuple<std::string, fs::path>> get_path_components(const fs::path& path)
+{
+    std::vector<std::tuple<std::string, fs::path>> components;
+
+    fs::path current;
+    for (const auto& part : fs::absolute(path).lexically_normal())
+    {
+        current /= part;
+        if (part == current.root_path())
+        {
+            // Skip root path component
+            continue;
+        }
+        if (part.empty())
+        {
+            // Skip empty components (can happen with trailing slashes)
+            continue;
+        }
+
+        // here, add it
+        components.emplace_back(part.string(), current);
+    }
+    std::reverse(components.begin(), components.end());
+    return components;
+}

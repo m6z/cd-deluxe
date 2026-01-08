@@ -690,3 +690,31 @@ TEST_CASE("match_test")
                                      " ,3: ( 1) /bb/cc\n");
     }
 }
+
+TEST_CASE("upwards_test")
+{
+    SECTION("up_a")
+    {
+        // somewhat artificial test since typically ".." would be used in normal case
+        auto cdd = cdd_test({"_cdd", "/tmp/a/b", "a"}, "", "/tmp/a/b/c", "");
+        cdd._is_directory = true;
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /tmp/a\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+#endif
+    }
+
+    SECTION("up_b")
+    {
+        auto cdd = cdd_test({"_cdd", "/a/b/bc/d/e/f", "b$"}, "", "/a/b/bc/d/e/f/g", "");
+        cdd._is_directory = true;
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /a/b\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/a/b'\n" == cdd.get_out_str());
+#endif
+    }
+}

@@ -28,38 +28,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 TEST_CASE("util_test")
 {
-    // TODO - old - remove
-    //     SECTION("normalize_path")
-    //     {
-    //         Cdd cdd;
-    //         REQUIRE("/tmp/a" == cdd.normalize_path("/tmp/a"));
-    //         // Remove trailing slash
-    //         REQUIRE("/tmp/a" == cdd.normalize_path("/tmp/a/"));
-    // #ifdef WIN32
-    //         REQUIRE("c:/tmp/a" == cdd.normalize_path("C:\\tmp\\a\\"));
-    // #endif
-    //     }
-    //
-    //     SECTION("windowize_path")
-    //     {
-    // #ifdef WIN32
-    //         Cdd cdd;
-    //         REQUIRE("\\tmp\\a" == cdd.windowize_path("/tmp/a"));
-    // #endif
-    //     }
-    //
-    //     SECTION("parent_path")
-    //     {
-    //         Cdd cdd;
-    //         REQUIRE("/abc/def" == cdd.get_parent_path("/abc/def/ghi.tmp"));
-    //         REQUIRE("/abc" == cdd.get_parent_path("/abc/def.tmp"));
-    //         REQUIRE("/" == cdd.get_parent_path("/abc.tmp"));
-    // #ifdef WIN32
-    //         REQUIRE("c:\\tmp" == cdd.get_parent_path("c:\\tmp\\a"));
-    //         REQUIRE("c:" == cdd.get_parent_path("c:abc.tmp"));
-    // #endif
-    //     }
-
     SECTION("expand_dots")
     {
         auto fun = [](string s)
@@ -95,6 +63,33 @@ TEST_CASE("util_test")
         REQUIRE(is_special_dash_parameter("-123") == true);
         REQUIRE(is_special_dash_parameter("-1") == true);
         REQUIRE(is_special_dash_parameter("45") == false);
+    }
+
+    SECTION("is_parent_of")
+    {
+        if (false) // TODO - old - remove
+        {
+            fs::path parent1 = "/abc/def";
+            fs::path child1 = "/abc/def/ghi/xyz.txt";
+            fs::path nonchild1 = "/abc/defxyz/ghi.txt";
+
+            REQUIRE(is_parent_of(parent1, child1) == true);
+            REQUIRE(is_parent_of(parent1, nonchild1) == false);
+        }
+
+        REQUIRE(is_parent_of("../..", "../../a/b") == true);
+    }
+
+    SECTION("get_path_components")
+    {
+        auto components = get_path_components("/a/b/c");
+        REQUIRE(components.size() == 3);
+        REQUIRE(std::get<0>(components[0]) == "c");
+        REQUIRE(std::get<1>(components[0]) == "/a/b/c");
+        REQUIRE(std::get<0>(components[1]) == "b");
+        REQUIRE(std::get<1>(components[1]) == "/a/b");
+        REQUIRE(std::get<0>(components[2]) == "a");
+        REQUIRE(std::get<1>(components[2]) == "/a");
     }
 }
 

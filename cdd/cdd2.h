@@ -154,6 +154,7 @@ private:
     bool change_to_path_spec(void);
     bool process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra);
     bool process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra);
+    bool process_path_spec_moving_upwards(const string& target, TaggedPath& tagged_path);
 
     bool go_backwards(unsigned amount, TaggedPath& tagged_path);
     bool go_forwards(unsigned amount, TaggedPath& tagged_path);

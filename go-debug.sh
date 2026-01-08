@@ -10,7 +10,8 @@
 # section=forward_plus_two
 # section=simple_match_forward
 # section=delete_one
-section=garbage_collect
+# section=garbage_collect
+section=up_a
 
 # test_case=match_test
 
