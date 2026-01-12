@@ -131,10 +131,11 @@ function cdd {{
         echo "Remove cdd function or unalias cd until the issue is resolved." >&2
         return 1
     fi
-    while read x
+
+    dirs -l -p | "${{_cdd_exe}}" "$@" | while read x
     do
         eval $x > /dev/null
-    done < <(dirs -l -p | "${{_cdd_exe}}" "$@")
+    done
 }}
 
 alias cd=cdd

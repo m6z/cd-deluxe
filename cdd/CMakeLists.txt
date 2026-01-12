@@ -16,6 +16,7 @@ add_library(cdd STATIC
     cdd_util.cpp
     cdd_options.cpp
     cdd_options_init.cpp
+    fzf_wrapper.cpp
 )
 
 # This command automatically adds the include directories and other

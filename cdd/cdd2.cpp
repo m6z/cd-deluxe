@@ -8,6 +8,7 @@
 #include <set>
 
 #include "cdd_util.h"
+#include "fzf_wrapper.h"
 
 namespace fs = std::filesystem;
 
@@ -282,11 +283,17 @@ std::vector<Cdd2::TaggedPath> Cdd2::filter_dirs_most_to_least(const std::optiona
 // Processing
 //----------------------------------------------------------------------
 
-void Cdd2::process(void)
+void Cdd2::process()
 {
     if (options_.list_history)
     {
         show_history();
+        return;
+    }
+
+    if (options_.use_fzf)
+    {
+        filter_with_fzf();
         return;
     }
 
@@ -318,7 +325,7 @@ void Cdd2::process(void)
     show_history();
 }
 
-bool Cdd2::change_to_path_spec(void)
+bool Cdd2::change_to_path_spec()
 {
     bool rc = false;
     string target;
@@ -637,19 +644,50 @@ bool Cdd2::go_common(unsigned amount, TaggedPath& tagged_path)
 // Display Methods (Updated to use create_*)
 //----------------------------------------------------------------------
 
-void Cdd2::show_history(void)
+void Cdd2::show_history()
 {
     if (options_.direction == CddOptions::direction_backwards)
     {
-        show_history_last_to_first();
+        show_history_last_to_first(strm_err_, options_.all_history);
     }
     else if (options_.direction == CddOptions::direction_forwards)
     {
-        show_history_first_to_last();
+        show_history_first_to_last(strm_err_, options_.all_history);
     }
     else if (options_.direction == CddOptions::direction_common)
     {
-        show_history_most_to_least();
+        show_history_most_to_least(strm_err_, options_.all_history);
+    }
+}
+
+void Cdd2::filter_with_fzf()
+{
+    stringstream strm;
+    char trim_char = ':';
+    if (options_.direction == CddOptions::direction_backwards)
+    {
+        show_history_last_to_first(strm, true);
+    }
+    else if (options_.direction == CddOptions::direction_forwards)
+    {
+        show_history_first_to_last(strm, true);
+    }
+    else if (options_.direction == CddOptions::direction_common)
+    {
+        trim_char = ')';
+        show_history_most_to_least(strm, true);
+    }
+
+    if (!strm.str().empty())
+    {
+        auto result = run_fzf(strm.str());
+        strm_err_ << "cdd: " << trim_from_char(result, ':') << endl;
+        // TODO : handle Windows quoting
+        strm_out_ << "pushd '" << trim_from_char(result, trim_char) << "'" << endl;
+    }
+    else
+    {
+        strm_err_ << "** No history to filter with fzf" << endl;
     }
 }
 
@@ -670,7 +708,7 @@ bool Cdd2::verify_history_matches(const std::vector<TaggedPath>& matches, const 
     return true;
 }
 
-void Cdd2::show_history_last_to_first(void)
+void Cdd2::show_history_last_to_first(std::ostream& strm, bool all_output)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_last_to_first(rf);
@@ -679,23 +717,23 @@ void Cdd2::show_history_last_to_first(void)
         return;
     }
 
-    size_t entry_count = std::min(options_.max_history, options_.max_backwards);
-    size_t count = 0;
+    size_t count_output = 0;
+    size_t max_output = all_output ? matches.size() : std::min(options_.max_history, options_.max_backwards);
     for (const auto& filtered_path : matches)
     {
-        strm_err_ << filtered_path.to_string() << endl;
-        if (++count >= entry_count && entry_count > 0 && !options_.all_history)
+        strm << filtered_path.to_string() << endl;
+        if (++count_output >= max_output)
         {
             break;
         }
     }
-    if (count < matches.size())
+    if (count_output < matches.size())
     {
-        strm_err_ << " ... showing last " << count << " of " << matches.size() << endl;
+        strm << " ... showing last " << count_output << " of " << matches.size() << endl;
     }
 }
 
-void Cdd2::show_history_first_to_last(void)
+void Cdd2::show_history_first_to_last(std::ostream& strm, bool all_output)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_first_to_last(rf);
@@ -704,23 +742,23 @@ void Cdd2::show_history_first_to_last(void)
         return;
     }
 
-    size_t entry_count = std::min(options_.max_history, options_.max_forwards);
-    size_t count = 0;
+    size_t count_output = 0;
+    size_t max_output = all_output ? matches.size() : std::min(options_.max_history, options_.max_forwards);
     for (const auto& filtered_path : matches)
     {
-        strm_err_ << filtered_path.to_string() << endl;
-        if (++count >= entry_count && entry_count > 0 && !options_.all_history)
+        strm << filtered_path.to_string() << endl;
+        if (++count_output >= max_output)
         {
             break;
         }
     }
-    if (count < matches.size())
+    if (count_output < matches.size())
     {
-        strm_err_ << " ... showing first " << count << " of " << matches.size() << endl;
+        strm << " ... showing first " << count_output << " of " << matches.size() << endl;
     }
 }
 
-void Cdd2::show_history_most_to_least(void)
+void Cdd2::show_history_most_to_least(std::ostream& strm, bool all_output)
 {
     auto rf = get_target_regex_filter();
     auto matches = filter_dirs_most_to_least(rf);
@@ -729,19 +767,19 @@ void Cdd2::show_history_most_to_least(void)
         return;
     }
 
-    size_t entry_count = std::min(options_.max_history, options_.max_common);
-    size_t count = 0;
+    size_t count_output = 0;
+    size_t max_output = all_output ? matches.size() : std::min(options_.max_history, options_.max_common);
     for (const auto& filtered_path : matches)
     {
-        strm_err_ << filtered_path.to_string() << endl;
-        if (++count >= entry_count && entry_count > 0 && !options_.all_history)
+        strm << filtered_path.to_string() << endl;
+        if (++count_output >= max_output)
         {
             break;
         }
     }
-    if (count < matches.size())
+    if (count_output < matches.size())
     {
-        strm_err_ << " ... showing top " << count << " of " << matches.size() << endl;
+        strm << " ... showing top " << count_output << " of " << matches.size() << endl;
     }
 }
 
@@ -755,14 +793,14 @@ bool Cdd2::is_regular_file(const fs::path& path)
     return fs::is_regular_file(path);
 }
 
-void Cdd2::process_reset(void)
+void Cdd2::process_reset()
 {
     vector<fs::path> empty_paths;
     command_generator(empty_paths);
     strm_err_ << "cdd reset" << endl;
 }
 
-void Cdd2::garbage_collect(void)
+void Cdd2::garbage_collect()
 {
     auto tagged_paths = create_dirs_first_to_last();
     if (tagged_paths.empty() || tagged_paths.size() == dirs_.size())
@@ -780,7 +818,7 @@ void Cdd2::garbage_collect(void)
     strm_err_ << "cdd reduced dirs: from " << dirs_.size() << " to " << paths.size() << endl;
 }
 
-void Cdd2::process_delete(void)
+void Cdd2::process_delete()
 {
     string target;
     if (!get_target(target))

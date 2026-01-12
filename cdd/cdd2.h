@@ -151,7 +151,7 @@ private:
     bool get_target_regex(std::regex& re, bool& check_all_parts);
     std::optional<RegexFilter> get_target_regex_filter();
 
-    bool change_to_path_spec(void);
+    bool change_to_path_spec();
     bool process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra);
     bool process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra);
     bool process_path_spec_moving_upwards(const string& target, TaggedPath& tagged_path);
@@ -162,15 +162,16 @@ private:
 
     bool process_match(const string& target, TaggedPath& tagged_path, vector<string>& path_extra);
 
-    void show_history(void);
-    void show_history_first_to_last(void);
-    void show_history_last_to_first(void);
-    void show_history_most_to_least(void);
+    void show_history();
+    void show_history_first_to_last(std::ostream& strm, bool all_output);
+    void show_history_last_to_first(std::ostream& strm, bool all_output);
+    void show_history_most_to_least(std::ostream& strm, bool all_output);
     bool verify_history_matches(const std::vector<TaggedPath>& matches, const std::optional<RegexFilter>& rf);
+    void filter_with_fzf();
 
-    void process_reset(void);
-    void garbage_collect(void);
-    void process_delete(void);
+    void process_reset();
+    void garbage_collect();
+    void process_delete();
 
     void command_generator(const vector<fs::path>& paths_remaining);
     void command_generator_win32(const vector<fs::path>& paths_remaining);

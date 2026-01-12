@@ -72,6 +72,7 @@ void add_common_options(CddOptions& x, cxxopts::Options& options)
         ("max-common", "Max common history", cxxopts::value(x.max_common))                                           //
         ("max-upwards", "Max upwards history", cxxopts::value(x.max_upwards))                                        //
         ("a,all", "Show all history", cxxopts::value(x.all_history)->implicit_value("true"))                         //
+        ("f,fzf", "Filter with fzf", cxxopts::value(x.use_fzf)->implicit_value("true"))                              //
         ;
 }
 

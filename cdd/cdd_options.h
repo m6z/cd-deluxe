@@ -31,6 +31,7 @@ public:
     bool delete_entry = false;
     bool reset_history = false;
     bool garbage_collect = false;
+    bool use_fzf = false;
     std::string error_message;
 
     std::vector<std::string> unmatched_args;

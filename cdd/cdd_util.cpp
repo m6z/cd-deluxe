@@ -144,3 +144,19 @@ std::vector<std::tuple<std::string, fs::path>> get_path_components(const fs::pat
     std::reverse(components.begin(), components.end());
     return components;
 }
+
+// trim string from first occurrence of character ch plus any following spaces
+std::string trim_from_char(const std::string& str, char ch)
+{
+    size_t pos = str.find(ch);
+    if (pos != std::string::npos)
+    {
+        size_t start_pos = pos + 1;
+        while (start_pos < str.size() && std::isspace(static_cast<unsigned char>(str[start_pos])))
+        {
+            start_pos++;
+        }
+        return str.substr(start_pos);
+    }
+    return str;
+}
