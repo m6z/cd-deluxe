@@ -21,9 +21,7 @@ int CddOptionsInit::parse(int argc, char* argv[])
             // explicit_value = false, implicit_value = "auto" allows:
             // --init        -> "auto"
             // --init bash   -> "bash"
-            ("init",
-             "Print shell integration code",
-             cxxopts::value<std::string>(init_shell_type)->implicit_value("auto"));
+            ("init", "Print shell integration code", cxxopts::value<std::string>(init_shell_type)->implicit_value("auto"));
 
         auto result = options.parse(argc, argv);
 
@@ -35,12 +33,14 @@ int CddOptionsInit::parse(int argc, char* argv[])
 
         // Resolve shell type
         std::string shell = init_shell_type;
-        if (shell == "auto" || shell.empty()) { shell = detect_shell(); }
+        if (shell == "auto" || shell.empty())
+        {
+            shell = detect_shell();
+        }
         std::string exe_path = get_self_executable_path(argv[0]);
 
         if (result.count("init"))
         {
-
             print_init_script(shell, exe_path);
             return 0; // Handled
         }
@@ -65,14 +65,20 @@ std::string CddOptionsInit::get_self_executable_path(const char* argv0) const
     // 1. Try to get path via OS-specific symlink (Linux/macOS)
     // /proc/self/exe is Linux standard.
     fs::path p = fs::read_symlink("/proc/self/exe", ec);
-    if (!ec) { result = p.string(); }
+    if (!ec)
+    {
+        result = p.string();
+    }
 
     // 2. Fallback: use argv[0] and make it absolute
     // This handles cases where the program was called via relative path ./cdd
     if (result.empty())
     {
         p = fs::absolute(argv0, ec);
-        if (!ec) { result = p.string(); }
+        if (!ec)
+        {
+            result = p.string();
+        }
     }
 
     // 3. Ultimate fallback (should rarely happen)
@@ -90,7 +96,8 @@ std::string CddOptionsInit::get_self_executable_path(const char* argv0) const
 std::string CddOptionsInit::detect_shell() const
 {
     const char* shell_env = std::getenv("SHELL");
-    if (!shell_env) return "bash"; // Default fallback
+    if (!shell_env)
+        return "bash"; // Default fallback
 
     std::string shell_path(shell_env);
     fs::path p(shell_path);
@@ -110,7 +117,10 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     {
         // TODO
     }
-    else { std::cout << std::format(_bash_setup, exe_path) << std::endl; }
+    else
+    {
+        std::cout << std::format(_bash_setup, exe_path) << std::endl;
+    }
 }
 
 static constexpr const char* _bash_init = R"(
@@ -150,5 +160,8 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
         std::cout << "echo \"-- cd-deluxe shell integration loaded for fish. See: "
                      "cd --help.\"\n";
     }
-    else { std::cout << std::format(_bash_init, exe_path); }
+    else
+    {
+        std::cout << std::format(_bash_init, exe_path);
+    }
 }
