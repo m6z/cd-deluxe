@@ -410,17 +410,20 @@ bool Cdd2::change_to_path_spec()
 
 bool Cdd2::process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
+    if (options_.direction == CddOptions::direction_upwards)
+    {
+        if (process_path_spec_searching_upwards(tagged_path))
+        {
+            return true;
+        }
+    }
+
     target = expand_dots(target);
 
     if (!target.empty())
     {
         if (is_directory(target))
         {
-            // check for change to parent directory including an extra qualifier in unmatched_args
-            if (process_path_spec_moving_upwards(target, tagged_path))
-            {
-                return true;
-            }
             tagged_path.path = target;
             return true;
         }
@@ -433,14 +436,8 @@ bool Cdd2::process_path_spec_including_filesystem(string target, TaggedPath& tag
     return process_path_spec_only_from_history(target, tagged_path, path_extra);
 }
 
-bool Cdd2::process_path_spec_moving_upwards(const string& target, TaggedPath& tagged_path)
+bool Cdd2::process_path_spec_searching_upwards(TaggedPath& tagged_path)
 {
-    if (options_.unmatched_args.size() <= 1)
-    {
-        // need extra parameter to match against
-        return false;
-    }
-
     fs::path cwd;
     if (!get_cwd_path(cwd))
     {
@@ -448,25 +445,23 @@ bool Cdd2::process_path_spec_moving_upwards(const string& target, TaggedPath& ta
         return false;
     }
 
-    if (!is_parent_of(target, cwd))
+    if (options_.unmatched_args.size() == 0)
     {
-        // Only apply if target is a parent of cwd
+        // need extra parameter to match against
         return false;
     }
 
-    string pattern = options_.unmatched_args[1];
+    string pattern = options_.unmatched_args[0];
     std::regex re = get_upwards_regex(pattern);
 
     // look at all the components of the target path
     // if there is a match with the pattern, return that path
 
-    auto path_components = get_path_components(target);
+    auto path_components = get_path_components(cwd);
     for (const auto& [part_str, part_path] : path_components)
     {
         if (std::regex_search(part_str, re))
         {
-            // get relative path from target to cwd
-            // tagged_path.path = fs::relative(part_path, cwd);
             tagged_path.path = part_path;
             return true;
         }

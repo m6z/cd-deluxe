@@ -153,7 +153,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
 
     // The program name is the first argument
     std::string program_name = args[0];
-    cxxopts::Options cmd_parser(program_name, " - A C++ Deluxe CD-ROM cataloger");
+    cxxopts::Options cmd_parser(program_name, " - A Change Directory Utility");
     add_full_options(*this, cmd_parser);
 
     // Special preprocessing for custom dash parameters (same as original logic)
@@ -224,6 +224,27 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         // Requirement: "Any options parsing errors are considered to be errors."
         set_error(e.what());
         return false;
+    }
+
+    // allow for shorthand specification of the direction
+    if (unmatched_args.size() > 1)
+    {
+        if (is_valid_direction(unmatched_args[0]))
+        {
+            direction = unmatched_args[0];
+            unmatched_args.erase(unmatched_args.begin());
+        }
+        else
+        {
+            // too many unmatched args
+            std::stringstream strm;
+            strm << "Ignoring extra arguments:";
+            for (size_t i = 1; i < unmatched_args.size(); ++i)
+            {
+                strm << " \"" << unmatched_args[i] << "\"";
+            }
+            set_error(strm.str());
+        }
     }
 
     return true;

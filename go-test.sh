@@ -7,7 +7,7 @@
 # test_pattern=cdd_options_test
 # test_pattern=cdd2_test
 # test_pattern=match_test
-test_pattern=cleanup_test
+# test_pattern=cleanup_test
 
 # Note: ctest does not support selection by SECTION, only by TEST_CASE
 

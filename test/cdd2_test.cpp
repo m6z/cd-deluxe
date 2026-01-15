@@ -718,8 +718,7 @@ TEST_CASE("upwards_test")
 {
     SECTION("up_a")
     {
-        // somewhat artificial test since typically ".." would be used in normal case
-        auto cdd = cdd_test({"_cdd", "/tmp/a/b", "a"}, "", "/tmp/a/b/c", "");
+        auto cdd = cdd_test({"_cdd", "-d..", "a"}, "", "/tmp/a/b/c", "");
         cdd._is_directory = true;
         cdd.process();
 #ifdef WIN32
@@ -731,7 +730,7 @@ TEST_CASE("upwards_test")
 
     SECTION("up_b")
     {
-        auto cdd = cdd_test({"_cdd", "/a/b/bc/d/e/f", "b$"}, "", "/a/b/bc/d/e/f/g", "");
+        auto cdd = cdd_test({"_cdd", "--direction=..", "b$"}, "", "/a/b/bc/d/e/f/g", "");
         cdd._is_directory = true;
         cdd.process();
 #ifdef WIN32
@@ -739,5 +738,102 @@ TEST_CASE("upwards_test")
 #else
         REQUIRE("pushd '/a/b'\n" == cdd.get_out_str());
 #endif
+    }
+}
+
+TEST_CASE("adhoc_tests")
+{
+    SECTION("adhoc_last_to_first_list_default")
+    {
+        auto cdd = cdd_test({"_cdd"}, "", "/a", {"/a", "/b", "/c"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == " -1: /b\n"
+                                     " -2: /c\n");
+    }
+
+    SECTION("adhoc_last_to_first_list_specified")
+    {
+        auto cdd = cdd_test({"_cdd", "-d-"}, "", "/a", {"/a", "/b", "/c"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == " -1: /b\n"
+                                     " -2: /c\n");
+    }
+
+    SECTION("adhoc_last_to_first_changed_specified")
+    {
+        auto cdd = cdd_test({"_cdd", "-d-", "d"}, "", "/a", {"/a", "/bc", "/cd", "/de"});
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /cd\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/cd'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: /cd\n"
+                                     " -3: /de\n");
+    }
+
+    SECTION("adhoc_last_to_first_changed_shorthand")
+    {
+        auto cdd = cdd_test({"_cdd", "-", "d"}, "", "/a", {"/a", "/bc", "/cd", "/de"});
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /cd\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/cd'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: /cd\n"
+                                     " -3: /de\n");
+    }
+
+    SECTION("adhoc_first_to_last_changed_shorthand")
+    {
+        auto cdd = cdd_test({"_cdd", "+", "d"}, "", "/a", {"/a", "/bc", "/cd", "/de"});
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /de\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/de'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: /de\n"
+                                     "  1: /cd\n");
+    }
+
+    SECTION("adhoc_most_common_changed_shorthand")
+    {
+        auto cdd = cdd_test({"_cdd", ",", "d"}, "", "/a", {"/a", "/bc", "/cd", "/de", "/de"});
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd /de\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/de'\n" == cdd.get_out_str());
+#endif
+        REQUIRE(cdd.get_err_str() == "cdd: ( 2) /de\n"
+                                     " ,3: ( 1) /cd\n");
+    }
+
+    SECTION("adhoc_upwards_changed_shorthand")
+    {
+        {
+            auto cdd = cdd_test({"_cdd", "..", "c"}, "", "/ab/bc/cd/ef/fg", "");
+            cdd._is_directory = true;
+            cdd.process();
+#ifdef WIN32
+            REQUIRE("pushd /ab/bc/cd\n" == cdd.get_out_str());
+#else
+            REQUIRE("pushd '/ab/bc/cd'\n" == cdd.get_out_str());
+#endif
+        }
+        {
+            auto cdd = cdd_test({"_cdd", "..", "c$"}, "", "/ab/bc/cd/ef/fg", "");
+            cdd._is_directory = true;
+            cdd.process();
+#ifdef WIN32
+            REQUIRE("pushd /ab/bc\n" == cdd.get_out_str());
+#else
+            REQUIRE("pushd '/ab/bc'\n" == cdd.get_out_str());
+#endif
+        }
     }
 }

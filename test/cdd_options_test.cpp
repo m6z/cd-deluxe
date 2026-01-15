@@ -145,9 +145,9 @@ TEST_CASE("cdd_options_test", "[options]")
     SECTION("multiple path spec")
     {
         CddOptions options({"./_cdd", "-", "abc"});
-        REQUIRE(options.unmatched_args.size() == 2);
-        REQUIRE(options.unmatched_args[0] == "-");
-        REQUIRE(options.unmatched_args[1] == "abc");
+        REQUIRE(options.direction == "-");
+        REQUIRE(options.unmatched_args.size() == 1);
+        REQUIRE(options.unmatched_args[0] == "abc");
     }
 
     SECTION("dashes")
@@ -185,6 +185,14 @@ TEST_CASE("cdd_options_test", "[options]")
             CddOptions options({"./_cdd", "--del", "abc"});
             REQUIRE(options.unmatched_args.size() == 1);
             REQUIRE(options.unmatched_args[0] == "abc");
+        }
+    }
+
+    SECTION("warnings")
+    {
+        {
+            CddOptions options({"./_cdd", "abc", "def"});
+            REQUIRE(options.error_message == "** Ignoring extra arguments: \"def\"");
         }
     }
 }
