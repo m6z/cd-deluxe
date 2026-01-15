@@ -132,6 +132,48 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
     return result;
 }
 
+std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_upwards()
+{
+    std::vector<TaggedPath> result;
+    fs::path cwd;
+    if (!get_cwd_path(cwd))
+    {
+        return result; // error
+    }
+
+    std::regex re;
+    std::string target;
+    bool use_regex = false;
+    if (get_target(target))
+    {
+        re = get_upwards_regex(target);
+        use_regex = true;
+    }
+
+    auto path_components = get_path_components(cwd);
+    size_t count = 0;
+    for (const auto& [part_str, part_path] : path_components)
+    {
+        if (count++ == 0)
+        {
+            continue; // skip the current directory
+        }
+
+        // if there is a target, filter by it
+        if (use_regex)
+        {
+            if (!std::regex_search(part_str, re))
+            {
+                continue;
+            }
+        }
+
+        string prefix = ".." + std::to_string(count - 1);
+        result.emplace_back(part_path, prefix);
+    }
+    return result;
+}
+
 //----------------------------------------------------------------------
 // Filter Helper Logic
 //----------------------------------------------------------------------
@@ -412,25 +454,8 @@ bool Cdd2::process_path_spec_moving_upwards(const string& target, TaggedPath& ta
         return false;
     }
 
-    std::regex re;
     string pattern = options_.unmatched_args[1];
-    try
-    {
-        if (options_.ignore_case)
-        {
-            re = std::regex(pattern, std::regex_constants::icase);
-        }
-        else
-        {
-            re = std::regex(pattern);
-        }
-    }
-    catch (std::regex_error& e)
-    {
-        stringstream strm;
-        strm << "Cannot process pattern \"" << pattern << "\" due to regex error: " << e.what();
-        throw std::runtime_error(strm.str());
-    }
+    std::regex re = get_upwards_regex(pattern);
 
     // look at all the components of the target path
     // if there is a match with the pattern, return that path
@@ -448,6 +473,36 @@ bool Cdd2::process_path_spec_moving_upwards(const string& target, TaggedPath& ta
     }
 
     return false;
+}
+
+std::regex Cdd2::get_upwards_regex(string pattern)
+{
+    // if pattern ends with path separator, anchor match to end of string
+    if (!pattern.empty() && (pattern.back() == fs::path::preferred_separator))
+    {
+        pattern.pop_back();
+        pattern = pattern + "$";
+    }
+
+    std::regex re;
+    try
+    {
+        if (options_.ignore_case)
+        {
+            re = std::regex(pattern, std::regex_constants::icase);
+        }
+        else
+        {
+            re = std::regex(pattern);
+        }
+    }
+    catch (std::regex_error& e)
+    {
+        stringstream strm;
+        strm << "Cannot process pattern \"" << pattern << "\" due to regex error: " << e.what();
+        throw std::runtime_error(strm.str());
+    }
+    return re;
 }
 
 bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra)
@@ -658,6 +713,10 @@ void Cdd2::show_history()
     {
         show_history_most_to_least(strm_err_, options_.all_history);
     }
+    else if (options_.direction == CddOptions::direction_upwards)
+    {
+        show_history_upwards(strm_err_, options_.all_history);
+    }
 }
 
 void Cdd2::filter_with_fzf()
@@ -676,6 +735,10 @@ void Cdd2::filter_with_fzf()
     {
         trim_char = ')';
         show_history_most_to_least(strm, true);
+    }
+    else if (options_.direction == CddOptions::direction_upwards)
+    {
+        show_history_upwards(strm, true);
     }
 
     if (!strm.str().empty())
@@ -780,6 +843,31 @@ void Cdd2::show_history_most_to_least(std::ostream& strm, bool all_output)
     if (count_output < matches.size())
     {
         strm << " ... showing top " << count_output << " of " << matches.size() << endl;
+    }
+}
+
+void Cdd2::show_history_upwards(std::ostream& strm, bool all_output)
+{
+    auto matches = create_dirs_upwards();
+    if (matches.empty())
+    {
+        strm_err_ << "** No parent directories from current working directory" << endl;
+        return;
+    }
+
+    size_t count_output = 0;
+    size_t max_output = all_output ? matches.size() : std::min(options_.max_history, static_cast<size_t>(matches.size()));
+    for (const auto& filtered_path : matches)
+    {
+        strm << filtered_path.to_string() << endl;
+        if (++count_output >= max_output)
+        {
+            break;
+        }
+    }
+    if (count_output < matches.size())
+    {
+        strm << " ... showing " << count_output << " of " << matches.size() << endl;
     }
 }
 

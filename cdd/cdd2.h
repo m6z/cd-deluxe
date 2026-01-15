@@ -126,6 +126,7 @@ protected:
     std::vector<TaggedPath> create_dirs_last_to_first();
     std::vector<TaggedPath> create_dirs_first_to_last();
     std::vector<CommonPath> create_dirs_most_to_least();
+    std::vector<TaggedPath> create_dirs_upwards();
 
 private:
     void initialize();
@@ -150,6 +151,7 @@ private:
     bool get_target(string& target);
     bool get_target_regex(std::regex& re, bool& check_all_parts);
     std::optional<RegexFilter> get_target_regex_filter();
+    std::regex get_upwards_regex(std::string pattern);
 
     bool change_to_path_spec();
     bool process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra);
@@ -166,6 +168,7 @@ private:
     void show_history_first_to_last(std::ostream& strm, bool all_output);
     void show_history_last_to_first(std::ostream& strm, bool all_output);
     void show_history_most_to_least(std::ostream& strm, bool all_output);
+    void show_history_upwards(std::ostream& strm, bool all_output);
     bool verify_history_matches(const std::vector<TaggedPath>& matches, const std::optional<RegexFilter>& rf);
     void filter_with_fzf();
 

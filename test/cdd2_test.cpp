@@ -78,7 +78,7 @@ TEST_CASE("cdd2_test")
         REQUIRE(cp1 == cp3);
     }
 
-    SECTION("Cdd2 internals")
+    SECTION("Cdd2_internals")
     {
         auto cdd = cdd_test({"_cdd", "--ignore-case"}, "", "/current/working/dir", R"(
             /path/one
@@ -89,31 +89,35 @@ TEST_CASE("cdd2_test")
 
         auto dirs_last_to_first = cdd.create_dirs_last_to_first();
         REQUIRE(dirs_last_to_first.size() == 3);
+        REQUIRE(dirs_last_to_first[0].prefix1 == " -1");
         REQUIRE(dirs_last_to_first[0].path == "/path/one");
+        REQUIRE(dirs_last_to_first[1].prefix1 == " -2");
         REQUIRE(dirs_last_to_first[1].path == "/path/two");
+        REQUIRE(dirs_last_to_first[2].prefix1 == " -3");
         REQUIRE(dirs_last_to_first[2].path == "/path/Three");
 
         auto dirs_first_to_last = cdd.create_dirs_first_to_last();
         REQUIRE(dirs_first_to_last.size() == 3);
+        REQUIRE(dirs_first_to_last[0].prefix1 == "  0");
         REQUIRE(dirs_first_to_last[0].path == "/path/TWO");
+        REQUIRE(dirs_first_to_last[1].prefix1 == "  1");
         REQUIRE(dirs_first_to_last[1].path == "/path/Three");
+        REQUIRE(dirs_first_to_last[2].prefix1 == "  2");
         REQUIRE(dirs_first_to_last[2].path == "/path/one");
 
         auto dirs_most_to_least = cdd.create_dirs_most_to_least();
         REQUIRE(dirs_most_to_least.size() == 3);
 
-        // for (auto i = 0; i < dirs_most_to_least.size(); ++i)
-        // {
-        //     std::cout << "dir " << i << ": " << dirs_most_to_least[i] << std::endl;
-        // }
-
-        // dir 0: CommonPath(2,1,"KeyedPath(""/path/two"", "/path/two")")
-        // dir 1: CommonPath(1,0,"KeyedPath(""/path/one"", "/path/one")")
-        // dir 2: CommonPath(1,2,"KeyedPath(""/path/Three"", "/path/three")")
-
         REQUIRE(dirs_most_to_least[0].get_keyed_path().get_dir_path() == "/path/two");
         REQUIRE(dirs_most_to_least[1].get_keyed_path().get_dir_path() == "/path/one");
         REQUIRE(dirs_most_to_least[2].get_keyed_path().get_dir_path() == "/path/Three");
+
+        auto dirs_upwards = cdd.create_dirs_upwards();
+        REQUIRE(dirs_upwards.size() == 2);
+        REQUIRE(dirs_upwards[0].prefix1 == "..1");
+        REQUIRE(dirs_upwards[0].path == "/current/working");
+        REQUIRE(dirs_upwards[1].prefix1 == "..2");
+        REQUIRE(dirs_upwards[1].path == "/current");
     }
 
     SECTION("back_none")
@@ -612,6 +616,25 @@ TEST_CASE("cdd2_test")
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
         REQUIRE(cdd.get_err_str() == " ,1: ( 2) /b\n");
+    }
+
+    SECTION("list_upwards")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=.."}, "", "/tmp/a/b/c", "");
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == "..1: /tmp/a/b\n"
+                                     "..2: /tmp/a\n"
+                                     "..3: /tmp\n");
+    }
+
+    SECTION("list_upwards_pattern")
+    {
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=..", "a"}, "", "/tmp/a/aa/b/c", "");
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE(cdd.get_err_str() == "..2: /tmp/a/aa\n"
+                                     "..3: /tmp/a\n");
     }
 }
 

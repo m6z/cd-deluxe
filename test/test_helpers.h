@@ -15,6 +15,7 @@ public:
     using Cdd2::create_dirs_first_to_last;
     using Cdd2::create_dirs_last_to_first;
     using Cdd2::create_dirs_most_to_least;
+    using Cdd2::create_dirs_upwards;
 
     virtual bool is_directory(const fs::path& /*path*/) { return _is_directory; }
     virtual bool is_regular_file(const fs::path& /*path*/) { return _is_regular_file; }

@@ -11,6 +11,7 @@ public:
     static constexpr const char* direction_forwards = "+";
     static constexpr const char* direction_backwards = "-";
     static constexpr const char* direction_common = ",";
+    static constexpr const char* direction_upwards = "..";
 
     static constexpr const char* direction_default = direction_backwards;
 

@@ -18,14 +18,16 @@ bool is_valid_direction(const std::string& s)
 {
     return s == CddOptions::direction_forwards ||  //
            s == CddOptions::direction_backwards || //
-           s == CddOptions::direction_common;      //
+           s == CddOptions::direction_common ||    //
+           s == CddOptions::direction_upwards;     //
 }
 
 std::string get_valid_directions_as_string()
 {
     return "\"" + std::string(CddOptions::direction_forwards) + "\" (forwards), \"" + //
            std::string(CddOptions::direction_backwards) + "\" (backwards), \"" +      //
-           std::string(CddOptions::direction_common) + "\" (common)";                 //
+           std::string(CddOptions::direction_common) + "\" (common), \"" +            //
+           std::string(CddOptions::direction_upwards) + "\" (upwards)";               //
 }
 
 // Helper to split the environment string into a vector of arguments

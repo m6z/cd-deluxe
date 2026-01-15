@@ -11,7 +11,8 @@
 # section=simple_match_forward
 # section=delete_one
 # section=garbage_collect
-section=up_a
+# section=up_a
+section=Cdd2_internals
 
 # test_case=match_test
 
