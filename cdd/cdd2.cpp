@@ -739,9 +739,12 @@ void Cdd2::filter_with_fzf()
     if (!strm.str().empty())
     {
         auto result = run_fzf(strm.str());
-        strm_err_ << "cdd: " << trim_from_char(result, ':') << endl;
-        // TODO : handle Windows quoting
-        strm_out_ << "pushd '" << trim_from_char(result, trim_char) << "'" << endl;
+        if (!result.empty())
+        {
+            strm_err_ << "cdd: " << trim_from_char(result, ':') << endl;
+            // TODO : handle Windows quoting
+            strm_out_ << "pushd '" << trim_from_char(result, trim_char) << "'" << endl;
+        }
     }
     else
     {

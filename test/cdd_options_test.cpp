@@ -195,4 +195,64 @@ TEST_CASE("cdd_options_test", "[options]")
             REQUIRE(options.error_message == "** Ignoring extra arguments: \"def\"");
         }
     }
+
+    SECTION("shorthand_backwards")
+    {
+        {
+            CddOptions options({"./_cdd", "-", "-l"});
+            REQUIRE(options.direction == "-");
+            REQUIRE(options.list_history);
+        }
+
+        {
+            CddOptions options({"./_cdd", "-f", "-"});
+            REQUIRE(options.direction == "-");
+            REQUIRE(options.use_fzf);
+        }
+    }
+
+    SECTION("shorthand_forwards")
+    {
+        {
+            CddOptions options({"./_cdd", "+", "--list"});
+            REQUIRE(options.direction == "+");
+            REQUIRE(options.list_history);
+        }
+
+        {
+            CddOptions options({"./_cdd", "--fzf", "+"});
+            REQUIRE(options.direction == "+");
+            REQUIRE(options.use_fzf);
+        }
+    }
+
+    SECTION("shorthand_common_upwards")
+    {
+        {
+            CddOptions options({"./_cdd", ",", "--list"});
+            REQUIRE(options.direction == ",");
+            REQUIRE(options.list_history);
+        }
+
+        {
+            CddOptions options({"./_cdd", "-f", ","});
+            REQUIRE(options.direction == ",");
+            REQUIRE(options.use_fzf);
+        }
+    }
+
+    SECTION("shorthand_upwards")
+    {
+        {
+            CddOptions options({"./_cdd", "..", "-l"});
+            REQUIRE(options.direction == "..");
+            REQUIRE(options.list_history);
+        }
+
+        {
+            CddOptions options({"./_cdd", "-f", ".."});
+            REQUIRE(options.direction == "..");
+            REQUIRE(options.use_fzf);
+        }
+    }
 }

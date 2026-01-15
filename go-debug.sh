@@ -12,7 +12,8 @@
 # section=delete_one
 # section=garbage_collect
 # section=up_a
-section=Cdd2_internals
+# section=Cdd2_internals
+section=shorthand_forwards
 
 # test_case=match_test
 

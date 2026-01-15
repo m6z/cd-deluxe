@@ -4,7 +4,7 @@
 #   alias tes='pushd ~/base/development/cd-deluxe_cpp20 >/dev/null && ./go-test.sh'
 #   alias tes='pushd ~/base/cdd_v2/cd-deluxe >/dev/null && ./go-test.sh'
 
-# test_pattern=cdd_options_test
+test_pattern=cdd_options_test
 # test_pattern=cdd2_test
 # test_pattern=match_test
 # test_pattern=cleanup_test

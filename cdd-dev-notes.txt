@@ -118,3 +118,13 @@ Add the following to ~/.zshrc or else execute directly in the shell:
 source <(/home/mike/base/cdd_v2/cd-deluxe/build1/main/cd-deluxe --init)
 
 #----------------------------------------------------------------------
+
+OKAY
+check listing with direction shorthand
+check fzf integration with direction shorthand
+
+TODO
+allow for more 'expand dots' ie "..1", "..2", ...
+code cleanup
+windows implementation
+test fish shell

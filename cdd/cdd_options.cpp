@@ -227,24 +227,27 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
     }
 
     // allow for shorthand specification of the direction
-    if (unmatched_args.size() > 1)
+    if (!unmatched_args.empty() && is_valid_direction(unmatched_args[0]))
     {
-        if (is_valid_direction(unmatched_args[0]))
+        if (unmatched_args.size() > 1 || list_history || use_fzf)
         {
+            // shorthand format
             direction = unmatched_args[0];
             unmatched_args.erase(unmatched_args.begin());
         }
-        else
+    }
+
+    // check again
+    if (unmatched_args.size() > 1)
+    {
+        // too many unmatched args
+        std::stringstream strm;
+        strm << "Ignoring extra arguments:";
+        for (size_t i = 1; i < unmatched_args.size(); ++i)
         {
-            // too many unmatched args
-            std::stringstream strm;
-            strm << "Ignoring extra arguments:";
-            for (size_t i = 1; i < unmatched_args.size(); ++i)
-            {
-                strm << " \"" << unmatched_args[i] << "\"";
-            }
-            set_error(strm.str());
+            strm << " \"" << unmatched_args[i] << "\"";
         }
+        set_error(strm.str());
     }
 
     return true;
@@ -255,7 +258,6 @@ void CddOptions::output(std::ostream& os) const
     os << "CddOptions:" << std::endl;
     os << "  show_help: " << std::boolalpha << show_help << std::endl;
     os << "  list_history: " << std::boolalpha << list_history << std::endl;
-    os << "  default_action: " << default_action << std::endl;
     os << "  direction: " << direction << std::endl;
     os << "  max_history: " << max_history << std::endl;
     os << "  max_backwards: " << max_backwards << std::endl;
@@ -264,6 +266,10 @@ void CddOptions::output(std::ostream& os) const
     os << "  max_upwards: " << max_upwards << std::endl;
     os << "  all_history: " << std::boolalpha << all_history << std::endl;
     os << "  ignore_case: " << std::boolalpha << ignore_case << std::endl;
+    os << "  delete_entry: " << std::boolalpha << delete_entry << std::endl;
+    os << "  reset_history: " << std::boolalpha << reset_history << std::endl;
+    os << "  garbage_collect: " << std::boolalpha << garbage_collect << std::endl;
+    os << "  use_fzf: " << std::boolalpha << use_fzf << std::endl;
 
     os << "  unmatched_args: [";
     for (size_t i = 0; i < unmatched_args.size(); ++i)

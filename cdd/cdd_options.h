@@ -20,7 +20,6 @@ public:
     // --- Parsed Results ---
     bool show_help = false;
     bool list_history = false;
-    std::string default_action;
     std::string direction = direction_default;
     std::size_t max_history = 10;
     std::size_t max_backwards = 10;
