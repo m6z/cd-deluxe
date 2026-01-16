@@ -59,6 +59,7 @@ std::string run_fzf(const std::string& inputs)
 
         // If we get here, exec failed
         std::cerr << "Failed to run fzf: " << strerror(errno) << std::endl;
+        std::cerr << "Check that fzf is installed and in your PATH." << std::endl;
         _exit(1);
     }
     else
