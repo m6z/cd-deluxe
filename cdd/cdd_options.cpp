@@ -1,4 +1,5 @@
 #include "cdd_options.h"
+#include "cdd_options_init.h"
 
 #include "cxxopts.hpp"
 
@@ -205,6 +206,14 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
             std::cerr << cmd_parser.help() << std::endl;
             output_footer();
             return true;
+        }
+
+        if (result.count("init"))
+        {
+            // need to send output the stderr in case this is being run under the cdd shell function
+            CddOptionsInit options_init(std::cerr);
+            options_init.parse(argc_c, const_cast<char**>(argv_ptr), /* force_default_setup */ true);
+            return false; // signal to caller that no further action is needed
         }
 
         // Validate direction (Fatal error if invalid here)

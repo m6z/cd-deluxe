@@ -7,20 +7,21 @@
 class CddOptionsInit
 {
 public:
-    CddOptionsInit() = default;
+    CddOptionsInit(std::ostream& output_stream = std::cout) : output_stream_(output_stream) {}
 
     /**
      * Parses arguments looking specifically for --help or --init.
      * Returns true if one of these options was found and handled.
      * Returns false if neither was found (program should proceed to main logic).
      */
-    int parse(int argc, char* argv[]);
+    int parse(int argc, char* argv[], bool force_default_setup = false);
 
-    bool has_error() const { return !error_message.empty(); }
-    const std::string& get_error() const { return error_message; }
+    bool has_error() const { return !error_message_.empty(); }
+    const std::string& get_error() const { return error_message_; }
 
 private:
-    std::string error_message;
+    std::ostream& output_stream_;
+    std::string error_message_;
 
     // Helper to get the full path of the current running executable
     std::string get_self_executable_path(const char* argv0) const;

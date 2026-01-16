@@ -7,7 +7,7 @@
 
 namespace fs = std::filesystem;
 
-int CddOptionsInit::parse(int argc, char* argv[])
+int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
 {
     try
     {
@@ -21,13 +21,13 @@ int CddOptionsInit::parse(int argc, char* argv[])
             // explicit_value = false, implicit_value = "auto" allows:
             // --init        -> "auto"
             // --init bash   -> "bash"
-            ("init", "Print shell integration code", cxxopts::value<std::string>(init_shell_type)->implicit_value("auto"));
+            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(init_shell_type)->implicit_value("auto"));
 
         auto result = options.parse(argc, argv);
 
-        if (result.count("help"))
+        if (result.count("help") && !force_default_setup)
         {
-            std::cout << options.help() << std::endl;
+            output_stream_ << options.help() << std::endl;
             return 0; // Handled
         }
 
@@ -39,7 +39,7 @@ int CddOptionsInit::parse(int argc, char* argv[])
         }
         std::string exe_path = get_self_executable_path(argv[0]);
 
-        if (result.count("init"))
+        if (result.count("init") && !force_default_setup)
         {
             print_init_script(shell, exe_path);
             return 0; // Handled
@@ -51,7 +51,7 @@ int CddOptionsInit::parse(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        error_message = e.what();
+        error_message_ = e.what();
     }
 
     return false; // Not an init/help command, let main program continue
@@ -80,11 +80,9 @@ std::string CddOptionsInit::get_self_executable_path(const char* argv0) const
             result = p.string();
         }
     }
-
-    // 3. Ultimate fallback (should rarely happen)
     if (result.empty())
     {
-        result = "cdd"; // Rely on PATH
+        result = "cd-deluxe"; // Rely on PATH
     }
 
     // Normalize path separators for shell usage (generic_string uses forward
@@ -119,12 +117,12 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     }
     else
     {
-        std::cout << std::format(_bash_setup, exe_path) << std::endl;
+        output_stream_ << std::format(_bash_setup, exe_path) << std::endl;
     }
 }
 
 static constexpr const char* _bash_init = R"(
-function cdd {{
+cdd() {{
     _cdd_exe="{}"
     if [ ! -f "${{_cdd_exe}}" ]; then
         echo "Error: cd-deluxe executable not found at ${{_cdd_exe}}" >&2
@@ -147,22 +145,22 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
     if (shell_type == "fish")
     {
         // Fish shell syntax is significantly different
-        std::cout << "function cdd\n";
-        std::cout << "  if test -x \"" << exe_path << "\"\n";
-        std::cout << "    set -l output (dirs -p | \"" << exe_path << "\" $argv)\n";
-        std::cout << "    for x in $output\n";
-        std::cout << "      eval $x\n";
-        std::cout << "    end\n";
-        std::cout << "  else\n";
-        std::cout << "    echo \"cdd executable not found at: " << exe_path << "\"\n";
-        std::cout << "  end\n";
-        std::cout << "end\n";
-        std::cout << "alias cd cdd\n";
-        std::cout << "echo \"-- cd-deluxe shell integration loaded for fish. See: "
-                     "cd --help.\"\n";
+        output_stream_ << "function cdd\n";
+        output_stream_ << "  if test -x \"" << exe_path << "\"\n";
+        output_stream_ << "    set -l output (dirs -p | \"" << exe_path << "\" $argv)\n";
+        output_stream_ << "    for x in $output\n";
+        output_stream_ << "      eval $x\n";
+        output_stream_ << "    end\n";
+        output_stream_ << "  else\n";
+        output_stream_ << "    echo \"cdd executable not found at: " << exe_path << "\"\n";
+        output_stream_ << "  end\n";
+        output_stream_ << "end\n";
+        output_stream_ << "alias cd cdd\n";
+        output_stream_ << "echo \"-- cd-deluxe shell integration loaded for fish. See: "
+                          "cd --help.\"\n";
     }
     else
     {
-        std::cout << std::format(_bash_init, exe_path);
+        output_stream_ << std::format(_bash_init, exe_path);
     }
 }

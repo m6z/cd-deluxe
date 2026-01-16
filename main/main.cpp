@@ -37,27 +37,8 @@ int main(int argc, const char* argv[])
     {
         if (isatty(fileno(stdin)))
         {
-            // cerr << "stdin is a terminal, expecting piped directory stack" <<
-            // endl;
-            // // TODO show better help
-            // // Cdd::help();
-            // return 1;
-
             CddOptionsInit options_init;
             return options_init.parse(argc, const_cast<char**>(argv));
-
-            // TODO - old - remove
-            // if (options_init.parse(argc, const_cast<char**>(argv)))
-            // {
-            //     return 0; // Handled init/help
-            // }
-            // else
-            // {
-            //     cerr << "Error: stdin is a terminal, expecting piped
-            //     directory stack" << endl;
-            //     // CddOptionInit::help();
-            //     return 1;
-            // }
         }
 
         // convert argv to vector<string>
@@ -65,7 +46,10 @@ int main(int argc, const char* argv[])
         CddOptions options;
         if (!options.initialize(args, get_environment(CddOptions::environment_variable_name)))
         {
-            cerr << options.error_message << endl;
+            if (!options.error_message.empty())
+            {
+                cerr << options.error_message << endl;
+            }
             return 1;
         }
         if (options.show_help)
@@ -89,30 +73,6 @@ int main(int argc, const char* argv[])
         cdd.process();
         cout << cdd.get_out_str();
         cerr << cdd.get_err_str();
-
-        //         TODO - old - remove
-        //         Cdd cdd;
-        //         if (cdd.options(argc, argv,
-        //         get_environment(Cdd::env_options_name)))
-        //         {
-        //             if ( ! cdd.has_directory_stack )
-        //             {
-        //                 if (isatty(fileno(stdin)))
-        //                 {
-        //                     cout << "stdin is a terminal, expecting piped
-        //                     directory stack" << endl; Cdd::help(); return 1;
-        //                 }
-        //                 vector<string> vec_pushd;
-        //                 string line;
-        //                 while (getline(cin, line))
-        //                     vec_pushd.push_back(line);
-        //                 cdd.assign(vec_pushd, get_working_path());
-        //             }
-        //             cdd.process();
-        //         }
-        //
-        //         cout << cdd.strm_out.str();
-        //         cerr << cdd.strm_err.str();
     }
     catch (exception& e)
     {
