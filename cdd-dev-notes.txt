@@ -122,9 +122,10 @@ source <(/home/mike/base/cdd_v2/cd-deluxe/build1/main/cd-deluxe --init)
 OKAY
 check listing with direction shorthand
 check fzf integration with direction shorthand
+allow for more 'expand dots' ie "..1", "..2", ...
 
 TODO
-allow for more 'expand dots' ie "..1", "..2", ...
-code cleanup
+improve help
+code cleanup - remove extraneous files
 windows implementation
 test fish shell

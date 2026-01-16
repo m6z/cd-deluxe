@@ -52,6 +52,13 @@ TEST_CASE("util_test")
         REQUIRE("abc/../../../def" == fun("abc\\....\\def"));
         REQUIRE("abc/../../def/../../ghi" == fun("abc\\...\\def/.../ghi"));
 
+        REQUIRE(fun("..1") == "..");
+        REQUIRE(fun("..2") == "../..");
+        REQUIRE(fun("..3") == "../../..");
+        REQUIRE(fun("...1") == "../..");
+        REQUIRE(fun("...2") == "../../..");
+        REQUIRE(fun("....5") == "../../../../../../..");
+
         // TODO add tests for path_separator
     }
 

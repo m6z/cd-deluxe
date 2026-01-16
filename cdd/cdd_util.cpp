@@ -66,25 +66,49 @@ std::string get_environment(std::string var_name)
 
 std::string expand_dots(std::string path)
 {
-    static std::regex re_dots("(?:^|[\\\\/])([.]{3,})(?:[\\\\/]|$)");
+    // Regex matches:
+    // 1. Separator or Start
+    // 2. (Group 1) Two or more dots
+    // 3. (Group 2) Optional integer
+    // 4. Separator or End
+    static std::regex re_dots("(?:^|[\\\\/])([.]{2,})([0-9]*)(?:[\\\\/]|$)");
     std::smatch what;
+
     if (std::regex_search(path, what, re_dots))
     {
-        std::string s_start(what[0].first, what[1].first);
-        std::string s_end(what[1].second, what[0].second);
-        std::string dots = "..";
-        int dot_len = what[1].second - what[1].first;
-        for (int i = 2; i < dot_len; i++)
+        std::string dots_str = what[1].str();
+        std::string num_str = what[2].str();
+
+        // If it is a standard ".." (2 dots, no number), do not expand.
+        // We concatenate and recurse on the suffix to find valid matches later in the path.
+        if (dots_str.length() == 2 && num_str.empty())
         {
-            dots += fs::path::preferred_separator;
-            dots += "..";
-            // #ifdef WIN32
-            //             dots += "\\..";
-            // #else
-            //             dots += "/..";
-            // #endif
+            return std::string(what.prefix()) + what.str() + expand_dots(std::string(what.suffix()));
         }
-        return std::string(what.prefix()) + s_start + dots + expand_dots(s_end + std::string(what.suffix()));
+
+        // Logic: (Dots - 2) + (Number if present, else 1)
+        // Ex: "...2" -> (3 - 2) + 2 = 3 levels
+        int base = dots_str.length() - 2;
+        int count = num_str.empty() ? 1 : std::stoi(num_str);
+        int total_levels = base + count;
+
+        std::string replacement;
+        for (int i = 0; i < total_levels; i++)
+        {
+            if (i > 0)
+            {
+                replacement += fs::path::preferred_separator;
+            }
+            replacement += "..";
+        }
+
+        // Reconstruct the path with separators preserved
+        // s_start: text between the previous separator and the dots
+        std::string s_start(what[0].first, what[1].first);
+        // s_end: text between the digits (or dots) and the next separator
+        std::string s_end(what[2].second, what[0].second);
+
+        return std::string(what.prefix()) + s_start + replacement + expand_dots(s_end + std::string(what.suffix()));
     }
     return path;
 }
