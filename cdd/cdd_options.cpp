@@ -66,15 +66,16 @@ void add_common_options(CddOptions& x, cxxopts::Options& options)
 {
     options.add_options()                                                                                            //
         ("l,list", "List history", cxxopts::value(x.list_history)->implicit_value("true"))                           //
-        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(x.ignore_case)->implicit_value("true")) //
-        ("d,direction", "Default direction", cxxopts::value(x.direction))                                            //
+        ("f,fzf", "Filter history with fzf", cxxopts::value(x.use_fzf)->implicit_value("true"))                      //
+        ("d,direction", get_valid_directions_as_string(), cxxopts::value(x.direction))                               //
         ("m,max", "Max history", cxxopts::value(x.max_history))                                                      //
         ("max-backwards", "Max backwards history", cxxopts::value(x.max_backwards))                                  //
         ("max-forwards", "Max forwards history", cxxopts::value(x.max_forwards))                                     //
         ("max-common", "Max common history", cxxopts::value(x.max_common))                                           //
         ("max-upwards", "Max upwards history", cxxopts::value(x.max_upwards))                                        //
         ("a,all", "Show all history", cxxopts::value(x.all_history)->implicit_value("true"))                         //
-        ("f,fzf", "Filter with fzf", cxxopts::value(x.use_fzf)->implicit_value("true"))                              //
+        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(x.ignore_case)->implicit_value("true")) //
+        ("init", "Generate shell initialization code")                                                               //
         ;
 }
 
@@ -89,6 +90,15 @@ void add_full_options(CddOptions& x, cxxopts::Options& options)
         ("reset", "Reset history", cxxopts::value(x.reset_history)->implicit_value("true"))                          //
         ("gc,garbage-collect", "Garbage collect history", cxxopts::value(x.garbage_collect)->implicit_value("true")) //
         ;
+
+    // options.custom_help("xx custom help");
+    // options.positional_help("xx positional help");
+}
+
+void output_footer()
+{
+    std::cerr << "See https://github.com/m6z/cd-deluxe for more information." << std::endl;
+    std::cerr << "Copyright (c) " << get_year() << " Michael Graz" << std::endl;
 }
 
 } // namespace
@@ -193,6 +203,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         {
             std::cerr << "Usage: " << program_name << " [options]" << std::endl;
             std::cerr << cmd_parser.help() << std::endl;
+            output_footer();
             return true;
         }
 

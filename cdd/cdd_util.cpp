@@ -33,6 +33,10 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_PATH_LENGTH MAXPATHLEN
 #endif
 
+#include <chrono>
+#include <ctime>
+#include <iostream>
+
 namespace fs = std::filesystem;
 
 std::string get_working_path()
@@ -183,4 +187,19 @@ std::string trim_from_char(const std::string& str, char ch)
         return str.substr(start_pos);
     }
     return str;
+}
+
+int get_year()
+{
+    // 1. Get current time point
+    auto now = std::chrono::system_clock::now();
+
+    // 2. Convert to time_t
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+
+    // 3. Convert to local time struct
+    std::tm now_tm = *std::localtime(&now_c);
+
+    // 4. Get year (tm_year is years since 1900)
+    return 1900 + now_tm.tm_year;
 }
