@@ -380,7 +380,7 @@ bool Cdd2::change_to_path_spec()
     TaggedPath tagged_path;
     vector<string> path_extra;
 
-    if (process_path_spec_including_filesystem(path_target, tagged_path, path_extra))
+    if (process_path_spec_including_filesystem(path_target.string(), tagged_path, path_extra))
     {
 #ifdef WIN32
         strm_out_ << "pushd " << tagged_path.path << endl;

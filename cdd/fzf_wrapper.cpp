@@ -1,10 +1,16 @@
 #include <array>
-#include <cstring> // for strerror
+#include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <string>
+#include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/wait.h>
 #include <unistd.h>
-#include <vector>
+#endif
 
 namespace
 {
@@ -15,9 +21,104 @@ std::string trim_newline(std::string s)
     {
         s.pop_back();
     }
+    if (!s.empty() && s.back() == '\r')
+    {
+        s.pop_back();
+    }
     return s;
 }
 } // namespace
+
+#ifdef _WIN32
+
+std::string run_fzf(const std::string& inputs)
+{
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = NULL;
+
+    // Create pipes for stdin
+    HANDLE hStdinRead, hStdinWrite;
+    if (!CreatePipe(&hStdinRead, &hStdinWrite, &sa, 0))
+    {
+        throw std::runtime_error("Failed to create stdin pipe");
+    }
+    // Ensure write handle is not inherited
+    SetHandleInformation(hStdinWrite, HANDLE_FLAG_INHERIT, 0);
+
+    // Create pipes for stdout
+    HANDLE hStdoutRead, hStdoutWrite;
+    if (!CreatePipe(&hStdoutRead, &hStdoutWrite, &sa, 0))
+    {
+        CloseHandle(hStdinRead);
+        CloseHandle(hStdinWrite);
+        throw std::runtime_error("Failed to create stdout pipe");
+    }
+    // Ensure read handle is not inherited
+    SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.hStdInput = hStdinRead;
+    si.hStdOutput = hStdoutWrite;
+    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(pi));
+
+    // fzf.exe should be in PATH
+    char cmdLine[] = "fzf";
+
+    if (!CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+    {
+        CloseHandle(hStdinRead);
+        CloseHandle(hStdinWrite);
+        CloseHandle(hStdoutRead);
+        CloseHandle(hStdoutWrite);
+        throw std::runtime_error("Failed to start fzf. Check that fzf is installed and in your PATH.");
+    }
+
+    // Close handles not needed by parent
+    CloseHandle(hStdinRead);
+    CloseHandle(hStdoutWrite);
+
+    // Write inputs to fzf
+    DWORD bytesWritten;
+    WriteFile(hStdinWrite, inputs.c_str(), static_cast<DWORD>(inputs.size()), &bytesWritten, NULL);
+    CloseHandle(hStdinWrite); // Send EOF
+
+    // Read output from fzf
+    std::string result;
+    std::array<char, 128> buffer;
+    DWORD bytesRead;
+    while (ReadFile(hStdoutRead, buffer.data(), static_cast<DWORD>(buffer.size()), &bytesRead, NULL) && bytesRead > 0)
+    {
+        result.append(buffer.data(), bytesRead);
+    }
+    CloseHandle(hStdoutRead);
+
+    // Wait for fzf to finish
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    DWORD exitCode;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    // fzf exit codes: 0 = success, 1 = no match, 130 = cancelled
+    if (exitCode == 0)
+    {
+        return trim_newline(result);
+    }
+
+    return "";
+}
+
+#else // POSIX
 
 std::string run_fzf(const std::string& inputs)
 {
@@ -106,3 +207,5 @@ std::string run_fzf(const std::string& inputs)
         return "";
     }
 }
+
+#endif
