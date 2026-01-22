@@ -93,11 +93,20 @@ std::string CddOptionsInit::get_self_executable_path(const char* argv0) const
 
 std::string CddOptionsInit::detect_shell() const
 {
+#ifdef _WIN32
+    char* shell_env = nullptr;
+    size_t len = 0;
+    _dupenv_s(&shell_env, &len, "SHELL");
+    if (!shell_env)
+        return "bash"; // Default fallback
+    std::string shell_path(shell_env);
+    free(shell_env);
+#else
     const char* shell_env = std::getenv("SHELL");
     if (!shell_env)
         return "bash"; // Default fallback
-
     std::string shell_path(shell_env);
+#endif
     fs::path p(shell_path);
 
     // Returns "zsh", "bash", "fish", etc.

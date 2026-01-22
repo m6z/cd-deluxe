@@ -19,7 +19,7 @@ std::string Cdd2::KeyedPath::generate_key_from_path(const fs::path& p, bool igno
     std::string s = p.generic_string();
     if (ignore_case)
     {
-        std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     }
     return s;
 }
@@ -98,7 +98,7 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
         auto it = common_paths.find(kp);
         if (it == common_paths.end())
         {
-            common_paths.insert(MapCommonPaths::value_type(kp, CommonPath(1, common_paths.size(), kp)));
+            common_paths.insert(MapCommonPaths::value_type(kp, CommonPath(1, static_cast<int>(common_paths.size()), kp)));
         }
         else
         {
@@ -545,7 +545,7 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     }
     if (std::regex_match(target, match, re_dashes))
     {
-        int amount = match[0].str().size();
+        int amount = static_cast<int>(match[0].str().size());
         return go_backwards(amount, tagged_path);
     }
 
@@ -557,7 +557,7 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     }
     if (std::regex_match(target, match, re_pluses))
     {
-        int amount = match[0].str().size();
+        int amount = static_cast<int>(match[0].str().size());
         return go_forwards(amount - 1, tagged_path);
     }
 
@@ -569,7 +569,7 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     }
     if (std::regex_match(target, match, re_commas))
     {
-        int amount = match[0].str().size();
+        int amount = static_cast<int>(match[0].str().size());
         return go_common(amount - 1, tagged_path);
     }
 
