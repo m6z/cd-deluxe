@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "cdd_util.h"
+#include "config.h"
 
 namespace
 {
@@ -212,7 +213,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
 
         if (show_version)
         {
-            std::cerr << "cdd version " << CDD_VERSION << std::endl;
+            std::cerr << "cdd version " << CDD_VERSION << '.' << BUILD_NUMBER << std::endl;
             return true;
         }
 
