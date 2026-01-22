@@ -1,0 +1,24 @@
+# Main reference:
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+# Maybe this is the Microsoft approach:
+# https://github.com/microsoft/vscode-cpptools/issues/657
+BasedOnStyle: LLVM
+
+AccessModifierOffset: -4
+AllowShortIfStatementsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: All
+BreakBeforeBraces: Allman
+BreakBeforeTernaryOperators: true
+ColumnLimit: 170
+IndentCaseLabels: false
+IndentWidth: 4
+MaxEmptyLinesToKeep: 1
+TabWidth: 4
+UseTab: Never
+KeepEmptyLinesAtTheStartOfBlocks: false
+PointerAlignment: Left
+PenaltyReturnTypeOnItsOwnLine: 2
+AlignEscapedNewlines: Left

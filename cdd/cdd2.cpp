@@ -106,7 +106,8 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
         }
     }
     result.reserve(common_paths.size());
-    std::transform(common_paths.begin(), common_paths.end(), std::back_inserter(result), //
+    std::transform(common_paths.begin(), common_paths.end(),
+                   std::back_inserter(result), //
                    [](auto& pair) { return std::move(pair.second); });
     sort(result.begin(), result.end());
 
@@ -508,7 +509,8 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
         return false;
     }
 
-    // [Regex setup for numerics omitted for brevity, assuming existing logic remains]
+    // [Regex setup for numerics omitted for brevity, assuming existing logic
+    // remains]
     static std::regex re_num("(\\d+)");
     static std::regex re_dashes("-+");
     static std::regex re_dash_num("-(\\d+)");
@@ -629,7 +631,8 @@ bool Cdd2::process_match(const string& target, TaggedPath& tagged_path, vector<s
     tagged_path = matches[0];
 
     // Remaining matches (if any) are added to info output
-    // Note: Skip index 0 in the formatting loop because index 0 is the jump target
+    // Note: Skip index 0 in the formatting loop because index 0 is the jump
+    // target
     size_t count = 0;
     if (options_.all_history)
     {
@@ -743,7 +746,12 @@ void Cdd2::filter_with_fzf()
         {
             strm_err_ << "cdd: " << trim_from_char(result, ':') << endl;
             // TODO : handle Windows quoting
-            strm_out_ << "pushd '" << trim_from_char(result, trim_char) << "'" << endl;
+            auto dir = trim_from_char(result, trim_char);
+#ifdef WIN32
+            strm_out_ << "pushd \"" << dir << '"' << endl;
+#else
+            strm_out_ << "pushd '" << dir << "'" << endl;
+#endif
         }
     }
     else
