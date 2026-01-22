@@ -479,7 +479,7 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd /tmp/c\n" == cdd.get_out_str())
+        REQUIRE("pushd /tmp/c\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
@@ -515,7 +515,7 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd /tmp/a\n" == cdd.get_out_str.str());
+        REQUIRE("pushd /tmp/a\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
 #endif

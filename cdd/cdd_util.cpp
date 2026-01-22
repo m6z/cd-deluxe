@@ -92,7 +92,7 @@ std::string expand_dots(std::string path)
 
         // Logic: (Dots - 2) + (Number if present, else 1)
         // Ex: "...2" -> (3 - 2) + 2 = 3 levels
-        int base = dots_str.length() - 2;
+        int base = static_cast<int>(dots_str.length()) - 2;
         int count = num_str.empty() ? 1 : std::stoi(num_str);
         int total_levels = base + count;
 
@@ -198,7 +198,12 @@ int get_year()
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
 
     // 3. Convert to local time struct
-    std::tm now_tm = *std::localtime(&now_c);
+    std::tm now_tm{};
+#ifdef _WIN32
+    localtime_s(&now_tm, &now_c);
+#else
+    now_tm = *std::localtime(&now_c);
+#endif
 
     // 4. Get year (tm_year is years since 1900)
     return 1900 + now_tm.tm_year;

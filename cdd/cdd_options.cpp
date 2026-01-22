@@ -48,7 +48,7 @@ std::vector<std::string> tokenize_environment_variable(const std::string& env_op
 
     while (iss >> std::ws) // Consume leading whitespace
     {
-        char nextChar = iss.peek();
+        int nextChar = iss.peek();
         if (nextChar == '"')
         {
             iss >> std::quoted(field);
