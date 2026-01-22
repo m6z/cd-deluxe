@@ -1,5 +1,6 @@
 #include "cdd_options.h"
 #include "cdd_options_init.h"
+#include "cdd_version.h"
 
 #include "cxxopts.hpp"
 
@@ -87,6 +88,7 @@ void add_full_options(CddOptions& x, cxxopts::Options& options)
 
     options.add_options()                                                                                            //
         ("h,help", "Show this help message", cxxopts::value(x.show_help)->implicit_value("true"))                    //
+        ("v,version", "Show version", cxxopts::value(x.show_version)->implicit_value("true"))                        //
         ("del", "Delete an entry", cxxopts::value(x.delete_entry)->implicit_value("true"))                           //
         ("reset", "Reset history", cxxopts::value(x.reset_history)->implicit_value("true"))                          //
         ("gc,garbage-collect", "Garbage collect history", cxxopts::value(x.garbage_collect)->implicit_value("true")) //
@@ -208,6 +210,12 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
             return true;
         }
 
+        if (show_version)
+        {
+            std::cerr << "cdd version " << CDD_VERSION << std::endl;
+            return true;
+        }
+
         if (result.count("init"))
         {
             // need to send output the stderr in case this is being run under the cdd shell function
@@ -277,6 +285,7 @@ void CddOptions::output(std::ostream& os) const
 {
     os << "CddOptions:" << std::endl;
     os << "  show_help: " << std::boolalpha << show_help << std::endl;
+    os << "  show_version: " << std::boolalpha << show_version << std::endl;
     os << "  list_history: " << std::boolalpha << list_history << std::endl;
     os << "  direction: " << direction << std::endl;
     os << "  max_history: " << max_history << std::endl;

@@ -19,6 +19,7 @@ public:
 
     // --- Parsed Results ---
     bool show_help = false;
+    bool show_version = false;
     bool list_history = false;
     std::string direction = direction_default;
     std::size_t max_history = 10;

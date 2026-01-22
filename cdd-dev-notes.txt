@@ -129,3 +129,4 @@ improve help
 code cleanup - remove extraneous files
 windows implementation
 test fish shell
+need to list minimum bash version, and perhaps other shells
