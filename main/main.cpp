@@ -52,9 +52,9 @@ int main(int argc, const char* argv[])
             }
             return 1;
         }
-        if (options.show_help)
+        if (options.show_help || options.show_version)
         {
-            // help output is handled in options.initialize
+            // help/version output is handled in options.initialize
             return 0;
         }
 
