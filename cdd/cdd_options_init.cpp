@@ -3,6 +3,7 @@
 #include <format>
 
 #include "cdd_options_init.h"
+#include "cdd_util.h"
 #include "cxxopts.hpp"
 
 namespace fs = std::filesystem;
@@ -15,13 +16,13 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         // main CddOptions
         cxxopts::Options options(argv[0], " - Shell integration setup");
 
-        std::string init_shell_type;
+        std::string shell;
 
         options.add_options()("h,help", "Show help")
             // explicit_value = false, implicit_value = "auto" allows:
             // --init        -> "auto"
             // --init bash   -> "bash"
-            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(init_shell_type)->implicit_value("auto"));
+            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"));
 
         auto result = options.parse(argc, argv);
 
@@ -31,11 +32,23 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
             return 0; // Handled
         }
 
+        // don't allow positional arguments
+        if (!result.unmatched().empty())
+        {
+            output_stream_ << "Error - positional arguments not recognized:";
+            for (const auto& arg : result.unmatched())
+            {
+                output_stream_ << " '" << arg << "'";
+            }
+            output_stream_ << std::endl;
+            output_stream_ << options.help() << std::endl;
+            return 1;
+        }
+
         // Resolve shell type
-        std::string shell = init_shell_type;
         if (shell == "auto" || shell.empty())
         {
-            shell = detect_shell();
+            shell = get_parent_process_name();
         }
         std::string exe_path = get_self_executable_path(argv[0]);
 
@@ -51,7 +64,7 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
     }
     catch (const std::exception& e)
     {
-        error_message_ = e.what();
+        output_stream_ << "Error parsing options: " << e.what() << std::endl;
     }
 
     return false; // Not an init/help command, let main program continue
@@ -91,46 +104,35 @@ std::string CddOptionsInit::get_self_executable_path(const char* argv0) const
     return result;
 }
 
-std::string CddOptionsInit::detect_shell() const
-{
-#ifdef _WIN32
-    char* shell_env = nullptr;
-    size_t len = 0;
-    _dupenv_s(&shell_env, &len, "SHELL");
-    if (!shell_env)
-        return "bash"; // Default fallback
-    std::string shell_path(shell_env);
-    free(shell_env);
-#else
-    const char* shell_env = std::getenv("SHELL");
-    if (!shell_env)
-        return "bash"; // Default fallback
-    std::string shell_path(shell_env);
-#endif
-    fs::path p(shell_path);
-
-    // Returns "zsh", "bash", "fish", etc.
-    return p.filename().string();
-}
-
 static constexpr const char* _bash_setup = R"(
-# Add the following line to .bashrc or .zshrc to enable cd-deluxe integration:
+# Add the following line to ~/.bashrc or ~/.zshrc to enable cd-deluxe integration:
 source <("{}" --init)
+)";
+
+static constexpr const char* _fish_setup = R"(
+# Add the following line to ~/.config/fish/config.fish to enable cd-deluxe integration:
+"{}" --init | source
 )";
 
 void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const std::string& exe_path) const
 {
     if (shell_type == "fish")
     {
-        // TODO
+        output_stream_ << std::format(_fish_setup, exe_path) << std::endl;
+    }
+    else if (shell_type == "bash" || shell_type == "zsh")
+    {
+        output_stream_ << std::format(_bash_setup, exe_path) << std::endl;
     }
     else
     {
-        output_stream_ << std::format(_bash_setup, exe_path) << std::endl;
+        output_stream_ << "# Shell type '" << shell_type << "' not specifically supported.\n";
     }
 }
 
 static constexpr const char* _bash_init = R"(
+# cd-deluxe integration for bash/zsh
+
 cdd() {{
     _cdd_exe="{}"
     if [ ! -f "${{_cdd_exe}}" ]; then
@@ -138,7 +140,6 @@ cdd() {{
         echo "Remove cdd function or unalias cd until the issue is resolved." >&2
         return 1
     fi
-
     dirs -l -p | "${{_cdd_exe}}" "$@" | while read x
     do
         eval $x > /dev/null
@@ -149,27 +150,46 @@ alias cd=cdd
 echo "-- cd-deluxe shell integration loaded. See: cd --help."
 )";
 
+static constexpr const char* _fish_init = R"(
+# cd-deluxe integration for fish shell
+
+function cdd
+    # Recursion guard - use builtin cd if called from pushd/popd
+    if string match -q -- "*pushd*" (status stack-trace) \
+       or string match -q -- "*popd*" (status stack-trace)
+        builtin cd $argv
+        return
+    end
+    # Verify the cd-deluxe executable exists
+    set -l _cdd_exe "{}"
+    if not test -f "$_cdd_exe"
+        echo "Error: cd-deluxe executable not found." >&2
+        return 1
+    end
+    # Run the executable and process its output
+    for x in (string join \n $dirstack | "$_cdd_exe" $argv)
+        # Also ensure explicit 'cd' commands from the C++ app use builtin
+        set x (string replace -r '^cd ' 'builtin cd ' -- "$x")
+        eval $x > /dev/null
+    end
+end
+
+alias cd cdd
+echo "-- cd-deluxe shell integration loaded. See: cd --help."
+)";
+
 void CddOptionsInit::print_init_script(const std::string& shell_type, const std::string& exe_path) const
 {
     if (shell_type == "fish")
     {
-        // Fish shell syntax is significantly different
-        output_stream_ << "function cdd\n";
-        output_stream_ << "  if test -x \"" << exe_path << "\"\n";
-        output_stream_ << "    set -l output (dirs -p | \"" << exe_path << "\" $argv)\n";
-        output_stream_ << "    for x in $output\n";
-        output_stream_ << "      eval $x\n";
-        output_stream_ << "    end\n";
-        output_stream_ << "  else\n";
-        output_stream_ << "    echo \"cdd executable not found at: " << exe_path << "\"\n";
-        output_stream_ << "  end\n";
-        output_stream_ << "end\n";
-        output_stream_ << "alias cd cdd\n";
-        output_stream_ << "echo \"-- cd-deluxe shell integration loaded for fish. See: "
-                          "cd --help.\"\n";
+        output_stream_ << std::format(_fish_init, exe_path);
+    }
+    else if (shell_type == "bash" || shell_type == "zsh")
+    {
+        output_stream_ << std::format(_bash_init, exe_path);
     }
     else
     {
-        output_stream_ << std::format(_bash_init, exe_path);
+        output_stream_ << "Error: shell '" << shell_type << "' unknown or not supported.\n";
     }
 }
