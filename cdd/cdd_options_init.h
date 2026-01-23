@@ -16,18 +16,11 @@ public:
      */
     int parse(int argc, char* argv[], bool force_default_setup = false);
 
-    bool has_error() const { return !error_message_.empty(); }
-    const std::string& get_error() const { return error_message_; }
-
 private:
     std::ostream& output_stream_;
-    std::string error_message_;
 
     // Helper to get the full path of the current running executable
     std::string get_self_executable_path(const char* argv0) const;
-
-    // Helper to detect current shell from environment variables
-    std::string detect_shell() const;
 
     // Generates the shell setup help message
     void print_shell_setup_help(const std::string& shell_type, const std::string& exe_path) const;
