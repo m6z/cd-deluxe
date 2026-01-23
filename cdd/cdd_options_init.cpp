@@ -5,6 +5,7 @@
 #include "cdd_options_init.h"
 #include "cdd_util.h"
 #include "cxxopts.hpp"
+#include "process_util.h"
 
 namespace fs = std::filesystem;
 

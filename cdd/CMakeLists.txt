@@ -45,6 +45,7 @@ add_library(${TARGET_NAME} STATIC
     cdd_options.cpp
     cdd_options_init.cpp
     fzf_wrapper.cpp
+    process_util.cpp
 )
 
 # Add the directory where the configured header is generated
