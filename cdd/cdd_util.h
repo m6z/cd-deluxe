@@ -11,4 +11,3 @@ bool is_parent_of(std::filesystem::path parent, std::filesystem::path child);
 std::vector<std::tuple<std::string, std::filesystem::path>> get_path_components(const std::filesystem::path& path);
 std::string trim_from_char(const std::string& str, char ch);
 int get_year();
-std::string get_parent_process_name();
