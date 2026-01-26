@@ -155,11 +155,13 @@ std::vector<std::tuple<std::string, fs::path>> get_path_components(const fs::pat
     for (const auto& part : fs::absolute(path).lexically_normal())
     {
         current /= part;
-        if (part == current.root_path())
+
+        if (current == current.root_path() || current == current.root_name())
         {
             // Skip root path component
             continue;
         }
+
         if (part.empty())
         {
             // Skip empty components (can happen with trailing slashes)

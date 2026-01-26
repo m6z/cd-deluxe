@@ -3,6 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "cdd/cdd2.h"
+#include "test_helpers.h"
 
 //----------------------------------------------------------------------
 
@@ -115,9 +116,9 @@ TEST_CASE("cdd2_test")
         auto dirs_upwards = cdd.create_dirs_upwards();
         REQUIRE(dirs_upwards.size() == 2);
         REQUIRE(dirs_upwards[0].prefix1 == "..1");
-        REQUIRE(dirs_upwards[0].path == "/current/working");
+        REQUIRE(nix_path(dirs_upwards[0].path) == "/current/working");
         REQUIRE(dirs_upwards[1].prefix1 == "..2");
-        REQUIRE(dirs_upwards[1].path == "/current");
+        REQUIRE(nix_path(dirs_upwards[1].path) == "/current");
     }
 
     SECTION("back_none")
@@ -142,7 +143,7 @@ TEST_CASE("cdd2_test")
         cdd._is_directory = true;
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/z\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/z'\n" == cdd.get_out_str());
 #endif
@@ -154,7 +155,8 @@ TEST_CASE("cdd2_test")
         cdd._is_directory = true;
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"..\\\\..\"\n" == cdd.get_out_str());
+        REQUIRE("cdd: ..\\..\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '../..'\n" == cdd.get_out_str());
         REQUIRE("cdd: ../..\n" == cdd.get_err_str());
@@ -167,11 +169,11 @@ TEST_CASE("cdd2_test")
         cdd._is_regular_file = true;
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp'\n" == cdd.get_out_str());
-        REQUIRE("cdd: /tmp\n" == cdd.get_err_str());
 #endif
+        REQUIRE("cdd: /tmp\n" == cdd.get_err_str());
     }
 
     //----------------------------------------------------------------------
@@ -185,7 +187,7 @@ TEST_CASE("cdd2_test")
         )");
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/b\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
