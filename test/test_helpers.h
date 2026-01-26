@@ -24,3 +24,6 @@ public:
 // factory functions for Cdd2_Test
 Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const string& dirs);
 Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const vector<string>& dirs);
+
+// convert a filesystem path to a Unix/Linux style string
+std::string nix_path(const fs::path& p);

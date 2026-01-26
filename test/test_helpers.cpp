@@ -37,3 +37,19 @@ Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path
     CddOptions options(args, env);
     return Cdd2_Test(options, dirs, cwd);
 }
+
+std::string nix_path(const fs::path& p)
+{
+    string s = p.string();
+
+    // remove drive letter on Windows for comparison
+    if (s.size() >= 2 && std::isalpha(s[0]) && s[1] == ':')
+    {
+        s = s.substr(2);
+    }
+
+    // replace all backward slashes with forward slashes for test comparison
+    std::replace(s.begin(), s.end(), '\\', '/');
+
+    return s;
+};
