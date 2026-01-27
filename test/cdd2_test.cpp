@@ -683,9 +683,10 @@ TEST_CASE("cdd2_test")
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
 #if _WIN32
-        REQUIRE(cdd.get_err_str() == "..1: C:\\tmp\\a\\b\n"
-                                     "..2: C:\\tmp\\a\n"
-                                     "..3: C:\\tmp\n");
+        auto cdd_err_output = swap_drive_letter(cdd.get_err_str());
+        REQUIRE(cdd_err_output == "..1: C:\\tmp\\a\\b\n"
+                                  "..2: C:\\tmp\\a\n"
+                                  "..3: C:\\tmp\n");
 #else
         REQUIRE(cdd.get_err_str() == "..1: /tmp/a/b\n"
                                      "..2: /tmp/a\n"
@@ -699,8 +700,9 @@ TEST_CASE("cdd2_test")
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
 #ifdef WIN32
-        REQUIRE(cdd.get_err_str() == "..2: C:\\tmp\\a\\aa\n"
-                                     "..3: C:\\tmp\\a\n");
+        auto cdd_err_output = swap_drive_letter(cdd.get_err_str());
+        REQUIRE(cdd_err_output == "..2: C:\\tmp\\a\\aa\n"
+                                  "..3: C:\\tmp\\a\n");
 #else
         REQUIRE(cdd.get_err_str() == "..2: /tmp/a/aa\n"
                                      "..3: /tmp/a\n");

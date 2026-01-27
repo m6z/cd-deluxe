@@ -27,3 +27,6 @@ Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path
 
 // convert a filesystem path to a Unix/Linux style string
 std::string nix_path(const fs::path& p);
+
+// simplify windows specific tests
+std::string swap_drive_letter(string s, char new_drive_letter = 'C');

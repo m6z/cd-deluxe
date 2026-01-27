@@ -53,3 +53,17 @@ std::string nix_path(const fs::path& p)
 
     return s;
 };
+
+std::string swap_drive_letter(string s, char new_drive_letter)
+{
+    // iterate through the string to find and replace each drive letter pattern (e.g., "C:")
+    for (size_t i = 0; i + 1 < s.size(); ++i)
+    {
+        if (std::isalpha(s[i]) && s[i + 1] == ':')
+        {
+            s[i] = new_drive_letter;
+            i++; // skip the colon
+        }
+    }
+    return s;
+}
