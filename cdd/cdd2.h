@@ -52,7 +52,8 @@ public:
             {
                 strm << prefix2 << ' ';
             }
-            strm << path.string();
+            auto output_path = path; // make a temp copy due to const
+            strm << output_path.make_preferred().string();
             return strm.str();
         }
     };
