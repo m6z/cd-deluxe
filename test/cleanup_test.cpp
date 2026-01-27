@@ -59,7 +59,7 @@ TEST_CASE("cleanup_test")
 #endif
         };
         REQUIRE(exp == act);
-        REQUIRE("cdd reduced dirs: from 4 to 3\n" == cdd.get_err_str());
+        REQUIRE("cdd reduced dirs from 4 to 3\n" == cdd.get_err_str());
     }
 
     SECTION("delete_one")
