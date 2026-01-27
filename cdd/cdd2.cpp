@@ -384,7 +384,7 @@ bool Cdd2::change_to_path_spec()
     if (process_path_spec_including_filesystem(path_target.string(), tagged_path, path_extra))
     {
 #ifdef WIN32
-        strm_out_ << "pushd " << tagged_path.path << endl;
+        strm_out_ << "pushd " << tagged_path.path.make_preferred().string() << endl;
 #else
         strm_out_ << "pushd '" << tagged_path.path.string() << "'" << endl;
 #endif
@@ -897,7 +897,7 @@ void Cdd2::garbage_collect()
         paths.push_back(tp.path);
     }
     command_generator(paths);
-    strm_err_ << "cdd reduced dirs: from " << dirs_.size() << " to " << paths.size() << endl;
+    strm_err_ << "cdd reduced dirs from " << dirs_.size() << " to " << paths.size() << endl;
 }
 
 void Cdd2::process_delete()
