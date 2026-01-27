@@ -411,6 +411,14 @@ bool Cdd2::change_to_path_spec()
 
 bool Cdd2::process_path_spec_including_filesystem(string target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
+    // simple case check for change to root directory
+    if (target == "/" || target == "\\")
+    {
+        tagged_path.path.clear();
+        tagged_path.path += fs::path::preferred_separator;
+        return true;
+    }
+
     if (options_.direction == CddOptions::direction_upwards)
     {
         if (process_path_spec_searching_upwards(tagged_path))
