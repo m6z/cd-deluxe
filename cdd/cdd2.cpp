@@ -386,7 +386,7 @@ bool Cdd2::change_to_path_spec()
 #ifdef WIN32
         strm_out_ << "pushd " << tagged_path.path.make_preferred().string() << endl;
 #else
-        strm_out_ << "pushd '" << tagged_path.path.string() << "'" << endl;
+        strm_out_ << "pushd '" << tagged_path.path.make_preferred().string() << "'" << endl;
 #endif
 
         if (tagged_path.path != path_target || path_extra.size())
@@ -398,7 +398,7 @@ bool Cdd2::change_to_path_spec()
             {
                 strm_err_ << ' ' << tagged_path.prefix2;
             }
-            strm_err_ << ' ' << tagged_path.path.string() << endl;
+            strm_err_ << ' ' << tagged_path.path.make_preferred().string() << endl;
         }
         for (const auto& extra : path_extra)
         {
@@ -930,11 +930,11 @@ void Cdd2::process_delete()
     }
     if (reversed.size() == dirs_.size())
     {
-        strm_err_ << "** Could not delete from history: " << tagged_path.path.string() << endl;
+        strm_err_ << "** Could not delete from history: " << tagged_path.path.make_preferred().string() << endl;
         return;
     }
     command_generator(reversed);
-    strm_err_ << "cdd del: " << tagged_path.path.string() << endl;
+    strm_err_ << "cdd del: " << tagged_path.path.make_preferred().string() << endl;
 }
 
 void Cdd2::command_generator(const vector<fs::path>& paths_remaining)
