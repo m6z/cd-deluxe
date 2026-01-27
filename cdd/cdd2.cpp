@@ -509,34 +509,26 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
         return false;
     }
 
-    // [Regex setup for numerics omitted for brevity, assuming existing logic
-    // remains]
-    static std::regex re_num("(\\d+)");
-    static std::regex re_dashes("-+");
-    static std::regex re_dash_num("-(\\d+)");
-    static std::regex re_pluses("[+]+");
-    static std::regex re_plus_num("[+](\\d+)");
-    static std::regex re_commas(",+");
-    static std::regex re_comma_num(",(\\d+)");
+    static std::regex re_num("(\\d+)");         // forwards
+    static std::regex re_pluses("[+]+");        // forwards
+    static std::regex re_plus_num("[+](\\d+)"); // forwards
+    static std::regex re_dashes("-+");          // backwards
+    static std::regex re_dash_num("-(\\d+)");   // backwards
+    static std::regex re_commas(",+");          // common
+    static std::regex re_comma_num(",(\\d+)");  // common
 
     std::smatch match;
 
-    if (std::regex_match(target, match, re_num))
+    // forwards
+    if (std::regex_match(target, match, re_num) || std::regex_match(target, match, re_plus_num))
     {
         int amount = std::stoi(match[1]);
-        if (options_.direction == CddOptions::direction_backwards)
-        {
-            return go_backwards(amount, tagged_path);
-        }
-        if (options_.direction == CddOptions::direction_forwards)
-        {
-            return go_forwards(amount, tagged_path);
-        }
-        if (options_.direction == CddOptions::direction_common)
-        {
-            return go_common(amount, tagged_path);
-        }
-        return false;
+        return go_forwards(amount, tagged_path);
+    }
+    if (std::regex_match(target, match, re_pluses))
+    {
+        int amount = static_cast<int>(match[0].str().size());
+        return go_forwards(amount - 1, tagged_path);
     }
 
     // backwards
@@ -549,18 +541,6 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     {
         int amount = static_cast<int>(match[0].str().size());
         return go_backwards(amount, tagged_path);
-    }
-
-    // forwards
-    if (std::regex_match(target, match, re_plus_num))
-    {
-        int amount = std::stoi(match[1]);
-        return go_forwards(amount, tagged_path);
-    }
-    if (std::regex_match(target, match, re_pluses))
-    {
-        int amount = static_cast<int>(match[0].str().size());
-        return go_forwards(amount - 1, tagged_path);
     }
 
     // common (comma)

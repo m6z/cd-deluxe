@@ -204,7 +204,7 @@ TEST_CASE("cdd2_test")
         cdd.process();
         // cdd.get_options().output();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/b\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
@@ -220,7 +220,7 @@ TEST_CASE("cdd2_test")
         )");
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/c\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
@@ -236,7 +236,7 @@ TEST_CASE("cdd2_test")
         )");
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/c\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
@@ -257,6 +257,25 @@ TEST_CASE("cdd2_test")
 
     //----------------------------------------------------------------------
 
+    SECTION("forward_zero")
+    {
+        auto cdd = cdd_test({"_cdd", "0"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd \"/tmp/a\"\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+    }
+
     SECTION("forward_plus_zero")
     {
         auto cdd = cdd_test({"_cdd", "+0"}, "", "/tmp/a",
@@ -269,7 +288,7 @@ TEST_CASE("cdd2_test")
 
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/a\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
 #endif
@@ -288,11 +307,29 @@ TEST_CASE("cdd2_test")
 
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/a\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
 #endif
         REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
+    }
+
+    SECTION("forward_one")
+    {
+        auto cdd = cdd_test({"_cdd", "1"}, "", "/tmp/a",
+                            {
+                                "/tmp/b", // fourth visited
+                                "/tmp/c", // third visited
+                                "/tmp/b", // second visited
+                                "/tmp/a", // first visited
+                            });
+        cdd.process();
+#ifdef WIN32
+        REQUIRE("pushd \"/tmp/b\"\n" == cdd.get_out_str());
+#else
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+#endif
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
     }
 
     SECTION("forward_plus_one")
@@ -306,7 +343,7 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/b\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
@@ -325,7 +362,7 @@ TEST_CASE("cdd2_test")
 
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/b\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
 #endif
@@ -343,7 +380,7 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/c\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
@@ -361,7 +398,7 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE(false); // TODO
+        REQUIRE("pushd \"/tmp/c\"\n" == cdd.get_out_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
 #endif
