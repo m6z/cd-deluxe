@@ -2,7 +2,7 @@
 setlocal
 
 :: set test_pattern=cdd2_test
-set test_pattern=match_test
+:: set test_pattern=match_test
 :: set test_pattern=util_test
 :: set test_pattern=get_path_components_tmp
 

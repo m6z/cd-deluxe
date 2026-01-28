@@ -111,7 +111,7 @@ void output_footer()
 
 bool CddOptions::initialize(const std::vector<std::string>& args, const std::string& env_options)
 {
-#ifdef _WIN32
+#ifdef WIN32
     ignore_case = true;
 #endif
 

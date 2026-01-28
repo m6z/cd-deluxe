@@ -22,7 +22,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <direct.h>
 #include <io.h>
 #define MAX_PATH_LENGTH _MAX_PATH
@@ -49,7 +49,7 @@ std::string get_environment(std::string var_name)
 {
     std::string result;
 
-#ifdef _WIN32
+#ifdef WIN32
     char* buffer = nullptr;
     size_t sz = 0;
     if (_dupenv_s(&buffer, &sz, var_name.c_str()) == 0 && buffer != nullptr)
@@ -201,7 +201,7 @@ int get_year()
 
     // 3. Convert to local time struct
     std::tm now_tm{};
-#ifdef _WIN32
+#ifdef WIN32
     localtime_s(&now_tm, &now_c);
 #else
     now_tm = *std::localtime(&now_c);
