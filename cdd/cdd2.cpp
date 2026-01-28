@@ -225,7 +225,7 @@ std::optional<Cdd2::RegexFilter> Cdd2::get_target_regex_filter()
     }
 
     // if pattern ends with path separator, match full directory names only
-    if (!rf.target.empty() && (rf.target.back() == fs::path::preferred_separator))
+    if (!rf.target.empty() && (rf.target.back() == '/' || rf.target.back() == '\\'))
     {
         rf.target.pop_back();
         rf.check_all_parts = false;

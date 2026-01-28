@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <windows.h>
 #else
 #include <sys/wait.h>
@@ -29,7 +29,7 @@ std::string trim_newline(std::string s)
 }
 } // namespace
 
-#ifdef _WIN32
+#ifdef WIN32
 
 std::string run_fzf(const std::string& inputs)
 {

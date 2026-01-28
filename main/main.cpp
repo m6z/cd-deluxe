@@ -23,12 +23,12 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include "cdd/cdd_options_init.h"
 #include "stdafx.h"
 
-#ifdef _WIN32
-#    include <direct.h>
-#    define isatty _isatty
-#    define fileno _fileno
+#ifdef WIN32
+#include <direct.h>
+#define isatty _isatty
+#define fileno _fileno
 #else
-#    include <unistd.h>
+#include <unistd.h>
 #endif
 
 int main(int argc, const char* argv[])

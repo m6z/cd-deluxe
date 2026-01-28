@@ -616,11 +616,19 @@ TEST_CASE("cdd2_test")
         cdd.process();
         // cdd.get_options().output();
         REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == "  0: \\a\n"
+                                     "  1: \\b\n"
+                                     "  2: \\c\n"
+                                     "  3: \\d\n"
+                                     "  4: \\e\n");
+#else
         REQUIRE(cdd.get_err_str() == "  0: /a\n"
                                      "  1: /b\n"
                                      "  2: /c\n"
                                      "  3: /d\n"
                                      "  4: /e\n");
+#endif
     }
 
     SECTION("list_forward_pattern")
@@ -629,7 +637,11 @@ TEST_CASE("cdd2_test")
                             {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == "  1: \\b\n");
+#else
         REQUIRE(cdd.get_err_str() == "  1: /b\n");
+#endif
     }
 
     SECTION("list_backwards")
@@ -639,11 +651,19 @@ TEST_CASE("cdd2_test")
         cdd.process();
         // cdd.get_options().output();
         REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " -1: \\d\n"
+                                     " -2: \\b\n"
+                                     " -3: \\e\n"
+                                     " -4: \\c\n"
+                                     " -5: \\a\n");
+#else
         REQUIRE(cdd.get_err_str() == " -1: /d\n"
                                      " -2: /b\n"
                                      " -3: /e\n"
                                      " -4: /c\n"
                                      " -5: /a\n");
+#endif
     }
 
     SECTION("list_backwards_pattern")
@@ -652,7 +672,11 @@ TEST_CASE("cdd2_test")
                             {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " -3: \\e\n");
+#else
         REQUIRE(cdd.get_err_str() == " -3: /e\n");
+#endif
     }
 
     SECTION("list_common")
@@ -661,11 +685,19 @@ TEST_CASE("cdd2_test")
                             {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " ,0: ( 2) \\d\n"
+                                     " ,1: ( 2) \\b\n"
+                                     " ,2: ( 1) \\e\n"
+                                     " ,3: ( 1) \\c\n"
+                                     " ,4: ( 1) \\a\n");
+#else
         REQUIRE(cdd.get_err_str() == " ,0: ( 2) /d\n"
                                      " ,1: ( 2) /b\n"
                                      " ,2: ( 1) /e\n"
                                      " ,3: ( 1) /c\n"
                                      " ,4: ( 1) /a\n");
+#endif
     }
 
     SECTION("list_common_pattern")
@@ -674,7 +706,11 @@ TEST_CASE("cdd2_test")
                             {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
+#ifdef WIN32
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\b\n");
+#else
         REQUIRE(cdd.get_err_str() == " ,1: ( 2) /b\n");
+#endif
     }
 
     SECTION("list_upwards")
@@ -801,7 +837,7 @@ TEST_CASE("upwards_test")
         cdd._is_directory = true;
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
+        REQUIRE("pushd C:\\tmp\\a\n" == swap_drive_letter(cdd.get_out_str()));
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
 #endif
@@ -813,7 +849,7 @@ TEST_CASE("upwards_test")
         cdd._is_directory = true;
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\a\\b\n" == cdd.get_out_str());
+        REQUIRE("pushd C:\\a\\b\n" == swap_drive_letter(cdd.get_out_str()));
 #else
         REQUIRE("pushd '/a/b'\n" == cdd.get_out_str());
 #endif
@@ -827,8 +863,13 @@ TEST_CASE("adhoc_tests")
         auto cdd = cdd_test({"_cdd"}, "", "/a", {"/a", "/b", "/c"});
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
+#if WIN32
+        REQUIRE(cdd.get_err_str() == " -1: \\b\n"
+                                     " -2: \\c\n");
+#else
         REQUIRE(cdd.get_err_str() == " -1: /b\n"
                                      " -2: /c\n");
+#endif
     }
 
     SECTION("adhoc_last_to_first_list_specified")
@@ -836,8 +877,13 @@ TEST_CASE("adhoc_tests")
         auto cdd = cdd_test({"_cdd", "-d-"}, "", "/a", {"/a", "/b", "/c"});
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
+#ifdef WIN32
+        REQUIRE(cdd.get_err_str() == " -1: \\b\n"
+                                     " -2: \\c\n");
+#else
         REQUIRE(cdd.get_err_str() == " -1: /b\n"
                                      " -2: /c\n");
+#endif
     }
 
     SECTION("adhoc_last_to_first_changed_specified")
@@ -846,11 +892,13 @@ TEST_CASE("adhoc_tests")
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\cd\n" == cdd.get_out_str());
+        REQUIRE(cdd.get_err_str() == "cdd: \\cd\n"
+                                     " -3: \\de\n");
 #else
         REQUIRE("pushd '/cd'\n" == cdd.get_out_str());
-#endif
         REQUIRE(cdd.get_err_str() == "cdd: /cd\n"
                                      " -3: /de\n");
+#endif
     }
 
     SECTION("adhoc_last_to_first_changed_shorthand")
@@ -859,11 +907,13 @@ TEST_CASE("adhoc_tests")
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\cd\n" == cdd.get_out_str());
+        REQUIRE(cdd.get_err_str() == "cdd: \\cd\n"
+                                     " -3: \\de\n");
 #else
         REQUIRE("pushd '/cd'\n" == cdd.get_out_str());
-#endif
         REQUIRE(cdd.get_err_str() == "cdd: /cd\n"
                                      " -3: /de\n");
+#endif
     }
 
     SECTION("adhoc_first_to_last_changed_shorthand")
@@ -872,11 +922,13 @@ TEST_CASE("adhoc_tests")
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\de\n" == cdd.get_out_str());
+        REQUIRE(cdd.get_err_str() == "cdd: \\de\n"
+                                     "  1: \\cd\n");
 #else
         REQUIRE("pushd '/de'\n" == cdd.get_out_str());
-#endif
         REQUIRE(cdd.get_err_str() == "cdd: /de\n"
                                      "  1: /cd\n");
+#endif
     }
 
     SECTION("adhoc_most_common_changed_shorthand")
@@ -885,11 +937,13 @@ TEST_CASE("adhoc_tests")
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\de\n" == cdd.get_out_str());
+        REQUIRE(cdd.get_err_str() == "cdd: ( 2) \\de\n"
+                                     " ,3: ( 1) \\cd\n");
 #else
         REQUIRE("pushd '/de'\n" == cdd.get_out_str());
-#endif
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) /de\n"
                                      " ,3: ( 1) /cd\n");
+#endif
     }
 
     SECTION("adhoc_upwards_changed_shorthand")
@@ -899,17 +953,18 @@ TEST_CASE("adhoc_tests")
             cdd._is_directory = true;
             cdd.process();
 #ifdef WIN32
-            REQUIRE("pushd \\ab\\bc\\cd\n" == cdd.get_out_str());
+            REQUIRE("pushd C:\\ab\\bc\\cd\n" == swap_drive_letter(cdd.get_out_str()));
 #else
             REQUIRE("pushd '/ab/bc/cd'\n" == cdd.get_out_str());
 #endif
         }
+
         {
             auto cdd = cdd_test({"_cdd", "..", "c$"}, "", "/ab/bc/cd/ef/fg", "");
             cdd._is_directory = true;
             cdd.process();
 #ifdef WIN32
-            REQUIRE("pushd \\ab\\bc\n" == cdd.get_out_str());
+            REQUIRE("pushd C:\\ab\\bc\n" == swap_drive_letter(cdd.get_out_str()));
 #else
             REQUIRE("pushd '/ab/bc'\n" == cdd.get_out_str());
 #endif
