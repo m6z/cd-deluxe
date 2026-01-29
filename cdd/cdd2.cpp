@@ -12,6 +12,24 @@
 
 namespace fs = std::filesystem;
 
+Cdd2::Cdd2(const CddOptions& options, const vector<string> dirs, fs::path cwd) : options_(options), dirs_(dirs), cwd_(cwd)
+{
+    if (!cwd.empty())
+    {
+        cwd_assigned_ = true;
+    }
+
+#if WIN32
+    // On Windows, add current working directory as windows pushd does not include it
+    fs::path pth;
+    if (get_cwd_path(pth))
+    {
+        // dirs_.push_back(pth.string());
+        dirs_.insert(dirs_.begin(), pth.string());
+    }
+#endif
+}
+
 //----------------------------------------------------------------------
 
 std::string Cdd2::KeyedPath::generate_key_from_path(const fs::path& p, bool ignore_case)
@@ -877,8 +895,16 @@ bool Cdd2::is_regular_file(const fs::path& path)
 
 void Cdd2::process_reset()
 {
-    vector<fs::path> empty_paths;
-    command_generator(empty_paths);
+    vector<fs::path> paths;
+
+    // end up with current working directory
+    fs::path cwd;
+    if (get_cwd_path(cwd))
+    {
+        paths.push_back(cwd);
+    }
+
+    command_generator(paths);
     strm_err_ << "cdd reset" << endl;
 }
 
@@ -952,14 +978,14 @@ void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining)
     int count = 0;
     for (const auto& path_remaining : paths_remaining)
     {
-        strm_out_ << (count++ ? "pushd " : "chdir/d ") << path_remaining << " 2>nul" << endl;
+        strm_out_ << (count++ ? "pushd " : "chdir/d ") << path_remaining.string() << " 2>nul" << endl;
     }
 
-    fs::path cwd;
-    if (get_cwd_path(cwd))
-    {
-        strm_out_ << (count ? "pushd " : "chdir/d ") << cwd << endl;
-    }
+    // fs::path cwd;
+    // if (get_cwd_path(cwd))
+    // {
+    //     strm_out_ << (count ? "pushd " : "chdir/d ") << cwd.string() << endl;
+    // }
 }
 
 void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
@@ -977,8 +1003,10 @@ void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
 size_t Cdd2::pushd_count() const
 {
     auto count = dirs_.size();
-#if WIN32
-    count--;
-#endif
+
+    // #if WIN32
+    //     count--;
+    // #endif
+
     return count;
 }

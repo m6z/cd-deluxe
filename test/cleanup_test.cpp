@@ -40,7 +40,7 @@ TEST_CASE("cleanup_test")
 {
     SECTION("garbage_collect")
     {
-        auto cdd = cdd_test({"_cdd", "--gc"}, "dd", "/current/working/dir", test_dirs);
+        auto cdd = cdd_test({"_cdd", "--gc"}, "", "/current/working/dir", test_dirs);
         cdd.process();
 
         vector<string> act = split_text(cdd.get_out_str());
@@ -48,9 +48,9 @@ TEST_CASE("cleanup_test")
 #ifdef WIN32
             "for /l %%i in (1,1,4) do popd", //
             "chdir/d aa 2>nul",              //
+            "pushd bb 2>nul",                //
             "pushd cc 2>nul",                //
-            "pushd dd 2>nul",                //
-            "pushd dd",                      //
+            "pushd /current/working/dir",    //
 #else
             "dirs -c",    //
             "\\cd 'aa'",  //
@@ -64,7 +64,7 @@ TEST_CASE("cleanup_test")
 
     SECTION("delete_one")
     {
-        auto cdd = cdd_test({"_cdd", "--del", "+1"}, "dd", "/current/working/dir", test_dirs);
+        auto cdd = cdd_test({"_cdd", "--del", "+1"}, "", "/current/working/dir", test_dirs);
         cdd.process();
 
         vector<string> act = split_text(cdd.get_out_str());
@@ -74,8 +74,7 @@ TEST_CASE("cleanup_test")
             "chdir/d aa 2>nul",              //
             "pushd cc 2>nul",                //
             "pushd aa 2>nul",                //
-            "pushd dd 2>nul",                //
-            "pushd dd",                      //
+            "pushd /current/working/dir",    //
 #else
             "dirs -c",    //
             "\\cd 'aa'",  //
@@ -96,7 +95,7 @@ TEST_CASE("cleanup_test")
         vector<string> exp = {
 #ifdef WIN32
             "for /l %%i in (1,1,4) do popd",
-            "chdir/d dd",
+            "chdir/d /current/working/dir",
 #else
             "dirs -c",
 #endif
