@@ -16,13 +16,7 @@ namespace fs = std::filesystem;
 class Cdd2
 {
 public:
-    Cdd2(const CddOptions& options, const vector<string> dirs, fs::path cwd = {}) : options_(options), dirs_(dirs), cwd_(cwd)
-    {
-        if (!cwd.empty())
-        {
-            cwd_assigned_ = true;
-        }
-    }
+    Cdd2(const CddOptions& options, const vector<string> dirs, fs::path cwd = {});
 
     void process(void);
     const CddOptions& get_options() const { return options_; }

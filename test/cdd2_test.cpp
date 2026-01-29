@@ -98,20 +98,23 @@ TEST_CASE("cdd2_test")
         REQUIRE(dirs_last_to_first[2].path == "/path/Three");
 
         auto dirs_first_to_last = cdd.create_dirs_first_to_last();
-        REQUIRE(dirs_first_to_last.size() == 3);
+        REQUIRE(dirs_first_to_last.size() == 4);
         REQUIRE(dirs_first_to_last[0].prefix1 == "  0");
         REQUIRE(dirs_first_to_last[0].path == "/path/TWO");
         REQUIRE(dirs_first_to_last[1].prefix1 == "  1");
         REQUIRE(dirs_first_to_last[1].path == "/path/Three");
         REQUIRE(dirs_first_to_last[2].prefix1 == "  2");
         REQUIRE(dirs_first_to_last[2].path == "/path/one");
+        REQUIRE(dirs_first_to_last[3].prefix1 == "  3");
+        REQUIRE(dirs_first_to_last[3].path == "/current/working/dir");
 
         auto dirs_most_to_least = cdd.create_dirs_most_to_least();
-        REQUIRE(dirs_most_to_least.size() == 3);
+        REQUIRE(dirs_most_to_least.size() == 4);
 
         REQUIRE(dirs_most_to_least[0].get_keyed_path().get_dir_path() == "/path/two");
-        REQUIRE(dirs_most_to_least[1].get_keyed_path().get_dir_path() == "/path/one");
-        REQUIRE(dirs_most_to_least[2].get_keyed_path().get_dir_path() == "/path/Three");
+        REQUIRE(dirs_most_to_least[1].get_keyed_path().get_dir_path() == "/current/working/dir");
+        REQUIRE(dirs_most_to_least[2].get_keyed_path().get_dir_path() == "/path/one");
+        REQUIRE(dirs_most_to_least[3].get_keyed_path().get_dir_path() == "/path/Three");
 
         auto dirs_upwards = cdd.create_dirs_upwards();
         REQUIRE(dirs_upwards.size() == 2);
@@ -126,7 +129,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", "-"}, "", "/current/working/dir", "");
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No history of directories\n" == cdd.get_err_str());
+        REQUIRE("No directory at -1\n" == cdd.get_err_str());
     }
 
     SECTION("back_dash_zero")
@@ -134,7 +137,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", "-0"}, "", "/current/working/dir", "");
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No history of directories\n" == cdd.get_err_str());
+        REQUIRE("No directory at -0\n" == cdd.get_err_str());
     }
 
     SECTION("cdd_to_dir")
