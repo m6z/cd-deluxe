@@ -59,6 +59,7 @@ std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_last_to_first()
 
     for (const auto& dir : dirs_)
     {
+        // std::cerr << "XX create_dirs_last_to_first processing: " << dir << std::endl;
         KeyedPath kp(dir, options_.ignore_case);
 
         // Check to see if this directory has already been seen
@@ -529,28 +530,31 @@ std::regex Cdd2::get_upwards_regex(string pattern)
 
 bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
+    std::smatch match;
+
+    std::regex re_dash_zeros("-(0+)"); // backwards error
+    if (std::regex_match(target, match, re_dash_zeros))
+    {
+        strm_err_ << "Invalid backwards index: " << target << ". Use -1, -2, etc." << endl;
+        return false;
+    }
+
     if (dirs_.empty())
     {
         strm_err_ << "No history of directories" << endl;
         return false;
     }
 
-    static std::regex re_num("(\\d+)");         // forwards
-    static std::regex re_pluses("[+]+");        // forwards
-    static std::regex re_plus_num("[+](\\d+)"); // forwards
-    static std::regex re_dashes("-+");          // backwards
-    static std::regex re_dash_num("-(\\d+)");   // backwards
-    static std::regex re_commas(",+");          // common
-    static std::regex re_comma_num(",(\\d+)");  // common
-
-    std::smatch match;
-
     // forwards
+    std::regex re_num("(\\d+)");
+    std::regex re_plus_num("[+](\\d+)");
     if (std::regex_match(target, match, re_num) || std::regex_match(target, match, re_plus_num))
     {
         int amount = std::stoi(match[1]);
         return go_forwards(amount, tagged_path);
     }
+
+    std::regex re_pluses("[+]+");
     if (std::regex_match(target, match, re_pluses))
     {
         int amount = static_cast<int>(match[0].str().size());
@@ -558,11 +562,13 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     }
 
     // backwards
+    std::regex re_dash_num("-(\\d+)");
     if (std::regex_match(target, match, re_dash_num))
     {
         int amount = std::stoi(match[1]);
         return go_backwards(amount, tagged_path);
     }
+    std::regex re_dashes("-+");
     if (std::regex_match(target, match, re_dashes))
     {
         int amount = static_cast<int>(match[0].str().size());
@@ -570,11 +576,13 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     }
 
     // common (comma)
+    std::regex re_comma_num(",(\\d+)");
     if (std::regex_match(target, match, re_comma_num))
     {
         int amount = std::stoi(match[1]);
         return go_common(amount, tagged_path);
     }
+    std::regex re_commas(",+");
     if (std::regex_match(target, match, re_commas))
     {
         int amount = static_cast<int>(match[0].str().size());
@@ -897,12 +905,14 @@ void Cdd2::process_reset()
 {
     vector<fs::path> paths;
 
+#if WIN32
     // end up with current working directory
     fs::path cwd;
     if (get_cwd_path(cwd))
     {
         paths.push_back(cwd);
     }
+#endif
 
     command_generator(paths);
     strm_err_ << "cdd reset" << endl;
@@ -954,6 +964,7 @@ void Cdd2::process_delete()
             reversed.push_back(dir);
         }
     }
+
     if (reversed.size() == dirs_.size())
     {
         strm_err_ << "** Could not delete from history: " << tagged_path.path.make_preferred().string() << endl;
@@ -990,13 +1001,31 @@ void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining)
 
 void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
 {
-    strm_out_ << "dirs -c" << endl;
-
-    int count = 0;
-
-    for (const auto& path_remaining : paths_remaining)
+    if (paths_remaining.empty())
     {
-        strm_out_ << (count++ ? "pushd" : "\\cd") << " '" << path_remaining.string() << "'" << endl;
+        // clear all and then finish
+        strm_out_ << "dirs -c" << endl;
+        return;
+    }
+
+    for (size_t i = 0; i < paths_remaining.size(); ++i)
+    {
+        auto path_remaining = paths_remaining[i];
+        bool use_cd = (i == 0) || (i == paths_remaining.size() - 1);
+        if (use_cd)
+        {
+            strm_out_ << "\\cd '" << path_remaining.string() << "'" << endl;
+        }
+        else
+        {
+            strm_out_ << "pushd '" << path_remaining.string() << "'" << endl;
+        }
+
+        if (i == 0)
+        {
+            // for the first one, also followup with the dirs command to clear the stack
+            strm_out_ << "dirs -c" << endl;
+        }
     }
 }
 
