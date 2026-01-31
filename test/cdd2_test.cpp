@@ -150,7 +150,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", "-0"}, "", "/current/working/dir", "");
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("Invalid backwards index: -0. Use -1, -2, etc.\n" == cdd.get_err_str());
+        REQUIRE("Invalid backwards index: -0. Use -1 or -2 ...\n" == cdd.get_err_str());
     }
 
     SECTION("cdd_to_dir")
@@ -464,114 +464,67 @@ TEST_CASE("cdd2_test")
 
     //----------------------------------------------------------------------
 
-    SECTION("common_comma_and_zero")
-    {
-        auto cdd = cdd_test({"_cdd", ","}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
-        cdd.process();
-#ifdef WIN32
-        REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) \\tmp\\b\n" == cdd.get_err_str());
-#else
-        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) /tmp/b\n" == cdd.get_err_str());
-#endif
-    }
+    static std::vector<std::string> common_test_dirs = {
+        "/a", "/a", "/a", "/a", "/a", // most visited
+        "/b", "/b", "/b", "/b",       // second most visited
+        "/c", "/c", "/c",             // third most visited
+        "/d", "/d",                   // fourth most visited
+    };
 
     SECTION("common_comma_zero")
     {
-        auto cdd = cdd_test({"_cdd", ",0"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",0"}, "", "", common_test_dirs);
         cdd.process();
-#ifdef WIN32
-        REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) \\tmp\\b\n" == cdd.get_err_str());
-#else
-        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) /tmp/b\n" == cdd.get_err_str());
-#endif
+        REQUIRE("" == cdd.get_out_str());
+        REQUIRE("Invalid common index: ,0. Use ,1 or ,2 ...\n" == cdd.get_err_str());
     }
 
     SECTION("common_one_comma")
     {
-        auto cdd = cdd_test({"_cdd", ","}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ","}, "", "", common_test_dirs);
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) \\tmp\\b\n" == cdd.get_err_str());
+        REQUIRE("pushd \\a\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 5) \\a\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 3) /tmp/b\n" == cdd.get_err_str());
 #endif
     }
 
     SECTION("common_comma_one")
     {
-        auto cdd = cdd_test({"_cdd", ",1"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",1"}, "", "", common_test_dirs);
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\c\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) \\tmp\\c\n" == cdd.get_err_str());
+        REQUIRE("pushd \\a\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 5) \\a\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 2) /tmp/c\n" == cdd.get_err_str());
 #endif
     }
 
     SECTION("common_two_commas")
     {
-        auto cdd = cdd_test({"_cdd", ",,"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",,"}, "", "", common_test_dirs);
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\c\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) \\tmp\\c\n" == cdd.get_err_str());
+        REQUIRE("pushd \\b\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 4) \\a\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 2) /tmp/c\n" == cdd.get_err_str());
 #endif
     }
 
     SECTION("common_comma_two")
     {
-        auto cdd = cdd_test({"_cdd", ",2"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",2"}, "", "", common_test_dirs);
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) \\tmp\\a\n" == cdd.get_err_str());
+        REQUIRE("pushd \\b\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 4) \\4\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 1) /tmp/a\n" == cdd.get_err_str());
@@ -580,54 +533,38 @@ TEST_CASE("cdd2_test")
 
     SECTION("common_three_commas")
     {
-        auto cdd = cdd_test({"_cdd", ",,,"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",,,"}, "", "", common_test_dirs);
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) \\tmp\\a\n" == cdd.get_err_str());
+        REQUIRE("pushd \\c\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 3) \\c\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 1) /tmp/a\n" == cdd.get_err_str());
 #endif
     }
 
-    SECTION("common_comma_three")
+    SECTION("common_comma_six")
     {
-        auto cdd = cdd_test({"_cdd", ",3"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",6"}, "", "", common_test_dirs);
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No directory at ,3\n" == cdd.get_err_str());
+        REQUIRE("No directory at ,6\n" == cdd.get_err_str());
     }
 
-    SECTION("common_four_commas")
+    SECTION("common_six_commas")
     {
-        auto cdd = cdd_test({"_cdd", ",,,,"}, "", "/tmp/a",
-                            {
-                                "/tmp/b", // fourth visited
-                                "/tmp/c", // third visited
-                                "/tmp/b", // second visited
-                                "/tmp/a", // first visited
-                            });
+        auto cdd = cdd_test({"_cdd", ",,,,,,"}, "", "", common_test_dirs);
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No directory at ,3\n" == cdd.get_err_str());
+        REQUIRE("No directory at ,6\n" == cdd.get_err_str());
     }
+
+    //----------------------------------------------------------------------
 
     SECTION("list_forward")
     {
-        auto cdd = cdd_test({"_cdd", "--list", "--direction=+"}, "", "/tmp/a", //
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=+"}, "", "/current/dir", //
                             {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
         cdd.process();
         // cdd.get_options().output();
@@ -637,7 +574,8 @@ TEST_CASE("cdd2_test")
                                      "  1: \\b\n"
                                      "  2: \\c\n"
                                      "  3: \\d\n"
-                                     "  4: \\e\n");
+                                     "  4: \\e\n"
+                                     "  5: \\current\\dir\n");
 #else
         REQUIRE(cdd.get_err_str() == "  0: /a\n"
                                      "  1: /b\n"
