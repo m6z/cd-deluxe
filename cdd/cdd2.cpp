@@ -135,10 +135,11 @@ std::vector<Cdd2::CommonPath> Cdd2::create_dirs_most_to_least()
     {
         // relative offset
         {
+            auto number = i + 1;
             stringstream strm;
-            if (i < 10)
+            if (number < 10)
                 strm << ' ';
-            strm << ',' << i;
+            strm << ',' << number;
             result[i].tag_prefix1 = strm.str();
         }
         // count
@@ -535,11 +536,33 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     std::regex re_dash_zeros("-(0+)"); // backwards error
     if (std::regex_match(target, match, re_dash_zeros))
     {
-        strm_err_ << "Invalid backwards index: " << target << ". Use -1, -2, etc." << endl;
+        strm_err_ << "Invalid backwards index: " << target << ". Use -1 or -2 ..." << endl;
         return false;
     }
 
-    if (dirs_.empty())
+    std::regex re_comma_zeros(",(0+)"); // common direction error
+    if (std::regex_match(target, match, re_comma_zeros))
+    {
+        strm_err_ << "Invalid common index: " << target << ". Use ,1 or ,2 ..." << endl;
+        return false;
+    }
+
+    bool has_history = !dirs_.empty();
+#if WIN32
+    if (dirs_.size() == 1)
+    {
+        fs::path cwd;
+        if (get_cwd_path(cwd))
+        {
+            if (dirs_[0] == cwd.string())
+            {
+                has_history = false;
+            }
+        }
+    }
+#endif
+
+    if (!has_history)
     {
         strm_err_ << "No history of directories" << endl;
         return false;
@@ -586,7 +609,7 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     if (std::regex_match(target, match, re_commas))
     {
         int amount = static_cast<int>(match[0].str().size());
-        return go_common(amount - 1, tagged_path);
+        return go_common(amount, tagged_path);
     }
 
     return process_match(target, tagged_path, path_extra);
