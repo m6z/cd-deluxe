@@ -103,15 +103,15 @@ TEST_CASE("cdd2_test")
 #else
         REQUIRE(dirs_first_to_last.size() == 3);
 #endif
-        REQUIRE(dirs_first_to_last[0].prefix1 == "  0");
+        REQUIRE(dirs_first_to_last[0].prefix1 == "  1");
         REQUIRE(dirs_first_to_last[0].path == "/path/TWO");
-        REQUIRE(dirs_first_to_last[1].prefix1 == "  1");
+        REQUIRE(dirs_first_to_last[1].prefix1 == "  2");
         REQUIRE(dirs_first_to_last[1].path == "/path/Three");
-        REQUIRE(dirs_first_to_last[2].prefix1 == "  2");
+        REQUIRE(dirs_first_to_last[2].prefix1 == "  3");
         REQUIRE(dirs_first_to_last[2].path == "/path/one");
 #if WIN32
         // on windows the current directory gets added in
-        REQUIRE(dirs_first_to_last[3].prefix1 == "  3");
+        REQUIRE(dirs_first_to_last[3].prefix1 == "  4");
         REQUIRE(dirs_first_to_last[3].path == "/current/working/dir");
 #endif
 
@@ -142,7 +142,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", "-"}, "", "/current/working/dir", "");
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No history of directories\n" == cdd.get_err_str());
+        REQUIRE("** No history of directories\n" == cdd.get_err_str());
     }
 
     SECTION("back_dash_zero")
@@ -150,7 +150,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", "-0"}, "", "/current/working/dir", "");
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("Invalid backwards index: -0. Use -1 or -2 ...\n" == cdd.get_err_str());
+        REQUIRE("** Invalid backwards index: \"-0\". Use -1 or -2 ...\n" == cdd.get_err_str());
     }
 
     SECTION("cdd_to_dir")
@@ -198,10 +198,10 @@ TEST_CASE("cdd2_test")
     SECTION("back_one_dash")
     {
         auto cdd = cdd_test({"_cdd", "-"}, "", "/tmp/a", R"(
-            /tmp/a
-            /tmp/b
-            /tmp/c
-        )");
+                /tmp/a
+                /tmp/b
+                /tmp/c
+            )");
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
@@ -215,10 +215,10 @@ TEST_CASE("cdd2_test")
     SECTION("back_dash_one")
     {
         auto cdd = cdd_test({"_cdd", "-1"}, "", "/tmp/a", R"(
-            /tmp/a
-            /tmp/b
-            /tmp/c
-        )");
+                /tmp/a
+                /tmp/b
+                /tmp/c
+            )");
         cdd.process();
         // cdd.get_options().output();
 #ifdef WIN32
@@ -233,10 +233,10 @@ TEST_CASE("cdd2_test")
     SECTION("back_two_dash")
     {
         auto cdd = cdd_test({"_cdd", "--"}, "", "/tmp/a", R"(
-            /tmp/a
-            /tmp/b
-            /tmp/c
-        )");
+                /tmp/a
+                /tmp/b
+                /tmp/c
+            )");
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\tmp\\c\n" == cdd.get_out_str());
@@ -250,10 +250,10 @@ TEST_CASE("cdd2_test")
     SECTION("back_dash_two")
     {
         auto cdd = cdd_test({"_cdd", "-2"}, "", "/tmp/a", R"(
-            /tmp/a
-            /tmp/b
-            /tmp/c
-        )");
+                /tmp/a
+                /tmp/b
+                /tmp/c
+            )");
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\tmp\\c\n" == cdd.get_out_str());
@@ -267,13 +267,13 @@ TEST_CASE("cdd2_test")
     SECTION("back_dash_three")
     {
         auto cdd = cdd_test({"_cdd", "-3"}, "", "/tmp/a", R"(
-            /tmp/a
-            /tmp/b
-            /tmp/c
-        )");
+                /tmp/a
+                /tmp/b
+                /tmp/c
+            )");
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
-        REQUIRE("No directory at -3\n" == cdd.get_err_str());
+        REQUIRE("** No directory at -3\n" == cdd.get_err_str());
     }
 
     //----------------------------------------------------------------------
@@ -289,13 +289,8 @@ TEST_CASE("cdd2_test")
                             });
 
         cdd.process();
-#ifdef WIN32
-        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
-        REQUIRE("cdd: \\tmp\\a\n" == cdd.get_err_str());
-#else
-        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
-        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
-#endif
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE("** Invalid forwards index: \"0\". Use 1 or 2 ...\n" == cdd.get_err_str());
     }
 
     SECTION("forward_plus_zero")
@@ -309,13 +304,8 @@ TEST_CASE("cdd2_test")
                             });
 
         cdd.process();
-#ifdef WIN32
-        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
-        REQUIRE("cdd: \\tmp\\a\n" == cdd.get_err_str());
-#else
-        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
-        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
-#endif
+        REQUIRE(cdd.get_out_str().empty());
+        REQUIRE("** Invalid forwards index: \"+0\". Use +1 or +2 ...\n" == cdd.get_err_str());
     }
 
     SECTION("forward_one_plus")
@@ -349,11 +339,11 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: \\tmp\\b\n" == cdd.get_err_str());
+        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
+        REQUIRE("cdd: \\tmp\\a\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
-        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
 #endif
     }
 
@@ -368,11 +358,11 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: \\tmp\\b\n" == cdd.get_err_str());
+        REQUIRE("pushd \\tmp\\a\n" == cdd.get_out_str());
+        REQUIRE("cdd: \\tmp\\a\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
-        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
+        REQUIRE("cdd: /tmp/a\n" == cdd.get_err_str());
 #endif
     }
 
@@ -407,11 +397,11 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
 #ifdef WIN32
-        REQUIRE("pushd \\tmp\\c\n" == cdd.get_out_str());
-        REQUIRE("cdd: \\tmp\\c\n" == cdd.get_err_str());
+        REQUIRE("pushd \\tmp\\b\n" == cdd.get_out_str());
+        REQUIRE("cdd: \\tmp\\b\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
-        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
+        REQUIRE("cdd: /tmp/b\n" == cdd.get_err_str());
 #endif
     }
 
@@ -444,8 +434,13 @@ TEST_CASE("cdd2_test")
                                 "/tmp/a", // first visited
                             });
         cdd.process();
-        REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No directory at +3\n" == cdd.get_err_str());
+#ifdef WIN32
+        REQUIRE("pushd \\tmp\\c\n" == cdd.get_out_str());
+        REQUIRE("cdd: \\tmp\\c\n" == cdd.get_err_str());
+#else
+        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
+        REQUIRE("cdd: /tmp/c\n" == cdd.get_err_str());
+#endif
     }
 
     SECTION("forward_four_plus")
@@ -459,7 +454,7 @@ TEST_CASE("cdd2_test")
                             });
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No directory at +3\n" == cdd.get_err_str());
+        REQUIRE("** No directory at +4\n" == cdd.get_err_str());
     }
 
     //----------------------------------------------------------------------
@@ -476,7 +471,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", ",0"}, "", "", common_test_dirs);
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("Invalid common index: ,0. Use ,1 or ,2 ...\n" == cdd.get_err_str());
+        REQUIRE("** Invalid common index: \",0\". Use ,1 or ,2 ...\n" == cdd.get_err_str());
     }
 
     SECTION("common_one_comma")
@@ -487,8 +482,8 @@ TEST_CASE("cdd2_test")
         REQUIRE("pushd \\a\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 5) \\a\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/b'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 3) /tmp/b\n" == cdd.get_err_str());
+        REQUIRE("pushd '/a'\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 5) /a\n" == cdd.get_err_str());
 #endif
     }
 
@@ -500,8 +495,8 @@ TEST_CASE("cdd2_test")
         REQUIRE("pushd \\a\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 5) \\a\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("pushd '/a'\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 5) /a\n" == cdd.get_err_str());
 #endif
     }
 
@@ -511,10 +506,10 @@ TEST_CASE("cdd2_test")
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 4) \\a\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 4) \\b\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/c'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 2) /tmp/c\n" == cdd.get_err_str());
+        REQUIRE("pushd '/b'\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 4) /b\n" == cdd.get_err_str());
 #endif
     }
 
@@ -526,8 +521,8 @@ TEST_CASE("cdd2_test")
         REQUIRE("pushd \\b\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 4) \\4\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) /tmp/a\n" == cdd.get_err_str());
+        REQUIRE("pushd '/b'\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 4) /b\n" == cdd.get_err_str());
 #endif
     }
 
@@ -539,8 +534,8 @@ TEST_CASE("cdd2_test")
         REQUIRE("pushd \\c\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 3) \\c\n" == cdd.get_err_str());
 #else
-        REQUIRE("pushd '/tmp/a'\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 1) /tmp/a\n" == cdd.get_err_str());
+        REQUIRE("pushd '/c'\n" == cdd.get_out_str());
+        REQUIRE("cdd: ( 3) /c\n" == cdd.get_err_str());
 #endif
     }
 
@@ -549,7 +544,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", ",6"}, "", "", common_test_dirs);
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No directory at ,6\n" == cdd.get_err_str());
+        REQUIRE("** No directory at ,6\n" == cdd.get_err_str());
     }
 
     SECTION("common_six_commas")
@@ -557,7 +552,7 @@ TEST_CASE("cdd2_test")
         auto cdd = cdd_test({"_cdd", ",,,,,,"}, "", "", common_test_dirs);
         cdd.process();
         REQUIRE("" == cdd.get_out_str());
-        REQUIRE("No directory at ,6\n" == cdd.get_err_str());
+        REQUIRE("** No directory at ,6\n" == cdd.get_err_str());
     }
 
     //----------------------------------------------------------------------
@@ -570,18 +565,18 @@ TEST_CASE("cdd2_test")
         // cdd.get_options().output();
         REQUIRE(cdd.get_out_str().empty());
 #if _WIN32
-        REQUIRE(cdd.get_err_str() == "  0: \\a\n"
-                                     "  1: \\b\n"
-                                     "  2: \\c\n"
-                                     "  3: \\d\n"
-                                     "  4: \\e\n"
-                                     "  5: \\current\\dir\n");
+        REQUIRE(cdd.get_err_str() == "  1: \\a\n"
+                                     "  2: \\b\n"
+                                     "  3: \\c\n"
+                                     "  4: \\d\n"
+                                     "  5: \\e\n"
+                                     "  6: \\current\\dir\n");
 #else
-        REQUIRE(cdd.get_err_str() == "  0: /a\n"
-                                     "  1: /b\n"
-                                     "  2: /c\n"
-                                     "  3: /d\n"
-                                     "  4: /e\n");
+        REQUIRE(cdd.get_err_str() == "  1: /a\n"
+                                     "  2: /b\n"
+                                     "  3: /c\n"
+                                     "  4: /d\n"
+                                     "  5: /e\n");
 #endif
     }
 
@@ -592,9 +587,9 @@ TEST_CASE("cdd2_test")
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
 #if _WIN32
-        REQUIRE(cdd.get_err_str() == "  1: \\b\n");
+        REQUIRE(cdd.get_err_str() == "  2: \\b\n");
 #else
-        REQUIRE(cdd.get_err_str() == "  1: /b\n");
+        REQUIRE(cdd.get_err_str() == "  2: /b\n");
 #endif
     }
 
@@ -640,17 +635,17 @@ TEST_CASE("cdd2_test")
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
 #if _WIN32
-        REQUIRE(cdd.get_err_str() == " ,0: ( 2) \\d\n"
-                                     " ,1: ( 2) \\b\n"
-                                     " ,2: ( 1) \\e\n"
-                                     " ,3: ( 1) \\c\n"
-                                     " ,4: ( 1) \\a\n");
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\d\n"
+                                     " ,2: ( 2) \\b\n"
+                                     " ,3: ( 1) \\e\n"
+                                     " ,4: ( 1) \\c\n"
+                                     " ,5: ( 1) \\a\n");
 #else
-        REQUIRE(cdd.get_err_str() == " ,0: ( 2) /d\n"
-                                     " ,1: ( 2) /b\n"
-                                     " ,2: ( 1) /e\n"
-                                     " ,3: ( 1) /c\n"
-                                     " ,4: ( 1) /a\n");
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) /d\n"
+                                     " ,2: ( 2) /b\n"
+                                     " ,3: ( 1) /e\n"
+                                     " ,4: ( 1) /c\n"
+                                     " ,5: ( 1) /a\n");
 #endif
     }
 
@@ -661,9 +656,9 @@ TEST_CASE("cdd2_test")
         cdd.process();
         REQUIRE(cdd.get_out_str().empty());
 #ifdef WIN32
-        REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\b\n");
+        REQUIRE(cdd.get_err_str() == " ,2: ( 2) \\b\n");
 #else
-        REQUIRE(cdd.get_err_str() == " ,1: ( 2) /b\n");
+        REQUIRE(cdd.get_err_str() == " ,2: ( 2) /b\n");
 #endif
     }
 
@@ -774,11 +769,11 @@ TEST_CASE("match_test")
 #ifdef WIN32
         REQUIRE("pushd \\cc\\dd\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) \\cc\\dd\n"
-                                     " ,3: ( 1) \\bb\\cc\n");
+                                     " ,4: ( 1) \\bb\\cc\n");
 #else
         REQUIRE("pushd '/cc/dd'\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) /cc/dd\n"
-                                     " ,3: ( 1) /bb/cc\n");
+                                     " ,4: ( 1) /bb/cc\n");
 #endif
     }
 }
@@ -877,11 +872,11 @@ TEST_CASE("adhoc_tests")
 #ifdef WIN32
         REQUIRE("pushd \\de\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: \\de\n"
-                                     "  1: \\cd\n");
+                                     "  2: \\cd\n");
 #else
         REQUIRE("pushd '/de'\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: /de\n"
-                                     "  1: /cd\n");
+                                     "  2: /cd\n");
 #endif
     }
 
@@ -892,11 +887,11 @@ TEST_CASE("adhoc_tests")
 #ifdef WIN32
         REQUIRE("pushd \\de\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) \\de\n"
-                                     " ,3: ( 1) \\cd\n");
+                                     " ,4: ( 1) \\cd\n");
 #else
         REQUIRE("pushd '/de'\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) /de\n"
-                                     " ,3: ( 1) /cd\n");
+                                     " ,4: ( 1) /cd\n");
 #endif
     }
 

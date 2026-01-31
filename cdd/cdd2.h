@@ -144,7 +144,7 @@ private:
 
     bool get_cwd_path(fs::path& cwd);
     bool get_target(string& target);
-    bool get_target_regex(std::regex& re, bool& check_all_parts);
+    void validate_target_shorthand(const string& target);
     std::optional<RegexFilter> get_target_regex_filter();
     std::regex get_upwards_regex(std::string pattern);
 

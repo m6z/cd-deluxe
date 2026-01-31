@@ -64,7 +64,7 @@ TEST_CASE("cleanup_test")
 
     SECTION("delete_one")
     {
-        auto cdd = cdd_test({"_cdd", "--del", "+1"}, "", "/current/working/dir", test_dirs);
+        auto cdd = cdd_test({"_cdd", "--del", "+2"}, "", "/current/working/dir", test_dirs);
         cdd.process();
 
         vector<string> act = split_text(cdd.get_out_str());
