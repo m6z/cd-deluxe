@@ -46,11 +46,11 @@ TEST_CASE("cleanup_test")
         vector<string> act = split_text(cdd.get_out_str());
         vector<string> exp = {
 #ifdef WIN32
-            "for /l %%i in (1,1,4) do popd", //
-            "chdir/d aa 2>nul",              //
-            "pushd bb 2>nul",                //
-            "pushd cc 2>nul",                //
-            "pushd /current/working/dir",    //
+            "for /l %%i in (1,1,5) do popd",    //
+            "chdir/d aa 2>nul",                 //
+            "pushd bb 2>nul",                   //
+            "pushd cc 2>nul",                   //
+            "pushd /current/working/dir 2>nul", //
 #else
             "\\cd 'aa'",  //
             "dirs -c",    //
@@ -59,7 +59,12 @@ TEST_CASE("cleanup_test")
 #endif
         };
         REQUIRE(exp == act);
+
+#if WIN32
+        REQUIRE("cdd reduced dirs from 5 to 4\n" == cdd.get_err_str()); // on windows cwd is included
+#else
         REQUIRE("cdd reduced dirs from 4 to 3\n" == cdd.get_err_str());
+#endif
     }
 
     SECTION("delete_one")
@@ -70,11 +75,11 @@ TEST_CASE("cleanup_test")
         vector<string> act = split_text(cdd.get_out_str());
         vector<string> exp = {
 #ifdef WIN32
-            "for /l %%i in (1,1,4) do popd", //
-            "chdir/d aa 2>nul",              //
-            "pushd cc 2>nul",                //
-            "pushd aa 2>nul",                //
-            "pushd /current/working/dir",    //
+            "for /l %%i in (1,1,5) do popd",    //
+            "chdir/d aa 2>nul",                 //
+            "pushd cc 2>nul",                   //
+            "pushd aa 2>nul",                   //
+            "pushd /current/working/dir 2>nul", //
 #else
             "\\cd 'aa'",  //
             "dirs -c",    //
@@ -94,8 +99,8 @@ TEST_CASE("cleanup_test")
         vector<string> act = split_text(cdd.get_out_str());
         vector<string> exp = {
 #ifdef WIN32
-            "for /l %%i in (1,1,4) do popd",
-            "chdir/d /current/working/dir",
+            "for /l %%i in (1,1,5) do popd",
+            "chdir/d /current/working/dir 2>nul",
 #else
             "dirs -c",
 #endif
