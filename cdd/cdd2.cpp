@@ -97,7 +97,7 @@ std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_first_to_last()
         if (set_dir.find(kp) == set_dir.end())
         {
             stringstream strm;
-            strm << setw(3) << result.size();
+            strm << setw(3) << result.size() + 1;
             result.emplace_back(dir, strm.str());
             set_dir.insert(kp);
         }
@@ -233,7 +233,43 @@ bool Cdd2::get_target(string& target)
         return false;
     }
     target = options_.unmatched_args[0];
+    validate_target_shorthand(target);
     return true;
+}
+
+void Cdd2::validate_target_shorthand(const string& target)
+{
+    std::smatch match;
+
+    static std::regex re_zeros("0+"); // forwards error
+    if (std::regex_match(target, match, re_zeros))
+    {
+        throw std::runtime_error("Invalid forwards index: \"" + target + "\". Use 1 or 2 ...");
+    }
+
+    static std::regex re_plus_zeros("\\+(0+)"); // forwards error
+    if (std::regex_match(target, match, re_plus_zeros))
+    {
+        throw std::runtime_error("Invalid forwards index: \"" + target + "\". Use +1 or +2 ...");
+    }
+
+    static std::regex re_dash_zeros("-(0+)"); // backwards error
+    if (std::regex_match(target, match, re_dash_zeros))
+    {
+        throw std::runtime_error("Invalid backwards index: \"" + target + "\". Use -1 or -2 ...");
+    }
+
+    static std::regex re_comma_zeros(",(0+)"); // common direction error
+    if (std::regex_match(target, match, re_comma_zeros))
+    {
+        throw std::runtime_error("Invalid common index: \"" + target + "\". Use ,1 or ,2 ...");
+    }
+
+    static std::regex re_upwards_zeros("\\.\\.(0+)"); // upwards error
+    if (std::regex_match(target, match, re_upwards_zeros))
+    {
+        throw std::runtime_error("Invalid upwards index: \"" + target + "\". Use ..1 or ..2 ...");
+    }
 }
 
 std::optional<Cdd2::RegexFilter> Cdd2::get_target_regex_filter()
@@ -264,7 +300,7 @@ std::optional<Cdd2::RegexFilter> Cdd2::get_target_regex_filter()
     }
     catch (std::regex_error& e)
     {
-        strm_err_ << "Regex error: " << e.what() << std::endl;
+        strm_err_ << "** regex error: " << e.what() << std::endl;
         return std::nullopt;
     }
     return rf;
@@ -348,44 +384,51 @@ std::vector<Cdd2::TaggedPath> Cdd2::filter_dirs_most_to_least(const std::optiona
 
 void Cdd2::process()
 {
-    if (options_.list_history)
+    try
     {
+        if (options_.list_history)
+        {
+            show_history();
+            return;
+        }
+
+        if (options_.use_fzf)
+        {
+            filter_with_fzf();
+            return;
+        }
+
+        if (options_.reset_history)
+        {
+            process_reset();
+            return;
+        }
+
+        if (options_.garbage_collect)
+        {
+            garbage_collect();
+            return;
+        }
+
+        if (options_.delete_entry)
+        {
+            process_delete();
+            return;
+        }
+
+        if (!options_.unmatched_args.empty())
+        {
+            change_to_path_spec();
+            return;
+        }
+
+        // default action is to show history
         show_history();
-        return;
     }
-
-    if (options_.use_fzf)
+    catch (std::runtime_error& e)
     {
-        filter_with_fzf();
-        return;
+        strm_err_ << "** " << e.what() << endl;
     }
-
-    if (options_.reset_history)
-    {
-        process_reset();
-        return;
-    }
-
-    if (options_.garbage_collect)
-    {
-        garbage_collect();
-        return;
-    }
-
-    if (options_.delete_entry)
-    {
-        process_delete();
-        return;
-    }
-
-    if (!options_.unmatched_args.empty())
-    {
-        change_to_path_spec();
-        return;
-    }
-
-    // default action is to show history
-    show_history();
 }
 
 bool Cdd2::change_to_path_spec()
@@ -448,7 +491,6 @@ bool Cdd2::process_path_spec_including_filesystem(string target, TaggedPath& tag
     }
 
     target = expand_dots(target);
-
     if (!target.empty())
     {
         if (is_directory(target))
@@ -523,7 +565,7 @@ std::regex Cdd2::get_upwards_regex(string pattern)
     catch (std::regex_error& e)
     {
         stringstream strm;
-        strm << "Cannot process pattern \"" << pattern << "\" due to regex error: " << e.what();
+        strm << "** Cannot process pattern \"" << pattern << "\" due to regex error: " << e.what();
         throw std::runtime_error(strm.str());
     }
     return re;
@@ -531,22 +573,6 @@ std::regex Cdd2::get_upwards_regex(string pattern)
 
 bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged_path, vector<string>& path_extra)
 {
-    std::smatch match;
-
-    std::regex re_dash_zeros("-(0+)"); // backwards error
-    if (std::regex_match(target, match, re_dash_zeros))
-    {
-        strm_err_ << "Invalid backwards index: " << target << ". Use -1 or -2 ..." << endl;
-        return false;
-    }
-
-    std::regex re_comma_zeros(",(0+)"); // common direction error
-    if (std::regex_match(target, match, re_comma_zeros))
-    {
-        strm_err_ << "Invalid common index: " << target << ". Use ,1 or ,2 ..." << endl;
-        return false;
-    }
-
     bool has_history = !dirs_.empty();
 #if WIN32
     if (dirs_.size() == 1)
@@ -564,9 +590,11 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
 
     if (!has_history)
     {
-        strm_err_ << "No history of directories" << endl;
+        strm_err_ << "** No history of directories" << endl;
         return false;
     }
+
+    std::smatch match;
 
     // forwards
     std::regex re_num("(\\d+)");
@@ -581,7 +609,7 @@ bool Cdd2::process_path_spec_only_from_history(string target, TaggedPath& tagged
     if (std::regex_match(target, match, re_pluses))
     {
         int amount = static_cast<int>(match[0].str().size());
-        return go_forwards(amount - 1, tagged_path);
+        return go_forwards(amount, tagged_path);
     }
 
     // backwards
@@ -648,19 +676,19 @@ bool Cdd2::process_match(const string& target, TaggedPath& tagged_path, vector<s
         }
         else
         {
-            strm_err_ << "Cannot process direction: " << options_.direction << endl;
+            strm_err_ << "** Cannot process direction: " << options_.direction << endl;
             return false;
         }
     }
     catch (std::regex_error& e)
     {
-        strm_err_ << "Cannot process pattern: '" << target << "'" << endl << e.what() << endl;
+        strm_err_ << "** Cannot process pattern: '" << target << "'" << endl << e.what() << endl;
         return false;
     }
 
     if (matches.empty())
     {
-        strm_err_ << "Cannot match pattern: '" << target << "'" << endl;
+        strm_err_ << "** Cannot match pattern: '" << target << "'" << endl;
         return false;
     }
 
@@ -698,7 +726,7 @@ bool Cdd2::go_backwards(unsigned amount, TaggedPath& tagged_path)
     auto tagged_paths = create_dirs_last_to_first();
     if (amount < 1 || amount > tagged_paths.size())
     {
-        strm_err_ << "No directory at -" << amount << endl;
+        strm_err_ << "** No directory at -" << amount << endl;
         return false;
     }
     tagged_path = tagged_paths[amount - 1];
@@ -708,23 +736,24 @@ bool Cdd2::go_backwards(unsigned amount, TaggedPath& tagged_path)
 bool Cdd2::go_forwards(unsigned amount, TaggedPath& tagged_path)
 {
     auto tagged_paths = create_dirs_first_to_last();
-    if (amount >= tagged_paths.size())
+    if (amount > tagged_paths.size())
     {
-        strm_err_ << "No directory at +" << amount << endl;
+        strm_err_ << "** No directory at +" << amount << endl;
         return false;
     }
-    tagged_path = tagged_paths[amount];
+    tagged_path = tagged_paths[amount - 1];
     return true;
 }
 
 bool Cdd2::go_common(unsigned amount, TaggedPath& tagged_path)
 {
     auto tagged_paths = create_dirs_most_to_least();
-    if (amount >= tagged_paths.size())
+    if (amount > tagged_paths.size())
     {
-        strm_err_ << "No directory at ," << amount << endl;
+        strm_err_ << "** No directory at ," << amount << endl;
         return false;
     }
+    amount -= 1;                                                                                  // zero based index
     tagged_path = TaggedPath(tagged_paths[amount].get_keyed_path().get_dir_path(),                //
                              tagged_paths[amount].tag_prefix1, tagged_paths[amount].tag_prefix2); //
     return true;
