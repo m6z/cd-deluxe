@@ -519,7 +519,7 @@ TEST_CASE("cdd2_test")
         cdd.process();
 #ifdef WIN32
         REQUIRE("pushd \\b\n" == cdd.get_out_str());
-        REQUIRE("cdd: ( 4) \\4\n" == cdd.get_err_str());
+        REQUIRE("cdd: ( 4) \\b\n" == cdd.get_err_str());
 #else
         REQUIRE("pushd '/b'\n" == cdd.get_out_str());
         REQUIRE("cdd: ( 4) /b\n" == cdd.get_err_str());
@@ -637,9 +637,10 @@ TEST_CASE("cdd2_test")
 #if _WIN32
         REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\d\n"
                                      " ,2: ( 2) \\b\n"
-                                     " ,3: ( 1) \\e\n"
-                                     " ,4: ( 1) \\c\n"
-                                     " ,5: ( 1) \\a\n");
+                                     " ,3: ( 1) \\tmp\\a\n" // on windows cwd is added
+                                     " ,4: ( 1) \\e\n"
+                                     " ,5: ( 1) \\c\n"
+                                     " ,6: ( 1) \\a\n");
 #else
         REQUIRE(cdd.get_err_str() == " ,1: ( 2) /d\n"
                                      " ,2: ( 2) /b\n"
@@ -769,7 +770,7 @@ TEST_CASE("match_test")
 #ifdef WIN32
         REQUIRE("pushd \\cc\\dd\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) \\cc\\dd\n"
-                                     " ,4: ( 1) \\bb\\cc\n");
+                                     " ,5: ( 1) \\bb\\cc\n"); // on windows cwd gets pushed ahead of this
 #else
         REQUIRE("pushd '/cc/dd'\n" == cdd.get_out_str());
         REQUIRE(cdd.get_err_str() == "cdd: ( 2) /cc/dd\n"
