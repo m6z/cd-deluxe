@@ -52,10 +52,10 @@ TEST_CASE("cleanup_test")
             "pushd cc 2>nul",                   //
             "pushd /current/working/dir 2>nul", //
 #else
-            "\\cd 'aa'",  //
-            "dirs -c",    //
-            "pushd 'bb'", //
-            "\\cd 'cc'",  //
+            "dirs -c",         //
+            "builtin cd 'aa'", //
+            "pushd 'bb'",      //
+            "pushd 'cc'",      //
 #endif
         };
         REQUIRE(exp == act);
@@ -81,10 +81,10 @@ TEST_CASE("cleanup_test")
             "pushd aa 2>nul",                   //
             "pushd /current/working/dir 2>nul", //
 #else
-            "\\cd 'aa'",  //
-            "dirs -c",    //
-            "pushd 'cc'", //
-            "\\cd 'aa'",  //
+            "dirs -c",         //
+            "builtin cd 'aa'", //
+            "pushd 'cc'",      //
+            "pushd 'aa'",      //
 #endif
         };
         REQUIRE(exp == act);
