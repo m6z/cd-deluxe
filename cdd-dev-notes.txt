@@ -130,3 +130,23 @@ code cleanup - remove extraneous files
 windows implementation
 test fish shell
 need to list minimum bash version, and perhaps other shells
+
+#----------------------------------------------------------------------
+
+When running cd-deluxe.exe from command line
+    - look for cdd.cmd in current directory
+    - if found
+        doskey cd="....\cd-deluxe.exe" $*
+    - else
+        report on where to find it from github
+        or, automatically create cdd.cmd in current directory
+            with doskey command above
+
+On windows cd-deluxe.exe needs to be run by the companion script cdd.cmd, which should exist in the same directory as cd-deluxe.exe.
+
+- check if cdd.cmd does not exist in the current directory
+
+If so, then 
+
+
+

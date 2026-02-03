@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <format>
+#include <fstream>
 
 #include "cdd_options_init.h"
 #include "cdd_util.h"
@@ -22,10 +23,14 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         options.add_options()       //
             ("h,help", "Show help") //
             ("v,version", "Show version")
+
+#ifndef _WIN32
             // explicit_value = false, implicit_value = "auto" allows:
             // --init        -> "auto"
             // --init bash   -> "bash"
-            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"));
+            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
+#endif
+            ;
 
         auto result = options.parse(argc, argv);
 
@@ -66,6 +71,14 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
             print_init_script(shell, exe_path);
             return 0; // Handled
         }
+
+#ifdef _WIN32
+        // On Windows, check if cdd.cmd wrapper exists and offer to create it
+        if (shell == "cmd")
+        {
+            check_and_create_cmd_wrapper(exe_path);
+        }
+#endif
 
         // default: print setup help
         print_shell_setup_help(shell, exe_path);
@@ -134,6 +147,29 @@ static constexpr const char* _fish_setup = R"(
 "{}" --init | source
 )";
 
+static constexpr const char* _cmd_setup = R"(
+==== Windows Command Prompt CD-Deluxe Usage ====
+
+To use cd-deluxe from the Windows command prompt (cmd.exe), the script 'cdd.cmd' is needed as a wrapper.
+
+There are two options for easy integration:
+    1. Create a 'cd' macro to invoke 'cdd.cmd'.  This will override the built-in 'cd' command.
+        -or-
+    2. Add the path to 'cdd.cmd' to your PATH environment variable and use by invoking 'cdd'
+
+Option 1:
+    To create a 'cd' macro, add the following line to your cmd.exe startup or run it in the command prompt:
+        doskey cd="{0}\cdd.cmd" $*
+
+Option 2
+    To use cdd.cmd directly without a macro, add the following to your PATH environment variable:
+        {0}
+    For example, to add it for the current session, run:
+        set PATH=%PATH%;{0}
+
+When using the cd-deluxe windows installer, cdd.cmd is created automatically and the PATH is updated.
+)";
+
 void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const std::string& exe_path) const
 {
     if (shell_type == "fish")
@@ -147,6 +183,11 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     else if (shell_type == "zsh")
     {
         output_stream_ << std::format(_zsh_setup, exe_path) << std::endl;
+    }
+    else if (shell_type == "cmd")
+    {
+        fs::path exe_dir = fs::path(exe_path).parent_path().make_preferred();
+        output_stream_ << std::format(_cmd_setup, exe_dir.string());
     }
     else
     {
@@ -219,3 +260,58 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
         output_stream_ << "Error: shell '" << shell_type << "' unknown or not supported.\n";
     }
 }
+
+#ifdef _WIN32
+static constexpr const char* _cmd_wrapper_content = R"(@echo off
+set pushd_tmp=%TEMP%\pushd.tmp
+set cdd_tmp_cmd=%TEMP%\cdd.tmp.cmd
+pushd > %pushd_tmp%
+%~dps0cd-deluxe.exe %* < %pushd_tmp% > %cdd_tmp_cmd%
+%cdd_tmp_cmd%
+)";
+
+void CddOptionsInit::check_and_create_cmd_wrapper(const std::string& exe_path)
+{
+    fs::path exe_fs_path(exe_path);
+    fs::path exe_dir = exe_fs_path.parent_path();
+    fs::path cmd_path = exe_dir / "cdd.cmd";
+
+    if (fs::exists(cmd_path))
+    {
+        // print a message that the file was successfully found
+        output_stream_ << "Found existing cdd.cmd wrapper at: " << cmd_path.make_preferred().string() << "\n";
+        return; // cdd.cmd already exists
+    }
+
+    output_stream_ << "\nThe wrapper script 'cdd.cmd' was not found in: " << exe_dir.make_preferred().string() << "\n";
+    output_stream_ << "This script is required to use cd-deluxe from the Windows command prompt.\n";
+    output_stream_ << "Would you like to create it now? [Y/n]: ";
+    output_stream_.flush();
+
+    std::string response;
+    std::getline(input_stream_, response);
+
+    // Default to yes if empty or starts with 'y' or 'Y'
+    if (response.empty() || response[0] == 'y' || response[0] == 'Y')
+    {
+        std::ofstream cmd_file(cmd_path);
+        if (cmd_file)
+        {
+            cmd_file << _cmd_wrapper_content;
+            cmd_file.close();
+            output_stream_ << "Created: " << cmd_path.make_preferred().string() << "\n";
+            // output_stream_ << "You can now use 'cdd' from the command prompt.\n";
+            // output_stream_ << "To use it from any directory, add the following to your PATH:\n";
+            // output_stream_ << "  " << exe_dir.string() << "\n";
+        }
+        else
+        {
+            output_stream_ << "Error: Failed to create " << cmd_path.string() << "\n";
+        }
+    }
+    else
+    {
+        output_stream_ << "Skipped creating cdd.cmd. You can manually copy it from the install directory.\n";
+    }
+}
+#endif
