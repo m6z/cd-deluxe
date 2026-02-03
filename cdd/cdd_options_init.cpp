@@ -19,7 +19,9 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
 
         std::string shell;
 
-        options.add_options()("h,help", "Show help")
+        options.add_options()       //
+            ("h,help", "Show help") //
+            ("v,version", "Show version")
             // explicit_value = false, implicit_value = "auto" allows:
             // --init        -> "auto"
             // --init bash   -> "bash"
@@ -30,6 +32,12 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         if (result.count("help") && !force_default_setup)
         {
             output_stream_ << options.help() << std::endl;
+            return 0; // Handled
+        }
+
+        if (result.count("version"))
+        {
+            output_stream_ << "cd-deluxe version " << get_cdd_version() << std::endl;
             return 0; // Handled
         }
 
