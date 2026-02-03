@@ -105,10 +105,16 @@ std::string CddOptionsInit::get_self_executable_path(const char* argv0) const
     return result;
 }
 
-static constexpr const char* _bash_setup = R"(
-# Add the following line to ~/.bashrc to enable cd-deluxe integration:
-source <("{}" --init)
-)";
+static constexpr const char* _bash_setup = R"_(
+# Add the following lines to ~/.bash_profile or ~/.bashrc to enable cd-deluxe integration:
+if [ "${{BASH_VERSINFO:-0}}" -le 3 ]; then
+    # For bash version 3 or lower
+    eval "$('{}' --init)"
+else
+    #For bash version 4 or higher
+    source <('{}' --init)
+fi
+)_";
 
 static constexpr const char* _zsh_setup = R"(
 # Add the following line to ~/.zshrc to enable cd-deluxe integration:
@@ -128,7 +134,7 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     }
     else if (shell_type == "bash")
     {
-        output_stream_ << std::format(_bash_setup, exe_path) << std::endl;
+        output_stream_ << std::format(_bash_setup, exe_path, exe_path) << std::endl;
     }
     else if (shell_type == "zsh")
     {
