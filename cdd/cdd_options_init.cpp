@@ -131,6 +131,8 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     }
 }
 
+// NOTE: the "while read x" loop (below) works across both bash and zsh to ensure eval is run in the current shell context.
+
 static constexpr const char* _bash_init = R"(
 # cd-deluxe integration for bash/zsh
 
@@ -141,10 +143,10 @@ cdd() {{
         echo "Remove cdd function or unalias cd until the issue is resolved." >&2
         return 1
     fi
-    dirs -l -p | "${{_cdd_exe}}" "$@" | while read x
+    while read x
     do
-        eval $x > /dev/null
-    done
+       eval $x > /dev/null
+    done < <(dirs -l -p | "${{_cdd_exe}}" "$@")
 }}
 
 alias cd=cdd
@@ -164,13 +166,13 @@ function cdd
     # Verify the cd-deluxe executable exists
     set -l _cdd_exe "{}"
     if not test -f "$_cdd_exe"
-        echo "Error: cd-deluxe executable not found." >&2
+        echo "Error: cd-deluxe executable not found at ${{_cdd_exe}}" >&2
+        echo "Remove cd or cdd functions until the issue is resolved." >&2
         return 1
     end
     # Run the executable and process its output
-    for x in (string join \n $dirstack | "$_cdd_exe" $argv)
+    for x in (string join \n $PWD $dirstack | "$_cdd_exe" $argv)
         # Also ensure explicit 'cd' commands from the C++ app use builtin
-        set x (string replace -r '^cd ' 'builtin cd ' -- "$x")
         eval $x > /dev/null
     end
 end

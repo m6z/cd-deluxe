@@ -59,7 +59,6 @@ std::vector<Cdd2::TaggedPath> Cdd2::create_dirs_last_to_first()
 
     for (const auto& dir : dirs_)
     {
-        // std::cerr << "XX create_dirs_last_to_first processing: " << dir << std::endl;
         KeyedPath kp(dir, options_.ignore_case);
 
         // Check to see if this directory has already been seen
@@ -1043,40 +1042,24 @@ void Cdd2::command_generator_win32(const vector<fs::path>& paths_remaining)
     {
         strm_out_ << (count++ ? "pushd " : "chdir/d ") << path_remaining.string() << " 2>nul" << endl;
     }
-
-    // fs::path cwd;
-    // if (get_cwd_path(cwd))
-    // {
-    //     strm_out_ << (count ? "pushd " : "chdir/d ") << cwd.string() << endl;
-    // }
 }
 
 void Cdd2::command_generator_bash(const vector<fs::path>& paths_remaining)
 {
-    if (paths_remaining.empty())
-    {
-        // clear all and then finish
-        strm_out_ << "dirs -c" << endl;
-        return;
-    }
+    // clear all
+    strm_out_ << "dirs -c" << endl;
 
-    for (size_t i = 0; i < paths_remaining.size(); ++i)
+    unsigned count = 0;
+    for (const auto& path_remaining : paths_remaining)
     {
-        auto path_remaining = paths_remaining[i];
-        bool use_cd = (i == 0) || (i == paths_remaining.size() - 1);
-        if (use_cd)
+        if (count++ == 0)
         {
-            strm_out_ << "\\cd '" << path_remaining.string() << "'" << endl;
+            // for first one use cd
+            strm_out_ << "builtin cd '" << path_remaining.string() << "'" << endl;
         }
         else
         {
             strm_out_ << "pushd '" << path_remaining.string() << "'" << endl;
-        }
-
-        if (i == 0)
-        {
-            // for the first one, also followup with the dirs command to clear the stack
-            strm_out_ << "dirs -c" << endl;
         }
     }
 }
