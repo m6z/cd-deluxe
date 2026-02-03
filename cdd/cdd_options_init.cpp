@@ -189,7 +189,7 @@ function cdd
     # Verify the cd-deluxe executable exists
     set -l _cdd_exe "{}"
     if not test -f "$_cdd_exe"
-        echo "Error: cd-deluxe executable not found at ${{_cdd_exe}}" >&2
+        echo "Error: cd-deluxe executable not found at $_cdd_exe" >&2
         echo "Remove cd or cdd functions until the issue is resolved." >&2
         return 1
     end
