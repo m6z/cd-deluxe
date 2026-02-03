@@ -1,9 +1,3 @@
-#include "cdd_options.h"
-#include "cdd_options_init.h"
-#include "cdd_version.h"
-
-#include "cxxopts.hpp"
-
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -11,8 +5,10 @@
 #include <string>
 #include <vector>
 
+#include "cdd_options.h"
+#include "cdd_options_init.h"
 #include "cdd_util.h"
-#include "config.h"
+#include "cxxopts.hpp"
 
 namespace
 {
@@ -213,7 +209,7 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
 
         if (show_version)
         {
-            std::cerr << "cdd version " << CDD_VERSION << '.' << BUILD_NUMBER << std::endl;
+            std::cerr << "cd-deluxe version " << get_cdd_version() << std::endl;
             return true;
         }
 
