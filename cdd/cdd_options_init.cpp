@@ -23,16 +23,21 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         options.add_options()       //
             ("h,help", "Show help") //
             ("v,version", "Show version")
-
-#ifndef _WIN32
-            // explicit_value = false, implicit_value = "auto" allows:
-            // --init        -> "auto"
-            // --init bash   -> "bash"
-            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
+        // explicit_value = false, implicit_value = "auto" allows:
+        // --init        -> "auto"
+        // --init bash   -> "bash" (Linux/macOS)
+        // --init cmd    -> "cmd" (Windows)
+#ifdef _WIN32
+                ("init", "Run shell setup (auto/cmd/powershell/pwsh)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
+#else
+                ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
 #endif
             ;
 
         auto result = options.parse(argc, argv);
+
+        std::cerr << "XX: parsed options - help: " << result.count("help") << ", version: " << result.count("version") << ", init: " << result.count("init")
+                  << ", shell: '" << shell << "'\n";
 
         if (result.count("help") && !force_default_setup)
         {
@@ -66,14 +71,26 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         }
         std::string exe_path = get_self_executable_path(argv[0]);
 
+#ifdef _WIN32
+        // On Windows, --init runs the setup steps (check/create wrapper + print help)
+        // This is different from Linux/macOS where --init prints shell script code
         if (result.count("init") && !force_default_setup)
         {
-            print_init_script(shell, exe_path);
+            // Check if wrapper scripts exist and offer to create them
+            if (shell == "cmd")
+            {
+                check_and_create_cmd_wrapper(exe_path);
+            }
+            else if (shell == "powershell" || shell == "pwsh")
+            {
+                check_and_create_ps1_wrapper(exe_path);
+            }
+            // Print setup help
+            print_shell_setup_help(shell, exe_path);
             return 0; // Handled
         }
 
-#ifdef _WIN32
-        // On Windows, check if wrapper scripts exist and offer to create them
+        // Default behavior (no options): also run setup steps
         if (shell == "cmd")
         {
             check_and_create_cmd_wrapper(exe_path);
@@ -81,6 +98,13 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         else if (shell == "powershell" || shell == "pwsh")
         {
             check_and_create_ps1_wrapper(exe_path);
+        }
+#else
+        // On Linux/macOS, --init prints shell script code for sourcing
+        if (result.count("init") && !force_default_setup)
+        {
+            print_init_script(shell, exe_path);
+            return 0; // Handled
         }
 #endif
 
