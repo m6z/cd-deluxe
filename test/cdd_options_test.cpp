@@ -255,4 +255,183 @@ TEST_CASE("cdd_options_test", "[options]")
             REQUIRE(options.use_fzf);
         }
     }
+
+    SECTION("direction_letter_aliases")
+    {
+        // Test --direction with letter aliases (PowerShell-friendly)
+        SECTION("direction=f for forwards")
+        {
+            CddOptions options({"./_cdd", "--direction=f"});
+            REQUIRE(options.direction == "+");
+        }
+
+        SECTION("direction=b for backwards")
+        {
+            CddOptions options({"./_cdd", "--direction=b"});
+            REQUIRE(options.direction == "-");
+        }
+
+        SECTION("direction=c for common")
+        {
+            CddOptions options({"./_cdd", "--direction=c"});
+            REQUIRE(options.direction == ",");
+        }
+
+        SECTION("direction=u for upwards")
+        {
+            CddOptions options({"./_cdd", "--direction=u"});
+            REQUIRE(options.direction == "..");
+        }
+
+        SECTION("-d f for forwards")
+        {
+            CddOptions options({"./_cdd", "-d", "f"});
+            REQUIRE(options.direction == "+");
+        }
+
+        SECTION("-d b for backwards")
+        {
+            CddOptions options({"./_cdd", "-d", "b"});
+            REQUIRE(options.direction == "-");
+        }
+
+        SECTION("-d c for common")
+        {
+            CddOptions options({"./_cdd", "-d", "c"});
+            REQUIRE(options.direction == ",");
+        }
+
+        SECTION("-d u for upwards")
+        {
+            CddOptions options({"./_cdd", "-d", "u"});
+            REQUIRE(options.direction == "..");
+        }
+    }
+
+    SECTION("direction_shorthand_flags")
+    {
+        // Test --db, --df, --dc, --du shorthand flags
+        SECTION("--db for backwards")
+        {
+            CddOptions options({"./_cdd", "--db"});
+            REQUIRE(options.direction == "-");
+        }
+
+        SECTION("--df for forwards")
+        {
+            CddOptions options({"./_cdd", "--df"});
+            REQUIRE(options.direction == "+");
+        }
+
+        SECTION("--dc for common")
+        {
+            CddOptions options({"./_cdd", "--dc"});
+            REQUIRE(options.direction == ",");
+        }
+
+        SECTION("--du for upwards")
+        {
+            CddOptions options({"./_cdd", "--du"});
+            REQUIRE(options.direction == "..");
+        }
+
+        SECTION("--db with --list")
+        {
+            CddOptions options({"./_cdd", "--db", "--list"});
+            REQUIRE(options.direction == "-");
+            REQUIRE(options.list_history);
+        }
+
+        SECTION("--df with --list")
+        {
+            CddOptions options({"./_cdd", "--df", "--list"});
+            REQUIRE(options.direction == "+");
+            REQUIRE(options.list_history);
+        }
+
+        SECTION("--dc with --list")
+        {
+            CddOptions options({"./_cdd", "--dc", "--list"});
+            REQUIRE(options.direction == ",");
+            REQUIRE(options.list_history);
+        }
+
+        SECTION("--du with --list")
+        {
+            CddOptions options({"./_cdd", "--du", "--list"});
+            REQUIRE(options.direction == "..");
+            REQUIRE(options.list_history);
+        }
+    }
+
+    SECTION("common_option")
+    {
+        // Test -c / --common option
+        SECTION("-c sets direction to common")
+        {
+            CddOptions options({"./_cdd", "-c"});
+            REQUIRE(options.direction == ",");
+        }
+
+        SECTION("--common sets direction to common")
+        {
+            CddOptions options({"./_cdd", "--common"});
+            REQUIRE(options.direction == ",");
+        }
+
+        SECTION("-c with --list")
+        {
+            CddOptions options({"./_cdd", "-c", "--list"});
+            REQUIRE(options.direction == ",");
+            REQUIRE(options.list_history);
+        }
+
+        SECTION("--common with -l")
+        {
+            CddOptions options({"./_cdd", "--common", "-l"});
+            REQUIRE(options.direction == ",");
+            REQUIRE(options.list_history);
+        }
+    }
+
+    SECTION("letter_aliases_not_positional")
+    {
+        // Letter aliases (b, f, c, u) should NOT work as positional shortcuts
+        // They should be treated as search patterns, not directions
+        SECTION("b as pattern not direction")
+        {
+            CddOptions options({"./_cdd", "--list", "b"});
+            REQUIRE(options.direction == "-"); // default direction
+            REQUIRE(options.list_history);
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "b");
+        }
+
+        SECTION("f as pattern not direction")
+        {
+            CddOptions options({"./_cdd", "--list", "f"});
+            REQUIRE(options.direction == "-"); // default direction
+            REQUIRE(options.list_history);
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "f");
+        }
+
+        SECTION("c as pattern not direction")
+        {
+            CddOptions options({"./_cdd", "--list", "c"});
+            REQUIRE(options.direction == "-"); // default direction
+            REQUIRE(options.list_history);
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "c");
+        }
+
+        SECTION("u as pattern not direction")
+        {
+            CddOptions options({"./_cdd", "--list", "u"});
+            REQUIRE(options.direction == "-"); // default direction
+            REQUIRE(options.list_history);
+            REQUIRE(options.unmatched_args.size() == 1);
+            REQUIRE(options.unmatched_args[0] == "u");
+        }
+    }
 }

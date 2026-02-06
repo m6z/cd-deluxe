@@ -9,9 +9,13 @@ class CddOptions
 public:
     // constants
     static constexpr const char* direction_forwards = "+";
+    static constexpr const char* direction_forwards_alt = "f";  // alias for forwards (PowerShell-friendly)
     static constexpr const char* direction_backwards = "-";
+    static constexpr const char* direction_backwards_alt = "b"; // alias for backwards (PowerShell-friendly)
     static constexpr const char* direction_common = ",";
+    static constexpr const char* direction_common_alt = "c";    // alias for common (PowerShell-friendly)
     static constexpr const char* direction_upwards = "..";
+    static constexpr const char* direction_upwards_alt = "u";   // alias for upwards (PowerShell-friendly)
 
     static constexpr const char* direction_default = direction_backwards;
 

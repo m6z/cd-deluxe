@@ -15,18 +15,50 @@ namespace
 
 bool is_valid_direction(const std::string& s)
 {
-    return s == CddOptions::direction_forwards ||  //
-           s == CddOptions::direction_backwards || //
-           s == CddOptions::direction_common ||    //
-           s == CddOptions::direction_upwards;     //
+    return s == CddOptions::direction_forwards ||      //
+           s == CddOptions::direction_forwards_alt ||  // "f" alias for forwards
+           s == CddOptions::direction_backwards ||     //
+           s == CddOptions::direction_backwards_alt || // "b" alias for backwards
+           s == CddOptions::direction_common ||        //
+           s == CddOptions::direction_common_alt ||    // "c" alias for common
+           s == CddOptions::direction_upwards ||       //
+           s == CddOptions::direction_upwards_alt;     // "u" alias for upwards
+}
+
+// Check if direction is a symbol (not a letter alias) - used for positional shorthand
+// Letter aliases like 'b', 'f', 'c', 'u' should only work with -d/--direction, not as positional args
+bool is_symbol_direction(const std::string& s)
+{
+    return s == CddOptions::direction_forwards ||  // "+"
+           s == CddOptions::direction_backwards || // "-"
+           s == CddOptions::direction_common ||    // ","
+           s == CddOptions::direction_upwards;     // ".."
+}
+
+// Normalize direction aliases to their canonical form
+std::string normalize_direction(const std::string& s)
+{
+    if (s == CddOptions::direction_forwards_alt)
+        return CddOptions::direction_forwards;
+    if (s == CddOptions::direction_backwards_alt)
+        return CddOptions::direction_backwards;
+    if (s == CddOptions::direction_common_alt)
+        return CddOptions::direction_common;
+    if (s == CddOptions::direction_upwards_alt)
+        return CddOptions::direction_upwards;
+    return s;
 }
 
 std::string get_valid_directions_as_string()
 {
-    return "\"" + std::string(CddOptions::direction_forwards) + "\" (forwards), \"" + //
-           std::string(CddOptions::direction_backwards) + "\" (backwards), \"" +      //
-           std::string(CddOptions::direction_common) + "\" (common), \"" +            //
-           std::string(CddOptions::direction_upwards) + "\" (upwards)";               //
+    return "\"" + std::string(CddOptions::direction_forwards) + "\" or \"" +      //
+           std::string(CddOptions::direction_forwards_alt) + "\" (forwards), \"" + //
+           std::string(CddOptions::direction_backwards) + "\" or \"" +             //
+           std::string(CddOptions::direction_backwards_alt) + "\" (backwards), \"" + //
+           std::string(CddOptions::direction_common) + "\" or \"" +                //
+           std::string(CddOptions::direction_common_alt) + "\" (common), \"" +     //
+           std::string(CddOptions::direction_upwards) + "\" or \"" +               //
+           std::string(CddOptions::direction_upwards_alt) + "\" (upwards)";        //
 }
 
 // Helper to split the environment string into a vector of arguments
@@ -60,6 +92,17 @@ std::vector<std::string> tokenize_environment_variable(const std::string& env_op
     return tokens;
 }
 
+// Flags for direction shorthand options (used to set direction after parsing)
+struct DirectionFlags
+{
+    bool backwards = false;
+    bool forwards = false;
+    bool common = false;
+    bool upwards = false;
+};
+
+static DirectionFlags direction_flags;
+
 // Helper to define the subset of options allowed in the environment variable
 void add_common_options(CddOptions& x, cxxopts::Options& options)
 {
@@ -67,6 +110,11 @@ void add_common_options(CddOptions& x, cxxopts::Options& options)
         ("l,list", "List history", cxxopts::value(x.list_history)->implicit_value("true"))                           //
         ("f,fzf", "Filter history with fzf", cxxopts::value(x.use_fzf)->implicit_value("true"))                      //
         ("d,direction", get_valid_directions_as_string(), cxxopts::value(x.direction))                               //
+        ("c,common", "Set direction to common (same as -d,)", cxxopts::value(direction_flags.common)->implicit_value("true"))     //
+        ("db", "Set direction to backwards (same as -d-)", cxxopts::value(direction_flags.backwards)->implicit_value("true"))     //
+        ("df", "Set direction to forwards (same as -d+)", cxxopts::value(direction_flags.forwards)->implicit_value("true"))       //
+        ("dc", "Set direction to common (same as -d,)", cxxopts::value(direction_flags.common)->implicit_value("true"))           //
+        ("du", "Set direction to upwards (same as -d..)", cxxopts::value(direction_flags.upwards)->implicit_value("true"))        //
         ("m,max", "Max history", cxxopts::value(x.max_history))                                                      //
         ("max-backwards", "Max backwards history", cxxopts::value(x.max_backwards))                                  //
         ("max-forwards", "Max forwards history", cxxopts::value(x.max_forwards))                                     //
@@ -76,6 +124,24 @@ void add_common_options(CddOptions& x, cxxopts::Options& options)
         ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(x.ignore_case)->implicit_value("true")) //
         ("init", "Generate shell initialization code")                                                               //
         ;
+}
+
+// Apply direction flags to options (call after parsing)
+void apply_direction_flags(CddOptions& x)
+{
+    // Priority: explicit -d/--direction > shorthand flags
+    // Only apply flags if direction wasn't explicitly set via -d
+    if (direction_flags.common)
+        x.direction = CddOptions::direction_common;
+    else if (direction_flags.backwards)
+        x.direction = CddOptions::direction_backwards;
+    else if (direction_flags.forwards)
+        x.direction = CddOptions::direction_forwards;
+    else if (direction_flags.upwards)
+        x.direction = CddOptions::direction_upwards;
+
+    // Reset flags for next parse
+    direction_flags = DirectionFlags{};
 }
 
 // Helper to define the full set of options (includes common options)
@@ -139,6 +205,12 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
             const char** argv_env_ptr = argv_env.data();
 
             env_parser.parse(argc_env, argv_env_ptr);
+
+            // Apply direction shorthand flags from environment
+            apply_direction_flags(*this);
+
+            // Normalize direction aliases (e.g., "c" -> ",")
+            direction = normalize_direction(direction);
 
             // Validate direction from environment immediately
             // If invalid, warn and reset logic (optional, or just keep invalid and let CLI fail later)
@@ -221,6 +293,12 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
             return false; // signal to caller that no further action is needed
         }
 
+        // Apply direction shorthand flags (--dc, --common, etc.)
+        apply_direction_flags(*this);
+
+        // Normalize direction aliases (e.g., "c" -> ",")
+        direction = normalize_direction(direction);
+
         // Validate direction (Fatal error if invalid here)
         if (!direction.empty() && !is_valid_direction(direction))
         {
@@ -251,8 +329,9 @@ bool CddOptions::initialize(const std::vector<std::string>& args, const std::str
         return false;
     }
 
-    // allow for shorthand specification of the direction
-    if (!unmatched_args.empty() && is_valid_direction(unmatched_args[0]))
+    // allow for shorthand specification of the direction using symbols (+, -, ,, ..)
+    // Note: letter aliases (b, f, c, u) are NOT allowed here as they conflict with search patterns
+    if (!unmatched_args.empty() && is_symbol_direction(unmatched_args[0]))
     {
         if (unmatched_args.size() > 1 || list_history || use_fzf)
         {

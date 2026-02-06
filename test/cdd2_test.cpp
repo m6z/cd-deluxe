@@ -694,6 +694,204 @@ TEST_CASE("cdd2_test")
                                      "..3: /tmp/a\n");
 #endif
     }
+
+    //----------------------------------------------------------------------
+    // Tests for PowerShell-friendly direction options
+
+    SECTION("list_common_with_dc_flag")
+    {
+        // Test --dc flag (PowerShell-friendly alternative to -d,)
+        auto cdd = cdd_test({"_cdd", "-l", "--dc"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\d\n"
+                                     " ,2: ( 2) \\b\n"
+                                     " ,3: ( 1) \\tmp\\a\n"
+                                     " ,4: ( 1) \\e\n"
+                                     " ,5: ( 1) \\c\n"
+                                     " ,6: ( 1) \\a\n");
+#else
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) /d\n"
+                                     " ,2: ( 2) /b\n"
+                                     " ,3: ( 1) /e\n"
+                                     " ,4: ( 1) /c\n"
+                                     " ,5: ( 1) /a\n");
+#endif
+    }
+
+    SECTION("list_common_with_c_flag")
+    {
+        // Test -c flag (PowerShell-friendly alternative to -d,)
+        auto cdd = cdd_test({"_cdd", "-l", "-c"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\d\n"
+                                     " ,2: ( 2) \\b\n"
+                                     " ,3: ( 1) \\tmp\\a\n"
+                                     " ,4: ( 1) \\e\n"
+                                     " ,5: ( 1) \\c\n"
+                                     " ,6: ( 1) \\a\n");
+#else
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) /d\n"
+                                     " ,2: ( 2) /b\n"
+                                     " ,3: ( 1) /e\n"
+                                     " ,4: ( 1) /c\n"
+                                     " ,5: ( 1) /a\n");
+#endif
+    }
+
+    SECTION("list_common_with_direction_c")
+    {
+        // Test --direction=c (PowerShell-friendly alternative to --direction=,)
+        auto cdd = cdd_test({"_cdd", "-l", "--direction=c"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) \\d\n"
+                                     " ,2: ( 2) \\b\n"
+                                     " ,3: ( 1) \\tmp\\a\n"
+                                     " ,4: ( 1) \\e\n"
+                                     " ,5: ( 1) \\c\n"
+                                     " ,6: ( 1) \\a\n");
+#else
+        REQUIRE(cdd.get_err_str() == " ,1: ( 2) /d\n"
+                                     " ,2: ( 2) /b\n"
+                                     " ,3: ( 1) /e\n"
+                                     " ,4: ( 1) /c\n"
+                                     " ,5: ( 1) /a\n");
+#endif
+    }
+
+    SECTION("list_upwards_with_du_flag")
+    {
+        // Test --du flag (PowerShell-friendly alternative to -d..)
+        auto cdd = cdd_test({"_cdd", "--list", "--du"}, "", "/tmp/a/b/c", "");
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        auto cdd_err_output = swap_drive_letter(cdd.get_err_str());
+        REQUIRE(cdd_err_output == "..1: C:\\tmp\\a\\b\n"
+                                  "..2: C:\\tmp\\a\n"
+                                  "..3: C:\\tmp\n");
+#else
+        REQUIRE(cdd.get_err_str() == "..1: /tmp/a/b\n"
+                                     "..2: /tmp/a\n"
+                                     "..3: /tmp\n");
+#endif
+    }
+
+    SECTION("list_upwards_with_direction_u")
+    {
+        // Test --direction=u (PowerShell-friendly alternative to --direction=..)
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=u"}, "", "/tmp/a/b/c", "");
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        auto cdd_err_output = swap_drive_letter(cdd.get_err_str());
+        REQUIRE(cdd_err_output == "..1: C:\\tmp\\a\\b\n"
+                                  "..2: C:\\tmp\\a\n"
+                                  "..3: C:\\tmp\n");
+#else
+        REQUIRE(cdd.get_err_str() == "..1: /tmp/a/b\n"
+                                     "..2: /tmp/a\n"
+                                     "..3: /tmp\n");
+#endif
+    }
+
+    SECTION("list_forwards_with_df_flag")
+    {
+        // Test --df flag (PowerShell-friendly alternative to -d+)
+        auto cdd = cdd_test({"_cdd", "--list", "--df"}, "", "/current/dir", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == "  1: \\a\n"
+                                     "  2: \\b\n"
+                                     "  3: \\c\n"
+                                     "  4: \\d\n"
+                                     "  5: \\e\n"
+                                     "  6: \\current\\dir\n");
+#else
+        REQUIRE(cdd.get_err_str() == "  1: /a\n"
+                                     "  2: /b\n"
+                                     "  3: /c\n"
+                                     "  4: /d\n"
+                                     "  5: /e\n");
+#endif
+    }
+
+    SECTION("list_forwards_with_direction_f")
+    {
+        // Test --direction=f (PowerShell-friendly alternative to --direction=+)
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=f"}, "", "/current/dir", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == "  1: \\a\n"
+                                     "  2: \\b\n"
+                                     "  3: \\c\n"
+                                     "  4: \\d\n"
+                                     "  5: \\e\n"
+                                     "  6: \\current\\dir\n");
+#else
+        REQUIRE(cdd.get_err_str() == "  1: /a\n"
+                                     "  2: /b\n"
+                                     "  3: /c\n"
+                                     "  4: /d\n"
+                                     "  5: /e\n");
+#endif
+    }
+
+    SECTION("list_backwards_with_db_flag")
+    {
+        // Test --db flag (PowerShell-friendly alternative to -d-)
+        auto cdd = cdd_test({"_cdd", "--list", "--db"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " -1: \\d\n"
+                                     " -2: \\b\n"
+                                     " -3: \\e\n"
+                                     " -4: \\c\n"
+                                     " -5: \\a\n");
+#else
+        REQUIRE(cdd.get_err_str() == " -1: /d\n"
+                                     " -2: /b\n"
+                                     " -3: /e\n"
+                                     " -4: /c\n"
+                                     " -5: /a\n");
+#endif
+    }
+
+    SECTION("list_backwards_with_direction_b")
+    {
+        // Test --direction=b (PowerShell-friendly alternative to --direction=-)
+        auto cdd = cdd_test({"_cdd", "--list", "--direction=b"}, "", "/tmp/a", //
+                            {"/d", "/b", "/e", "/d", "/c", "/b", "/a"});
+        cdd.process();
+        REQUIRE(cdd.get_out_str().empty());
+#if _WIN32
+        REQUIRE(cdd.get_err_str() == " -1: \\d\n"
+                                     " -2: \\b\n"
+                                     " -3: \\e\n"
+                                     " -4: \\c\n"
+                                     " -5: \\a\n");
+#else
+        REQUIRE(cdd.get_err_str() == " -1: /d\n"
+                                     " -2: /b\n"
+                                     " -3: /e\n"
+                                     " -4: /c\n"
+                                     " -5: /a\n");
+#endif
+    }
 }
 
 //----------------------------------------------------------------------

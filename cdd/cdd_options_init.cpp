@@ -73,10 +73,14 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         }
 
 #ifdef _WIN32
-        // On Windows, check if cdd.cmd wrapper exists and offer to create it
+        // On Windows, check if wrapper scripts exist and offer to create them
         if (shell == "cmd")
         {
             check_and_create_cmd_wrapper(exe_path);
+        }
+        else if (shell == "powershell" || shell == "pwsh")
+        {
+            check_and_create_ps1_wrapper(exe_path);
         }
 #endif
 
@@ -170,6 +174,20 @@ Option 2
 When using the cd-deluxe windows installer, cdd.cmd is created automatically and the PATH is updated.
 )";
 
+static constexpr const char* _powershell_setup = R"(
+==== Windows PowerShell CD-Deluxe Usage ====
+
+To use cd-deluxe from PowerShell, dot-source the 'cdd.ps1' script in your PowerShell profile.
+
+Add the following line to your PowerShell profile ($PROFILE):
+    . "{0}\cdd.ps1"
+
+To optionally override the built-in 'cd' command, add this after the dot-source line:
+    Set-Alias -Name cd -Value cdd -Option AllScope -Scope Global
+
+The cdd.ps1 script provides the 'cdd' function for enhanced directory navigation.
+)";
+
 void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const std::string& exe_path) const
 {
     if (shell_type == "fish")
@@ -188,6 +206,11 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     {
         fs::path exe_dir = fs::path(exe_path).parent_path().make_preferred();
         output_stream_ << std::format(_cmd_setup, exe_dir.string());
+    }
+    else if (shell_type == "powershell" || shell_type == "pwsh")
+    {
+        fs::path exe_dir = fs::path(exe_path).parent_path().make_preferred();
+        output_stream_ << std::format(_powershell_setup, exe_dir.string());
     }
     else
     {
@@ -312,6 +335,128 @@ void CddOptionsInit::check_and_create_cmd_wrapper(const std::string& exe_path)
     else
     {
         output_stream_ << "Skipped creating cdd.cmd. You can manually copy it from the install directory.\n";
+    }
+}
+
+static constexpr const char* _ps1_wrapper_content = R"PS1(# cd-deluxe integration for PowerShell
+# This script provides the 'cdd' function for enhanced directory navigation
+# Dot-source this file in your PowerShell profile: . "PATH\TO\cdd.ps1"
+
+function cdd {
+    # Use $args to avoid PowerShell's parameter parsing interfering with cd-deluxe arguments
+    # (e.g., "-d," would cause parser errors with declared parameters)
+
+    $exePath = Join-Path $PSScriptRoot "cd-deluxe.exe"
+    if (-not (Test-Path $exePath)) {
+        Write-Error "cd-deluxe.exe not found at $exePath"
+        return
+    }
+
+    # Build the directory stack input (current dir + pushed locations)
+    # This mimics what 'pushd' outputs in cmd.exe
+    $stackInput = @((Get-Location).Path)
+    $locationStack = Get-Location -Stack -ErrorAction SilentlyContinue
+    if ($locationStack) {
+        $stackInput += $locationStack.Path
+    }
+
+    # Run cd-deluxe.exe with input and capture output
+    $output = $stackInput | & $exePath @args 2>&1
+
+    # Separate stdout and stderr
+    $stdoutLines = @()
+    $stderrLines = @()
+    foreach ($item in $output) {
+        if ($item -is [System.Management.Automation.ErrorRecord]) {
+            $stderrLines += $item.ToString()
+        } else {
+            $stdoutLines += $item
+        }
+    }
+
+    # Display stderr messages to user
+    foreach ($line in $stderrLines) {
+        Write-Host $line
+    }
+
+    # Process each line of stdout, translating cmd.exe commands to PowerShell
+    foreach ($line in $stdoutLines) {
+        # Skip empty lines
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+        # Translate cmd.exe commands to PowerShell
+        if ($line -match '^for /l %%i in \(1,1,(\d+)\) do popd$') {
+            # Batch loop to pop N times
+            $count = [int]$Matches[1]
+            1..$count | ForEach-Object { Pop-Location -ErrorAction SilentlyContinue }
+        }
+        elseif ($line -match '^chdir/d (.+?)(?: 2>nul)?$') {
+            # chdir/d path -> Set-Location path
+            Set-Location $Matches[1] -ErrorAction SilentlyContinue
+        }
+        elseif ($line -match '^pushd "?(.+?)"?(?: 2>nul)?$') {
+            # pushd path (with or without quotes)
+            Push-Location $Matches[1] -ErrorAction SilentlyContinue
+        }
+        elseif ($line -match '^popd$') {
+            Pop-Location -ErrorAction SilentlyContinue
+        }
+        elseif ($line -match '^cd /d "?(.+?)"?$') {
+            # cd /d path -> Set-Location path
+            Set-Location $Matches[1] -ErrorAction SilentlyContinue
+        }
+        else {
+            # Try to execute as-is for any other commands
+            try {
+                Invoke-Expression $line 2>$null
+            } catch {
+                # Silently ignore execution errors
+            }
+        }
+    }
+}
+
+Write-Host "-- cd-deluxe PowerShell integration loaded. See: cdd --help"
+)PS1";
+
+void CddOptionsInit::check_and_create_ps1_wrapper(const std::string& exe_path)
+{
+    fs::path exe_fs_path(exe_path);
+    fs::path exe_dir = exe_fs_path.parent_path();
+    fs::path ps1_path = exe_dir / "cdd.ps1";
+
+    if (fs::exists(ps1_path))
+    {
+        output_stream_ << "Found existing cdd.ps1 wrapper at: " << ps1_path.make_preferred().string() << "\n";
+        return; // cdd.ps1 already exists
+    }
+
+    output_stream_ << "\nThe wrapper script 'cdd.ps1' was not found in: " << exe_dir.make_preferred().string() << "\n";
+    output_stream_ << "This script is required to use cd-deluxe from PowerShell.\n";
+    output_stream_ << "Would you like to create it now? [Y/n]: ";
+    output_stream_.flush();
+
+    std::string response;
+    std::getline(input_stream_, response);
+
+    // Default to yes if empty or starts with 'y' or 'Y'
+    if (response.empty() || response[0] == 'y' || response[0] == 'Y')
+    {
+        std::ofstream ps1_file(ps1_path);
+        if (ps1_file)
+        {
+            ps1_file << _ps1_wrapper_content;
+            ps1_file.close();
+            output_stream_ << "Created: " << ps1_path.make_preferred().string() << "\n";
+        }
+        else
+        {
+            output_stream_ << "Error: Failed to create " << ps1_path.make_preferred().string() << "\n";
+        }
+    }
+    else
+    {
+        output_stream_ << "Skipped creating cdd.ps1.\n";
     }
 }
 #endif
