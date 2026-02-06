@@ -7,8 +7,17 @@
 class CddOptionsInit
 {
 public:
-    CddOptionsInit(std::ostream& output_stream = std::cout, std::istream& input_stream = std::cin)
-        : output_stream_(output_stream), input_stream_(input_stream)
+    CddOptionsInit(std::ostream& output_stream = std::cout
+#ifdef _WIN32
+                   ,
+                   std::istream& input_stream = std::cin
+#endif
+                   )
+        : output_stream_(output_stream)
+#ifdef _WIN32
+          ,
+          input_stream_(input_stream)
+#endif
     {
     }
 
@@ -21,7 +30,9 @@ public:
 
 private:
     std::ostream& output_stream_;
+#ifdef _WIN32
     std::istream& input_stream_;
+#endif
 
     // Helper to get the full path of the current running executable
     std::string get_self_executable_path(const char* argv0) const;

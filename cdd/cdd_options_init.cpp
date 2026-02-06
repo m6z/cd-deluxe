@@ -35,10 +35,6 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
             ;
 
         auto result = options.parse(argc, argv);
-
-        std::cerr << "XX: parsed options - help: " << result.count("help") << ", version: " << result.count("version") << ", init: " << result.count("init")
-                  << ", shell: '" << shell << "'\n";
-
         if (result.count("help") && !force_default_setup)
         {
             output_stream_ << options.help() << std::endl;
