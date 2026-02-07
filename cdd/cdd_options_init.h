@@ -34,8 +34,10 @@ private:
 
 #ifdef _WIN32
     // Windows-specific: check and optionally create cdd.cmd wrapper script
-    void check_and_create_cmd_wrapper(const std::string& exe_path);
+    // If force is true, overwrite existing file without prompting
+    void check_and_create_cmd_wrapper(const std::string& exe_path, bool force = false);
     // Windows-specific: check and optionally create cdd.ps1 wrapper script for PowerShell
-    void check_and_create_ps1_wrapper(const std::string& exe_path);
+    // If force is true, overwrite existing file without prompting
+    void check_and_create_ps1_wrapper(const std::string& exe_path, bool force = false);
 #endif
 };
