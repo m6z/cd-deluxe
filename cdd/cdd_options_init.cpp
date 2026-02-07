@@ -19,25 +19,26 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         cxxopts::Options options(argv[0], " - Shell integration setup");
 
         std::string shell;
+        bool force = false;
 
         options.add_options()       //
             ("h,help", "Show help") //
             ("v,version", "Show version")
-        // explicit_value = false, implicit_value = "auto" allows:
-        // --init        -> "auto"
-        // --init bash   -> "bash" (Linux/macOS)
-        // --init cmd    -> "cmd" (Windows)
 #ifdef _WIN32
-                ("init", "Run shell setup (auto/cmd/powershell/pwsh)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
+            // Windows: --init runs setup steps (check/create wrapper + print help)
+            // --init=auto (default) - auto-detect shell
+            // --init=cmd - setup for cmd.exe
+            // --init=powershell or --init=pwsh - setup for PowerShell
+            // --init=all - setup for both cmd and PowerShell
+            ("init", "Run shell setup (auto/cmd/powershell/pwsh/all)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
+            ("force", "Force creation of wrapper scripts even if they exist", cxxopts::value<bool>(force)->implicit_value("true"))
 #else
-                ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
+            // Linux/macOS: --init prints shell script code for sourcing
+            ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
 #endif
             ;
 
         auto result = options.parse(argc, argv);
-
-        std::cerr << "XX: parsed options - help: " << result.count("help") << ", version: " << result.count("version") << ", init: " << result.count("init")
-                  << ", shell: '" << shell << "'\n";
 
         if (result.count("help") && !force_default_setup)
         {
@@ -64,11 +65,6 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
             return 1;
         }
 
-        // Resolve shell type
-        if (shell == "auto" || shell.empty())
-        {
-            shell = get_parent_process_name();
-        }
         std::string exe_path = get_self_executable_path(argv[0]);
 
 #ifdef _WIN32
@@ -76,30 +72,59 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         // This is different from Linux/macOS where --init prints shell script code
         if (result.count("init") && !force_default_setup)
         {
+            // Handle --init=all: setup for both cmd and PowerShell
+            if (shell == "all")
+            {
+                check_and_create_cmd_wrapper(exe_path, force);
+                print_shell_setup_help("cmd", exe_path);
+                output_stream_ << "\n";
+                check_and_create_ps1_wrapper(exe_path, force);
+                print_shell_setup_help("powershell", exe_path);
+                return 0; // Handled
+            }
+
+            // Resolve shell type for auto
+            if (shell == "auto")
+            {
+                shell = get_parent_process_name();
+            }
+
             // Check if wrapper scripts exist and offer to create them
             if (shell == "cmd")
             {
-                check_and_create_cmd_wrapper(exe_path);
+                check_and_create_cmd_wrapper(exe_path, force);
             }
             else if (shell == "powershell" || shell == "pwsh")
             {
-                check_and_create_ps1_wrapper(exe_path);
+                check_and_create_ps1_wrapper(exe_path, force);
             }
             // Print setup help
             print_shell_setup_help(shell, exe_path);
             return 0; // Handled
         }
 
+        // Resolve shell type for default behavior (no --init option)
+        if (shell == "auto" || shell.empty())
+        {
+            shell = get_parent_process_name();
+        }
+
         // Default behavior (no options): also run setup steps
         if (shell == "cmd")
         {
-            check_and_create_cmd_wrapper(exe_path);
+            check_and_create_cmd_wrapper(exe_path, force);
         }
         else if (shell == "powershell" || shell == "pwsh")
         {
-            check_and_create_ps1_wrapper(exe_path);
+            check_and_create_ps1_wrapper(exe_path, force);
         }
 #else
+        // Resolve shell type
+        if (shell == "auto" || shell.empty())
+        {
+            shell = get_parent_process_name();
+        }
+
         // On Linux/macOS, --init prints shell script code for sourcing
         if (result.count("init") && !force_default_setup)
         {
@@ -317,29 +342,35 @@ pushd > %pushd_tmp%
 %cdd_tmp_cmd%
 )";
 
-void CddOptionsInit::check_and_create_cmd_wrapper(const std::string& exe_path)
+void CddOptionsInit::check_and_create_cmd_wrapper(const std::string& exe_path, bool force)
 {
     fs::path exe_fs_path(exe_path);
     fs::path exe_dir = exe_fs_path.parent_path();
     fs::path cmd_path = exe_dir / "cdd.cmd";
 
-    if (fs::exists(cmd_path))
+    if (fs::exists(cmd_path) && !force)
     {
         // print a message that the file was successfully found
         output_stream_ << "Found existing cdd.cmd wrapper at: " << cmd_path.make_preferred().string() << "\n";
         return; // cdd.cmd already exists
     }
 
-    output_stream_ << "\nThe wrapper script 'cdd.cmd' was not found in: " << exe_dir.make_preferred().string() << "\n";
-    output_stream_ << "This script is required to use cd-deluxe from the Windows command prompt.\n";
-    output_stream_ << "Would you like to create it now? [Y/n]: ";
-    output_stream_.flush();
+    bool should_create = force;
+    if (!force)
+    {
+        output_stream_ << "\nThe wrapper script 'cdd.cmd' was not found in: " << exe_dir.make_preferred().string() << "\n";
+        output_stream_ << "This script is required to use cd-deluxe from the Windows command prompt.\n";
+        output_stream_ << "Would you like to create it now? [Y/n]: ";
+        output_stream_.flush();
 
-    std::string response;
-    std::getline(input_stream_, response);
+        std::string response;
+        std::getline(input_stream_, response);
 
-    // Default to yes if empty or starts with 'y' or 'Y'
-    if (response.empty() || response[0] == 'y' || response[0] == 'Y')
+        // Default to yes if empty or starts with 'y' or 'Y'
+        should_create = response.empty() || response[0] == 'y' || response[0] == 'Y';
+    }
+
+    if (should_create)
     {
         std::ofstream cmd_file(cmd_path);
         if (cmd_file)
@@ -347,9 +378,6 @@ void CddOptionsInit::check_and_create_cmd_wrapper(const std::string& exe_path)
             cmd_file << _cmd_wrapper_content;
             cmd_file.close();
             output_stream_ << "Created: " << cmd_path.make_preferred().string() << "\n";
-            // output_stream_ << "You can now use 'cdd' from the command prompt.\n";
-            // output_stream_ << "To use it from any directory, add the following to your PATH:\n";
-            // output_stream_ << "  " << exe_dir.string() << "\n";
         }
         else
         {
@@ -443,28 +471,34 @@ function cdd {
 Write-Host "-- cd-deluxe PowerShell integration loaded. See: cdd --help"
 )PS1";
 
-void CddOptionsInit::check_and_create_ps1_wrapper(const std::string& exe_path)
+void CddOptionsInit::check_and_create_ps1_wrapper(const std::string& exe_path, bool force)
 {
     fs::path exe_fs_path(exe_path);
     fs::path exe_dir = exe_fs_path.parent_path();
     fs::path ps1_path = exe_dir / "cdd.ps1";
 
-    if (fs::exists(ps1_path))
+    if (fs::exists(ps1_path) && !force)
     {
         output_stream_ << "Found existing cdd.ps1 wrapper at: " << ps1_path.make_preferred().string() << "\n";
         return; // cdd.ps1 already exists
     }
 
-    output_stream_ << "\nThe wrapper script 'cdd.ps1' was not found in: " << exe_dir.make_preferred().string() << "\n";
-    output_stream_ << "This script is required to use cd-deluxe from PowerShell.\n";
-    output_stream_ << "Would you like to create it now? [Y/n]: ";
-    output_stream_.flush();
+    bool should_create = force;
+    if (!force)
+    {
+        output_stream_ << "\nThe wrapper script 'cdd.ps1' was not found in: " << exe_dir.make_preferred().string() << "\n";
+        output_stream_ << "This script is required to use cd-deluxe from PowerShell.\n";
+        output_stream_ << "Would you like to create it now? [Y/n]: ";
+        output_stream_.flush();
 
-    std::string response;
-    std::getline(input_stream_, response);
+        std::string response;
+        std::getline(input_stream_, response);
 
-    // Default to yes if empty or starts with 'y' or 'Y'
-    if (response.empty() || response[0] == 'y' || response[0] == 'Y')
+        // Default to yes if empty or starts with 'y' or 'Y'
+        should_create = response.empty() || response[0] == 'y' || response[0] == 'Y';
+    }
+
+    if (should_create)
     {
         std::ofstream ps1_file(ps1_path);
         if (ps1_file)
