@@ -31,7 +31,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #endif
 
-// Check if any argument starts with --init, --help, --version, or --force
+// Check if any of the arguments starts with --init
 // These should always go through CddOptionsInit, regardless of stdin state
 static bool has_init_args(int argc, const char* argv[])
 {
@@ -42,14 +42,6 @@ static bool has_init_args(int argc, const char* argv[])
         {
             return true;
         }
-
-        // TODO - old - remove
-        // if (arg.starts_with("--init") || arg.starts_with("--help") ||
-        //     arg.starts_with("--version") || arg.starts_with("--force") ||
-        //     arg == "-h" || arg == "-v")
-        // {
-        //     return true;
-        // }
     }
     return false;
 }
