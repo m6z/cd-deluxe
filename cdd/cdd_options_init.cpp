@@ -19,7 +19,9 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
         cxxopts::Options options(argv[0], " - Shell integration setup");
 
         std::string shell;
+#ifdef _WIN32
         bool force = false;
+#endif
 
         options.add_options()       //
             ("h,help", "Show help") //
