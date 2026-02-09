@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --build:*)",
+      "Bash(ctest:*)",
+      "Bash(ls:*)",
+      "Bash(cmake:*)",
+      "Bash(./cd-deluxe.exe --init=all --force)"
+    ]
+  }
+}
