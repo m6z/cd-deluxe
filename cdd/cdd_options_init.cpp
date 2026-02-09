@@ -30,8 +30,8 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
             // --init=cmd - setup for cmd.exe
             // --init=powershell or --init=pwsh - setup for PowerShell
             // --init=all - setup for both cmd and PowerShell
-            ("init", "Run shell setup (auto/cmd/powershell/pwsh/all)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
-            ("force", "Force creation of wrapper scripts even if they exist", cxxopts::value<bool>(force)->implicit_value("true"))
+            ("init", "Run shell setup (auto/cmd/powershell/pwsh/all)", cxxopts::value<std::string>(shell)->implicit_value("auto"))(
+                "force", "Force creation of wrapper scripts even if they exist", cxxopts::value<bool>(force)->implicit_value("true"))
 #else
             // Linux/macOS: --init prints shell script code for sourcing
             ("init", "Print shell integration code (auto/bash/zsh/fish)", cxxopts::value<std::string>(shell)->implicit_value("auto"))
@@ -39,7 +39,6 @@ int CddOptionsInit::parse(int argc, char* argv[], bool force_default_setup)
             ;
 
         auto result = options.parse(argc, argv);
-
         if (result.count("help") && !force_default_setup)
         {
             output_stream_ << options.help() << std::endl;
