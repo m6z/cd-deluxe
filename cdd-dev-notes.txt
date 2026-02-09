@@ -146,7 +146,9 @@ On windows cd-deluxe.exe needs to be run by the companion script cdd.cmd, which 
 
 - check if cdd.cmd does not exist in the current directory
 
-If so, then 
+#----------------------------------------------------------------------
 
+CDD_VERSION and CDD_BUILD_NUMBER are set in the top level CMakeLists.txt
 
+cdd/version.h.in
 

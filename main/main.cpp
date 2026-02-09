@@ -31,11 +31,36 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #endif
 
+// Check if any argument starts with --init, --help, --version, or --force
+// These should always go through CddOptionsInit, regardless of stdin state
+static bool has_init_args(int argc, const char* argv[])
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        std::string arg(argv[i]);
+        if (arg.starts_with("--init"))
+        {
+            return true;
+        }
+
+        // TODO - old - remove
+        // if (arg.starts_with("--init") || arg.starts_with("--help") ||
+        //     arg.starts_with("--version") || arg.starts_with("--force") ||
+        //     arg == "-h" || arg == "-v")
+        // {
+        //     return true;
+        // }
+    }
+    return false;
+}
+
 int main(int argc, const char* argv[])
 {
     try
     {
-        if (isatty(fileno(stdin)))
+        // If stdin is a tty OR if init/help/version/force args are present,
+        // use CddOptionsInit (handles setup commands)
+        if (isatty(fileno(stdin)) || has_init_args(argc, argv))
         {
             CddOptionsInit options_init;
             return options_init.parse(argc, const_cast<char**>(argv));

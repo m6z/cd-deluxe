@@ -38,16 +38,13 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <string>
 
-#include "cdd_version.h"
-#include "config.h"
+#include "version.h"
 
 namespace fs = std::filesystem;
 
 std::string get_cdd_version()
 {
-    std::stringstream strm;
-    strm << CDD_VERSION << "." << BUILD_NUMBER;
-    return strm.str();
+    return CDD_VERSION;
 }
 
 std::string get_working_path()

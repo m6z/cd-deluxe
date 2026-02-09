@@ -13,27 +13,10 @@ FetchContent_MakeAvailable(cxxopts)
 
 #----------------------------------------------------------------------
 
-# Get the total commit count across all branches
-execute_process(
-    COMMAND git rev-list --count --all
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_BUILD_NUMBER
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE GIT_RESULT
-)
-
-# Check if the git command was successful
-if(GIT_RESULT EQUAL 0)
-    message(STATUS "Git total commit count: ${GIT_BUILD_NUMBER}")
-else()
-    message(WARNING "Failed to get git commit count, defaulting to 0.")
-    set(GIT_BUILD_NUMBER 0)
-endif()
-
-# Configure a header file (e.g., "config.h.in") to write the build number
+# Configure a header file to assign the version number
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/config.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.h
     @ONLY
 )
 
