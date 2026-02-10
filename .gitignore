@@ -20,7 +20,7 @@
 *.lib
 
 # Executables
-*.exe
+CddInstaller*.exe
 *.out
 *.app
 
