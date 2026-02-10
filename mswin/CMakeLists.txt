@@ -48,6 +48,7 @@ add_custom_command(
     DEPENDS cd-deluxe
             ${CMAKE_CURRENT_SOURCE_DIR}/cdd_installer.nsi
             ${CMAKE_CURRENT_SOURCE_DIR}/cdd_shell.cmd
+            ${CMAKE_CURRENT_SOURCE_DIR}/cdd_shell.ps1
             ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt
     COMMENT "Building Windows installer: ${INSTALLER_FILENAME}"
     VERBATIM

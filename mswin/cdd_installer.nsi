@@ -47,6 +47,11 @@ ShowInstDetails show
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\CdDeluxe"
 
 ;--------------------------------
+; GUI - use a wider shell
+
+!define MUI_UI "modern-large.exe"
+
+;--------------------------------
 ; Language
 
 !insertmacro MUI_LANGUAGE "English"
@@ -66,6 +71,9 @@ Var hwndCreateDesktopShortcut
 Var RunCddShell
 Var hwndRunCddShell
 
+Var RunCddPowershell
+Var hwndRunCddPowershell
+
 ;----------------------------------------------------------------------
 ; Functions
 
@@ -74,6 +82,7 @@ Function .onInit
     IntOp $CreateStartMenuShortcuts 0 + 1
     IntOp $CreateDesktopShortcut 0 + 1
     IntOp $RunCddShell 0 + 1
+    IntOp $RunCddPowershell 0 + 1
 FunctionEnd
 
 ;----------------------------------------------------------------------
@@ -106,9 +115,13 @@ Function custom_settings
   Pop $hwndCreateDesktopShortcut
   SendMessage $hwndCreateDesktopShortcut ${BM_SETCHECK} $CreateDesktopShortcut 0
 
-  ${NSD_CreateCheckBox} 15u 70u 100% 15u "Run sample cdd shell when installation is completed"
+  ${NSD_CreateCheckBox} 15u 70u 100% 15u "Run sample cdd cmd.exe shell when installation is completed"
   Pop $hwndRunCddShell
   SendMessage $hwndRunCddShell ${BM_SETCHECK} $RunCddShell 0
+
+  ${NSD_CreateCheckBox} 15u 90u 100% 15u "Run sample cdd PowerShell when installation is completed"
+  Pop $hwndRunCddPowershell
+  SendMessage $hwndRunCddPowershell ${BM_SETCHECK} $RunCddPowershell 0
 
   nsDialogs::Show
 FunctionEnd
@@ -118,6 +131,7 @@ Function custom_settings_end
   SendMessage $hwndCreateStartMenuShortcuts ${BM_GETCHECK} 0 0 $CreateStartMenuShortcuts
   SendMessage $hwndCreateDesktopShortcut ${BM_GETCHECK} 0 0 $CreateDesktopShortcut
   SendMessage $hwndRunCddShell ${BM_GETCHECK} 0 0 $RunCddShell
+  SendMessage $hwndRunCddPowershell ${BM_GETCHECK} 0 0 $RunCddPowershell
 FunctionEnd
 
 ; The stuff to install
@@ -135,6 +149,7 @@ Section "CddInstaller (required)"
 
   ; Supporting files from install directory
   File cdd_shell.cmd
+  File cdd_shell.ps1
   File LICENSE.txt
 
   ; Generate wrapper scripts using cd-deluxe.exe --init=all --force
@@ -147,6 +162,7 @@ Section "CddInstaller (required)"
   ${EndIf}
 
   CreateShortCut "$INSTDIR\cdd shell.lnk" cmd.exe '/k "$INSTDIR\cdd_shell.cmd"'
+  CreateShortCut "$INSTDIR\cdd powershell.lnk" "powershell.exe" "-NoExit -ExecutionPolicy Bypass -Command $\". '$INSTDIR\cdd_shell.ps1'$\""
 
   ; These reg settings change the appearance of the cdd shell
   WriteRegDWORD   HKCU   "Console\cdd shell"   "ColorTable01"       0x007d0000
@@ -161,6 +177,19 @@ Section "CddInstaller (required)"
   WriteRegDWORD   HKCU   "Console\cdd shell"   "QuickEdit"          0x00000800
   WriteRegDWORD   HKCU   "Console\cdd shell"   "HistoryNoDup"       0x00100000
 
+  ; Console settings for the PowerShell cdd shell
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "ColorTable01"       0x007d0000
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "ColorTable15"       0x00fefefe
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "ScreenColors"       0x0000001f
+  WriteRegStr     HKCU   "Console\cdd powershell"   "FaceName"           "Lucida Console"
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "FontFamily"         0x00000036
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "FontSize"           0x000e0008
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "FontWeight"         0x00000190
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "ScreenBufferSize"   0x07d00064
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "WindowSize"         0x001e0064
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "QuickEdit"          0x00000800
+  WriteRegDWORD   HKCU   "Console\cdd powershell"   "HistoryNoDup"       0x00100000
+
   ; Add to path
   IntCmp $AddToPath 0 add_to_path_end
   EnVar::AddValue "PATH" "$INSTDIR"
@@ -170,12 +199,14 @@ Section "CddInstaller (required)"
   IntCmp $CreateStartMenuShortcuts 0 start_menu_end
   CreateDirectory "$SMPROGRAMS\Cd Deluxe"
   CreateShortCut "$SMPROGRAMS\Cd Deluxe\cdd shell.lnk" cmd.exe '/k "$INSTDIR\cdd_shell.cmd"'
+  CreateShortCut "$SMPROGRAMS\Cd Deluxe\cdd powershell.lnk" "powershell.exe" "-NoExit -ExecutionPolicy Bypass -Command $\". '$INSTDIR\cdd_shell.ps1'$\""
   CreateShortCut "$SMPROGRAMS\Cd Deluxe\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
   start_menu_end:
 
   ; Desktop shortcut
   IntCmp $CreateDesktopShortcut 0 desktop_end
   CreateShortCut "$DESKTOP\cdd shell.lnk" cmd.exe '/k "$INSTDIR\cdd_shell.cmd"'
+  CreateShortCut "$DESKTOP\cdd powershell.lnk" "powershell.exe" "-NoExit -ExecutionPolicy Bypass -Command $\". '$INSTDIR\cdd_shell.ps1'$\""
   desktop_end:
 
   ; Uninstall stuff
@@ -194,10 +225,15 @@ Section "CddInstaller (required)"
   WriteRegStr "${UNINST_ROOT}" "${UNINST_KEY}" "URLUpdateInfo " "http://www.plan10.com/cdd"
   WriteRegStr "${UNINST_ROOT}" "${UNINST_KEY}" "URLInfoAbout " "http://www.plan10.com/cdd"
 
-  ; Sample shell
+  ; Sample cmd.exe shell
   IntCmp $RunCddShell 0 cdd_shell_end
   ExecShell "" "$INSTDIR\cdd shell.lnk"
   cdd_shell_end:
+
+  ; Sample PowerShell shell
+  IntCmp $RunCddPowershell 0 cdd_powershell_end
+  ExecShell "" "$INSTDIR\cdd powershell.lnk"
+  cdd_powershell_end:
 
 SectionEnd
 
@@ -208,22 +244,27 @@ Section "Uninstall"
   Delete $INSTDIR\cdd.cmd
   Delete $INSTDIR\cdd.ps1
   Delete $INSTDIR\cdd_shell.cmd
+  Delete $INSTDIR\cdd_shell.ps1
   Delete $INSTDIR\Uninstall.exe
   Delete $INSTDIR\LICENSE.txt
   Delete "$INSTDIR\cdd shell.lnk"
-  RMDir $INSTDIR
+  Delete "$INSTDIR\cdd powershell.lnk"
+  RMDir /r $INSTDIR
 
   ; Start Menu
   Delete "$SMPROGRAMS\Cd Deluxe\cdd shell.lnk"
+  Delete "$SMPROGRAMS\Cd Deluxe\cdd powershell.lnk"
   Delete "$SMPROGRAMS\Cd Deluxe\Uninstall.lnk"
   RMDir "$SMPROGRAMS\Cd Deluxe"
 
   ; Desktop
   Delete "$DESKTOP\cdd shell.lnk"
+  Delete "$DESKTOP\cdd powershell.lnk"
 
   ; Registry
   DeleteRegKey ${UNINST_ROOT} "${UNINST_KEY}"
   DeleteRegKey HKCU "Console\cdd shell"
+  DeleteRegKey HKCU "Console\cdd powershell"
 
 SectionEnd
 

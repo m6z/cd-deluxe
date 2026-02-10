@@ -20,9 +20,11 @@ doskey cd="%~dp0%cdd.cmd" $*
 set prompt=$q$g $p$_$q$g 
 
 echo.
-echo Typing "cd +?" shows the history of all directories visited in this session.
-echo Try changing directories and then issue the "cd +?" command again.
+echo Typing "cd --help" will show you the available options for the cdd command.
+echo.
+echo Typing "cd -d+" shows the history of all directories visited in this session.
+echo Try changing directories and then issue the "cd -d+" command again.
 echo.
 
-echo cd +?
-call %~dps0cdd.cmd +?
+echo cd -d+
+call %~dps0cdd.cmd -d+
