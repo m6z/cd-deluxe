@@ -35,8 +35,8 @@ breakpoints.lldb
 *.tmp
 *-
 
-# Build directories
-Debug
-Release
-build*
-Testing
+# temporary development build directories
+Debug/
+Release/
+build*/
+Testing/
