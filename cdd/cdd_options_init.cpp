@@ -268,10 +268,11 @@ void CddOptionsInit::print_shell_setup_help(const std::string& shell_type, const
     }
 }
 
-// NOTE: the "while read x" loop (below) works across both bash and zsh to ensure eval is run in the current shell context.
+// NOTE: the "while read x" loop (below) works better for bash to ensure eval is run in the current shell context
+// and also to support fzf integration.
 
 static constexpr const char* _bash_init = R"(
-# cd-deluxe integration for bash/zsh
+# cd-deluxe integration for bash
 
 cdd() {{
     _cdd_exe="{}"
@@ -284,6 +285,26 @@ cdd() {{
     do
        eval $x > /dev/null
     done < <(dirs -l -p | "${{_cdd_exe}}" "$@")
+}}
+
+alias cd=cdd
+echo "-- cd-deluxe shell integration loaded. See: cd --help."
+)";
+
+static constexpr const char* _zsh_init = R"(
+# cd-deluxe integration for zsh
+
+cdd() {{
+    _cdd_exe="{}"
+    if [ ! -f "${{_cdd_exe}}" ]; then
+        echo "Error: cd-deluxe executable not found at ${{_cdd_exe}}" >&2
+        echo "Remove cdd function or unalias cd until the issue is resolved." >&2
+        return 1
+    fi
+    dirs -l -p | "${{_cdd_exe}}" "$@" | while read x
+    do
+        eval $x > /dev/null
+    done
 }}
 
 alias cd=cdd
@@ -324,9 +345,13 @@ void CddOptionsInit::print_init_script(const std::string& shell_type, const std:
     {
         output_stream_ << std::format(_fish_init, exe_path);
     }
-    else if (shell_type == "bash" || shell_type == "zsh")
+    else if (shell_type == "bash")
     {
         output_stream_ << std::format(_bash_init, exe_path);
+    }
+    else if (shell_type == "zsh")
+    {
+        output_stream_ << std::format(_zsh_init, exe_path);
     }
     else
     {
