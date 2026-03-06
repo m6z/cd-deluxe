@@ -25,16 +25,14 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include "cdd/cdd_options_init.h"
 #include "cdd/cdd_util.h"
 
-using namespace std;
-
-// TODO is this needed?
-#ifdef WIN32
-#include <direct.h>
-#define isatty _isatty
-#define fileno _fileno
+#ifdef _WIN32
+#include <fcntl.h> // for _O_BINARY
+#include <io.h>    // for _isatty() on Windows
 #else
-#include <unistd.h>
+#include <unistd.h> // for isatty() on Unix/Linux/macOS
 #endif
+
+using namespace std;
 
 // Check if any of the arguments starts with --init
 // These should always go through CddOptionsInit, regardless of stdin state
@@ -57,7 +55,7 @@ int main(int argc, const char* argv[])
     {
         // If stdin is a tty OR if init/help/version/force args are present,
         // use CddOptionsInit (handles setup commands)
-        if (isatty(fileno(stdin)) || has_init_args(argc, argv))
+        if (_isatty(_fileno(stdin)) || has_init_args(argc, argv))
         {
             CddOptionsInit options_init;
             return options_init.parse(argc, const_cast<char**>(argv));
