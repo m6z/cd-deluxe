@@ -35,7 +35,7 @@ add_library(${TARGET_NAME} STATIC
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # Add the header to the source list (optional, but good practice)
-target_sources(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+target_sources(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 
 # This command automatically adds the include directories and other
 # usage requirements from cxxopts to the cdd target.

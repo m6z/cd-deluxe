@@ -152,3 +152,12 @@ CDD_VERSION and CDD_BUILD_NUMBER are set in the top level CMakeLists.txt
 
 cdd/version.h.in
 
+#----------------------------------------------------------------------
+
+Need to remove
+    install directory
+    doc directory - or update
+
+cleanup precompiled headers
+
+review missing tests
