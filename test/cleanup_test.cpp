@@ -20,9 +20,10 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "stdafx.h"
-
+#include "test_helpers.h"
 #include <catch2/catch_test_macros.hpp>
+
+using namespace std;
 
 namespace
 {

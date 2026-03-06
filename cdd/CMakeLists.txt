@@ -31,6 +31,9 @@ add_library(${TARGET_NAME} STATIC
     process_util.cpp
 )
 
+# precompiled header
+target_precompile_headers(${TARGET_NAME} PRIVATE pch.h)
+
 # Add the directory where the configured header is generated
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
