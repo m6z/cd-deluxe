@@ -20,8 +20,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "stdafx.h"
-
 #include "cdd/cdd_util.h"
 #include "test_helpers.h"
 

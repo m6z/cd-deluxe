@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+set(TARGET_NAME testmain)
+
 # ---- Dependencies ----
 
 include(FetchContent)
@@ -20,17 +22,20 @@ set(test_sources
     test_helpers.cpp
 )
 
-add_executable(testmain ${test_sources})
+add_executable(${TARGET_NAME} ${test_sources})
 
-target_link_libraries(testmain
+target_link_libraries(${TARGET_NAME}
     PRIVATE
         cdd
         Catch2::Catch2WithMain
 )
 
-target_include_directories(testmain PRIVATE ${CMAKE_SOURCE_DIR})
+# precompiled header
+target_precompile_headers(${TARGET_NAME} PRIVATE pch.h)
+
+target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
 # ---- Enable automatic test discovery ----
 include(CTest)
 include(Catch)
-catch_discover_tests(testmain)
+catch_discover_tests(${TARGET_NAME})

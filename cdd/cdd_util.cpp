@@ -20,8 +20,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "stdafx.h"
-
 #ifdef WIN32
 #include <direct.h>
 #include <io.h>
@@ -32,11 +30,6 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #define MAX_PATH_LENGTH MAXPATHLEN
 #endif
-
-#include <chrono>
-#include <ctime>
-#include <iostream>
-#include <string>
 
 #include "version.h"
 

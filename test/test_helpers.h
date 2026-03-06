@@ -1,9 +1,9 @@
 #pragma once
 
-#include "stdafx.h"
+#include "cdd/cdd2.h"
 
-string trim(const string& str);
-vector<string> split_text(const string& dirs);
+std::string trim(const std::string& str);
+std::vector<std::string> split_text(const std::string& dirs);
 
 class Cdd2_Test : public Cdd2
 {
@@ -22,11 +22,11 @@ public:
 };
 
 // factory functions for Cdd2_Test
-Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const string& dirs);
-Cdd2_Test cdd_test(const vector<string>& args, const string& env, const fs::path& cwd, const vector<string>& dirs);
+Cdd2_Test cdd_test(const std::vector<std::string>& args, const std::string& env, const fs::path& cwd, const std::string& dirs);
+Cdd2_Test cdd_test(const std::vector<std::string>& args, const std::string& env, const fs::path& cwd, const std::vector<std::string>& dirs);
 
 // convert a filesystem path to a Unix/Linux style string
 std::string nix_path(const fs::path& p);
 
 // simplify windows specific tests
-std::string swap_drive_letter(string s, char new_drive_letter = 'C');
+std::string swap_drive_letter(std::string s, char new_drive_letter = 'C');

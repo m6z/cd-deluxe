@@ -20,9 +20,14 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+#include "cdd/cdd2.h"
+#include "cdd/cdd_options.h"
 #include "cdd/cdd_options_init.h"
-#include "stdafx.h"
+#include "cdd/cdd_util.h"
 
+using namespace std;
+
+// TODO is this needed?
 #ifdef WIN32
 #include <direct.h>
 #define isatty _isatty
