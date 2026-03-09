@@ -26,8 +26,7 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #include "cdd/cdd_util.h"
 
 #ifdef _WIN32
-#include <fcntl.h> // for _O_BINARY
-#include <io.h>    // for _isatty() on Windows
+#include <io.h> // for _isatty() on Windows
 #define isatty _isatty
 #define fileno _fileno
 #else
