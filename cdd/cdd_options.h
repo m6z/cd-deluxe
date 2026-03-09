@@ -1,3 +1,25 @@
+/*
+
+Copyright 2010-2026 Michael Graz
+https://github.com/m6z/cd-deluxe
+
+This file is part of Cd Deluxe.
+
+Cd Deluxe is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Cd Deluxe is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 #pragma once
 
 #include <iostream>
@@ -9,13 +31,13 @@ class CddOptions
 public:
     // constants
     static constexpr const char* direction_forwards = "+";
-    static constexpr const char* direction_forwards_alt = "f";  // alias for forwards (PowerShell-friendly)
+    static constexpr const char* direction_forwards_alt = "f"; // alias for forwards (PowerShell-friendly)
     static constexpr const char* direction_backwards = "-";
     static constexpr const char* direction_backwards_alt = "b"; // alias for backwards (PowerShell-friendly)
     static constexpr const char* direction_common = ",";
-    static constexpr const char* direction_common_alt = "c";    // alias for common (PowerShell-friendly)
+    static constexpr const char* direction_common_alt = "c"; // alias for common (PowerShell-friendly)
     static constexpr const char* direction_upwards = "..";
-    static constexpr const char* direction_upwards_alt = "u";   // alias for upwards (PowerShell-friendly)
+    static constexpr const char* direction_upwards_alt = "u"; // alias for upwards (PowerShell-friendly)
 
     static constexpr const char* direction_default = direction_backwards;
 

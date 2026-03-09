@@ -5,7 +5,9 @@
       "Bash(ctest:*)",
       "Bash(ls:*)",
       "Bash(cmake:*)",
-      "Bash(./cd-deluxe.exe --init=all --force)"
+      "Bash(./cd-deluxe.exe --init=all --force)",
+      "Bash(rg:*)",
+      "Bash(python3:*)"
     ]
   }
 }

@@ -1,3 +1,24 @@
+/*
+
+Copyright 2010-2026 Michael Graz
+https://github.com/m6z/cd-deluxe
+
+This file is part of Cd Deluxe.
+
+Cd Deluxe is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Cd Deluxe is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
 
 #include "process_util.h"
 
@@ -5,9 +26,9 @@
 
 //----------------------------------------------------------------------
 
-#include <windows.h>
-#include <tlhelp32.h>
 #include <string>
+#include <tlhelp32.h>
+#include <windows.h>
 
 std::string get_parent_process_name()
 {
@@ -49,13 +70,11 @@ std::string get_parent_process_name()
                 if (pe32.th32ProcessID == parent_pid)
                 {
                     // Convert wide string to narrow string
-                    int len = WideCharToMultiByte(CP_UTF8, 0, pe32.szExeFile, -1,
-                                                  nullptr, 0, nullptr, nullptr);
+                    int len = WideCharToMultiByte(CP_UTF8, 0, pe32.szExeFile, -1, nullptr, 0, nullptr, nullptr);
                     if (len > 0)
                     {
                         name.resize(len - 1);
-                        WideCharToMultiByte(CP_UTF8, 0, pe32.szExeFile, -1,
-                                            name.data(), len, nullptr, nullptr);
+                        WideCharToMultiByte(CP_UTF8, 0, pe32.szExeFile, -1, name.data(), len, nullptr, nullptr);
                     }
                     break;
                 }
@@ -67,8 +86,7 @@ std::string get_parent_process_name()
 
     // Remove .exe extension if present
     const std::string ext = ".exe";
-    if (name.size() >= ext.size() &&
-        name.compare(name.size() - ext.size(), ext.size(), ext) == 0)
+    if (name.size() >= ext.size() && name.compare(name.size() - ext.size(), ext.size(), ext) == 0)
     {
         name.erase(name.size() - ext.size());
     }

@@ -1,3 +1,25 @@
+/*
+
+Copyright 2010-2026 Michael Graz
+https://github.com/m6z/cd-deluxe
+
+This file is part of Cd Deluxe.
+
+Cd Deluxe is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Cd Deluxe is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -51,14 +73,14 @@ std::string normalize_direction(const std::string& s)
 
 std::string get_valid_directions_as_string()
 {
-    return "\"" + std::string(CddOptions::direction_forwards) + "\" or \"" +      //
-           std::string(CddOptions::direction_forwards_alt) + "\" (forwards), \"" + //
-           std::string(CddOptions::direction_backwards) + "\" or \"" +             //
+    return "\"" + std::string(CddOptions::direction_forwards) + "\" or \"" +         //
+           std::string(CddOptions::direction_forwards_alt) + "\" (forwards), \"" +   //
+           std::string(CddOptions::direction_backwards) + "\" or \"" +               //
            std::string(CddOptions::direction_backwards_alt) + "\" (backwards), \"" + //
-           std::string(CddOptions::direction_common) + "\" or \"" +                //
-           std::string(CddOptions::direction_common_alt) + "\" (common), \"" +     //
-           std::string(CddOptions::direction_upwards) + "\" or \"" +               //
-           std::string(CddOptions::direction_upwards_alt) + "\" (upwards)";        //
+           std::string(CddOptions::direction_common) + "\" or \"" +                  //
+           std::string(CddOptions::direction_common_alt) + "\" (common), \"" +       //
+           std::string(CddOptions::direction_upwards) + "\" or \"" +                 //
+           std::string(CddOptions::direction_upwards_alt) + "\" (upwards)";          //
 }
 
 // Helper to split the environment string into a vector of arguments
@@ -106,23 +128,23 @@ static DirectionFlags direction_flags;
 // Helper to define the subset of options allowed in the environment variable
 void add_common_options(CddOptions& x, cxxopts::Options& options)
 {
-    options.add_options()                                                                                            //
-        ("l,list", "List history", cxxopts::value(x.list_history)->implicit_value("true"))                           //
-        ("f,fzf", "Filter history with fzf", cxxopts::value(x.use_fzf)->implicit_value("true"))                      //
-        ("d,direction", get_valid_directions_as_string(), cxxopts::value(x.direction))                               //
-        ("c,common", "Set direction to common (same as -d,)", cxxopts::value(direction_flags.common)->implicit_value("true"))     //
-        ("db", "Set direction to backwards (same as -d-)", cxxopts::value(direction_flags.backwards)->implicit_value("true"))     //
-        ("df", "Set direction to forwards (same as -d+)", cxxopts::value(direction_flags.forwards)->implicit_value("true"))       //
-        ("dc", "Set direction to common (same as -d,)", cxxopts::value(direction_flags.common)->implicit_value("true"))           //
-        ("du", "Set direction to upwards (same as -d..)", cxxopts::value(direction_flags.upwards)->implicit_value("true"))        //
-        ("m,max", "Max history", cxxopts::value(x.max_history))                                                      //
-        ("max-backwards", "Max backwards history", cxxopts::value(x.max_backwards))                                  //
-        ("max-forwards", "Max forwards history", cxxopts::value(x.max_forwards))                                     //
-        ("max-common", "Max common history", cxxopts::value(x.max_common))                                           //
-        ("max-upwards", "Max upwards history", cxxopts::value(x.max_upwards))                                        //
-        ("a,all", "Show all history", cxxopts::value(x.all_history)->implicit_value("true"))                         //
-        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(x.ignore_case)->implicit_value("true")) //
-        ("init", "Generate shell initialization code")                                                               //
+    options.add_options()                                                                                                     //
+        ("l,list", "List history", cxxopts::value(x.list_history)->implicit_value("true"))                                    //
+        ("f,fzf", "Filter history with fzf", cxxopts::value(x.use_fzf)->implicit_value("true"))                               //
+        ("d,direction", get_valid_directions_as_string(), cxxopts::value(x.direction))                                        //
+        ("c,common", "Set direction to common (same as -d,)", cxxopts::value(direction_flags.common)->implicit_value("true")) //
+        ("db", "Set direction to backwards (same as -d-)", cxxopts::value(direction_flags.backwards)->implicit_value("true")) //
+        ("df", "Set direction to forwards (same as -d+)", cxxopts::value(direction_flags.forwards)->implicit_value("true"))   //
+        ("dc", "Set direction to common (same as -d,)", cxxopts::value(direction_flags.common)->implicit_value("true"))       //
+        ("du", "Set direction to upwards (same as -d..)", cxxopts::value(direction_flags.upwards)->implicit_value("true"))    //
+        ("m,max", "Max history", cxxopts::value(x.max_history))                                                               //
+        ("max-backwards", "Max backwards history", cxxopts::value(x.max_backwards))                                           //
+        ("max-forwards", "Max forwards history", cxxopts::value(x.max_forwards))                                              //
+        ("max-common", "Max common history", cxxopts::value(x.max_common))                                                    //
+        ("max-upwards", "Max upwards history", cxxopts::value(x.max_upwards))                                                 //
+        ("a,all", "Show all history", cxxopts::value(x.all_history)->implicit_value("true"))                                  //
+        ("i,ignore-case", "Ignore case when comparing paths", cxxopts::value(x.ignore_case)->implicit_value("true"))          //
+        ("init", "Generate shell initialization code")                                                                        //
         ;
 }
 
