@@ -28,6 +28,8 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef _WIN32
 #include <fcntl.h> // for _O_BINARY
 #include <io.h>    // for _isatty() on Windows
+#define isatty _isatty
+#define fileno _fileno
 #else
 #include <unistd.h> // for isatty() on Unix/Linux/macOS
 #endif
@@ -55,7 +57,7 @@ int main(int argc, const char* argv[])
     {
         // If stdin is a tty OR if init/help/version/force args are present,
         // use CddOptionsInit (handles setup commands)
-        if (_isatty(_fileno(stdin)) || has_init_args(argc, argv))
+        if (isatty(fileno(stdin)) || has_init_args(argc, argv))
         {
             CddOptionsInit options_init;
             return options_init.parse(argc, const_cast<char**>(argv));
