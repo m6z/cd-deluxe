@@ -1,7 +1,7 @@
 /*
 
-Copyright 2010-2021 Michael Graz
-http://www.plan10.com/cdd
+Copyright 2010-2026 Michael Graz
+https://github.com/m6z/cd-deluxe
 
 This file is part of Cd Deluxe.
 
