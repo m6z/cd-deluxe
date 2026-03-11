@@ -61,13 +61,56 @@ cd ....       # up three levels (same as cd ..3)
 
 ---
 
+### The common listing includes visit counts
+
+```
+$ cd -l ,
+ ,1: ( 7) /home/mike/projects/cd-deluxe
+ ,2: ( 4) /home/mike/projects
+ ,3: ( 1) /tmp
+```
+
+The above indicates that `/home/mike/projects/cd-deluxe` is the most-visited directory (7 visits), followed by `/home/mike/projects` (4 visits) and `/tmp` (1 visit).
+
+To simply jump to the most-visited directory, type `cd ,`.  To visit the second most-visited, type `cd ,2` or `cd ,,`.  And so on.
+
+For listing only, all of the following are equivalent:
+
+```
+cd -l ,                   # list common history
+cd --list --direction=c   # list common history
+cd -c                     # list common history
+cd --dc                   # list common history
+```
+
+---
+
+## Upward navigation in detail
+
+`..` and its shorthands walk up the current directory's parent chain.  This is most useful when working in deeply nested directories, where the standard `cd ..` is tedious to repeat and `cd ../../..` is error-prone.
+
+```
+# Current directory: /home/mike/projects/cd-deluxe/test
+
+cd ..             →  /home/mike/projects/cd-deluxe
+cd ...            →  /home/mike/projects
+cd ....           →  /home/mike
+cd .. projects    →  /home/mike/projects   (first parent matching "projects")
+cd -l ..          lists all parents
+cd -f ..          lists all parent steps through fzf and then jumps to the selected one
+```
+
+Dot expansion also works as part of a path argument: `cd .../foo` expands to `../../foo`.
+
+---
+
 ### Change to the directory of an existing file
 
 ```
 cd /home/mike/projects/cd-deluxe/CMakeLists.txt → /home/mike/projects/cd-deluxe
 ```
 
-The approache here is that if you `cd` to a file, you probably meant to `cd` to its directory.  This is especially useful when pasting in a path from an editor or file explorer into a terminal session.
+The approach here is that if you `cd` to a file, you probably meant to `cd` to its directory.  This is especially useful when pasting in a path from an editor or file explorer into a terminal session.
 
 ---
 
@@ -76,9 +119,9 @@ The approache here is that if you `cd` to a file, you probably meant to `cd` to 
 Add a pattern to narrow the match:
 
 ```
-cd ee         # directory whose path contains "ee"
-cd cc$        # directory ending with "cc"
-cd end/       # directory whose final component ends with "end"
+cd ee         # directory in history whose path contains "ee"
+cd cc$        # directory in history ending with "cc"
+cd end/       # directory in history whose final component ends with "end"
 cd , src      # most-visited directory containing "src"
 cd + projects # earliest directory containing "projects"
 cd .. work    # nearest parent directory matching "work"
@@ -113,7 +156,7 @@ cd -l , src   # list entries containing "src" organized by visit count
 ### Fuzzy find (fzf)
 
 ```
-cd -f         # pipe backward list through fzf
+cd -f         # pipe default listing of directories visited through fzf and then change to selection
 cd -f ,       # pipe common list through fzf
 cd -f ..      # pipe parent list through fzf
 cd -f , abc   # Filter first by pattern "abc", then pipe through fzf (regex works as well))
@@ -130,19 +173,6 @@ cd -a         # show all history (no truncation)
 cd -m 20      # set max history length to 20 (default: 10)
 ```
 
-The common listing includes visit counts:
-
-```
-$ cd ,?
- ,1: ( 7) /home/mike/projects/cd-deluxe
- ,2: ( 4) /home/mike/projects
- ,3: ( 1) /tmp
-```
-
-The above indicates that `/home/mike/projects/cd-deluxe` is the most-visited directory (7 visits), followed by `/home/mike/projects` (4 visits) and `/tmp` (1 visit).
-
-To simply jump to the most-visited directory, type `cd ,`.  To visit the second most-visited, type `cd ,2` or `cd ,,`.  And so on.
-
 ---
 
 ## History management
@@ -150,7 +180,7 @@ To simply jump to the most-visited directory, type `cd ,`.  To visit the second 
 ```
 cd --del -2         # remove the second-most-recent entry
 cd --del +1         # remove the oldest entry
-cd --gc             # garbage-collect duplicates
+cd --gc             # garbage-collect duplicates (flattens visit counts into single entries)
 cd --reset          # wipe the entire history
 ```
 
@@ -174,25 +204,6 @@ For shells where bare `+`, `-`, or `,` are awkward (e.g. PowerShell), use letter
 cd -d f src         # forward search for "src"
 cd --dc             # most-visited directory
 ```
-
----
-
-## Upward navigation in detail
-
-`..` and its shorthands walk up the current directory's parent chain.  This is most useful when working in deeply nested directories, where the standard `cd ..` is tedious to repeat and `cd ../../..` is error-prone.
-
-```
-# Current directory: /home/mike/projects/cd-deluxe/test
-
-cd ..             →  /home/mike/projects/cd-deluxe
-cd ...            →  /home/mike/projects
-cd ....           →  /home/mike
-cd .. projects    →  /home/mike/projects   (first parent matching "projects")
-cd -l ..          lists all parents
-cd -f ..          lists all parent steps through fzf and then jumps to the selected one
-```
-
-Dot expansion also works as part of a path argument: `cd .../foo` expands to `../../foo`.
 
 ---
 
@@ -225,6 +236,8 @@ source <(PATH_TO_BINARY/cd-deluxe --init)          # add to ~/.zshrc
 PATH_TO_BINARY/cd-deluxe --init | source           # add to ~/.config/fish/config.fish
 ```
 
+For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  See Releases section in github, and then follow the instructions displayed by the installer.
+
 ### PowerShell
 ```powershell
 cd-deluxe --init powershell         # generates cdd.ps1 in current directory
@@ -234,10 +247,8 @@ cd-deluxe --init powershell         # generates cdd.ps1 in current directory
 ### Windows CMD
 ```bat
 cd-deluxe --init cmd                # generates cdd.cmd in current directory
-doskey cd=cdd.cmd $*
+doskey cd=PATH_TO_INSTALL\cdd.cmd $*
 ```
-
-For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  See Releases section in github, and then follow the instructions displayed by the installer.
 
 ---
 
