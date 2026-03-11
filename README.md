@@ -1,6 +1,6 @@
 # cd-deluxe
 
-A supercharged `cd` replacement for the command line. Navigate your directory history by recency, frequency, or position — with regex filtering and fuzzy-find on top.
+A supercharged `cd` replacement for the command line. Navigate your directory history by recency, frequency, or position — with regex filtering and fuzzy-find integration as an option.
 
 It has a goal of being lightweight and fast, with a simple interface and minimal setup.  It runs completely from the directory stack and an environment variable, so it doesn't require external databases or file storage.
 
@@ -17,13 +17,13 @@ source <(PATH_TO_BINARY/cd-deluxe --init)        # zsh
 PATH_TO_BINARY/cd-deluxe --init | source         # fish
 ```
 
-After that, use `cdd` (or `cd`, which is aliased) normally. The rest is automatic.
+After that, use `cdd` (or `cd`, which is aliased by the above setup) normally. The rest is automatic.
 
 ---
 
 ## Navigation
 
-cd-deluxe tracks your directory history in four independent vectors.
+cd-deluxe makes it easy to access your directory history in four independent vectors.
 
 | Symbol | Direction | Meaning                  |
 |--------|-----------|--------------------------|
@@ -33,6 +33,8 @@ cd-deluxe tracks your directory history in four independent vectors.
 | `..`   | Upward    | Parent directory chain   |
 
 The default direction when not specified is backward (`-`).  But you can switch to any of the other directions at any time, and the history is tracked independently in each direction.  To override the default direction, use environment `CDD_OPTIONS=--direction=+` (or `-d +`) to switch to forward direction, for example.
+
+---
 
 ### By count or repetition
 
@@ -46,19 +48,42 @@ cd +2         # second earliest (same as cd ++)
 
 cd ,          # go to most-visited directory
 cd ,2         # second most-visited (same as cd ,,)
+cd ,,,        # third most-visited (same as cd ,3)
+```
 
 cd ..         # up one level (as per usual)
 cd ...        # up two levels (same as cd ..2)
 cd ....       # up three levels (same as cd ..3)
 ```
 
-### Change to the directory of an existing file:
+---
+
+### Change to the directory of an existing file
 
 ```
 cd /home/mike/projects/cd-deluxe/CMakeLists.txt → /home/mike/projects/cd-deluxe
 ```
 
-The thinking here is that if you `cd` to a file, you probably meant to `cd` to its directory.  This is especially useful when pasting in a path from an editor or file explorer into a terminal session.
+The approache here is that if you `cd` to a file, you probably meant to `cd` to its directory.  This is especially useful when pasting in a path from an editor or file explorer into a terminal session.
+
+---
+
+### Regex filtering
+
+Add a pattern to narrow the match:
+
+```
+cd ee         # directory whose path contains "ee"
+cd cc$        # directory ending with "cc"
+cd end/       # directory whose final component ends with "end"
+cd , src      # most-visited directory containing "src"
+cd + projects # earliest directory containing "projects"
+cd .. work    # nearest parent directory matching "work"
+```
+
+Patterns are standard C++ regex (so `^`, `$`, `.*`, `[...]`, etc. all work).  Note: regex matching is used instead of glob matching.
+
+---
 
 ### List before jumping
 
@@ -71,19 +96,16 @@ cd -l ,       # list history, most visited first (with visit counts)
 cd -l ..      # list parent directories upward
 ```
 
-### Regex filtering
+Note: issuing `cd` with no arguments lists the recent history in the default direction.
 
-Add a pattern to narrow the match:
+Use `-l` or `--list` with a pattern to filter the listing:
 
 ```
-cd ee         # most recent directory whose path contains "ee"
-cd cc$        # most recent path ending with "cc"
-cd , src      # most-visited directory containing "src"
-cd + projects # earliest directory containing "projects"
-cd .. work    # nearest parent directory matching "work"
+cd -l src     # list history entries containing "src"
+cd -l , src   # list entries containing "src" organized by visit count
 ```
 
-Patterns are standard C++ regex (so `^`, `$`, `.*`, `[...]`, etc. all work).
+---
 
 ### Fuzzy find (fzf)
 
@@ -98,11 +120,9 @@ Requires [fzf](https://github.com/junegunn/fzf) to be on your `PATH`.
 
 ---
 
-## Listing and history size
+## Listing history size
 
 ```
-cd            # default: list recent history (same as cd -?)
-cd -l         # explicit list (respects current direction)
 cd -a         # show all history (no truncation)
 cd -m 20      # set max history length to 20 (default: 10)
 ```
@@ -118,7 +138,7 @@ $ cd ,?
 
 The above indicates that `/home/mike/projects/cd-deluxe` is the most-visited directory (7 visits), followed by `/home/mike/projects` (4 visits) and `/tmp` (1 visit).
 
-To simply jump to the most-visited directory, type `cd ,`
+To simply jump to the most-visited directory, type `cd ,`.  To visit the second most-visited, type `cd ,2` or `cd ,,`.  And so on.
 
 ---
 
@@ -214,7 +234,7 @@ cd-deluxe --init cmd                # generates cdd.cmd in current directory
 doskey cd=cdd.cmd $*
 ```
 
-For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  Follow the notes in the installer.
+For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  See Releases section in github, and then follow the instructions displayed by the installer.
 
 ---
 
@@ -231,20 +251,25 @@ Requires a C++20 compiler and CMake 3.20+. Dependencies (Catch2, cxxopts) are fe
 
 ## Options reference
 
-TODO HERE HERE HERE
+| Option | Description |
+|--------|-------------|
+| `--direction=DIR` | Set direction: `-`, `+`, `,`, `..` or `b`, `f`, `c`, `u` |
+| `--db / --df / --dc / --du` | Shorthand direction flags |
+| `--list` | List without changing directory |
+| `--all` | Show full history (no limit) |
+| `--max=N` | Maximum history entries (default 10) |
+| `--max-backwards=N` | Maximum backwards history entries (overrides `--max`) |
+| `--max-forwards=N` | Maximum forwards history entries (overrides `--max`) |
+| `--max-common=N` | Maximum common history entries (overrides `--max`) |
+| `--max-upwards=N` | Maximum upwards history entries (overrides `--max`) |
+| `-a, --all` | Show all history (no limit) |
+| `-i, --ignore-case` | Ignore case when comparing paths |
+| `--init [SHELL]` | Generate shell initialization code (optionally specify shell) |
+| `-h, --help` | Show help message |
+| `-v, --version` | Show version |
+| `--del ENTRY` | Delete an entry from history |
+| `--reset` | Reset history (clear all entries) |
+| `--gc` | Garbage collect history (remove duplicates) |
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--direction=DIR` | `-d DIR` | Set direction: `-`, `+`, `,`, `..` or `b`, `f`, `c`, `u` |
-| `--db / --df / --dc / --du` | | Shorthand direction flags |
-| `--list` | `-l` | List without changing directory |
-| `--all` | `-a` | Show full history (no limit) |
-| `--max=N` | `-m N` | Maximum history entries (default 10) |
-| `--fzf` | `-f` | Pipe listing through fzf |
-| `--ignore-case` | `-i` | Case-insensitive path comparison |
-| `--del ENTRY` | | Delete one history entry |
-| `--gc` | | Garbage-collect duplicate entries |
-| `--reset` | | Clear all history |
-| `--init [SHELL]` | | Print shell integration code |
-| `--help` | `-h` | Show help |
-| `--version` | `-v` | Show version |
+Note: most options can be set via the `CDD_OPTIONS` environment variable for persistent defaults.  For example, `export CDD_OPTIONS="--ignore-case --direction=c"` to set pattern matching to be case insensitive and the default direction to be "common" (most-visited).
+
