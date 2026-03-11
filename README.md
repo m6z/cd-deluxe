@@ -1,6 +1,6 @@
 # cd-deluxe
 
-A supercharged `cd` replacement for the command line. Navigate your directory history by recency, frequency, or position — with regex filtering and fuzzy-find integration as an option.
+A supercharged `cd` replacement for the command line. Navigate your directory history by recency, frequency, or position — with regex filtering and fuzzy-find integration as options.
 
 It has a goal of being lightweight and fast, with a simple interface and minimal setup.  It runs completely from the directory stack and an environment variable, so it doesn't require external databases or file storage.
 
@@ -10,12 +10,16 @@ Supports **Bash**, **Zsh**, **Fish**, **PowerShell**, and **Windows CMD**. Runs 
 
 ## Quick Start
 
+Build from source or grab a pre-built Linux or MacOS binary from the [Releases].  Then add the initialization code to your shell config file (e.g. `~/.bashrc`, `~/.zshrc`, etc.) as shown below.
+
 ```bash
 # One-time shell setup (add to ~/.bashrc, ~/.zshrc, etc.)
 eval "$(PATH_TO_BINARY/cd-deluxe --init)"        # bash
 source <(PATH_TO_BINARY/cd-deluxe --init)        # zsh
 PATH_TO_BINARY/cd-deluxe --init | source         # fish
 ```
+
+For Windows CMD and PowerShell, there is an installer which installs the executable and sets up the necessary scripts.
 
 After that, use `cdd` (or `cd`, which is aliased by the above setup) normally. The rest is automatic.
 
@@ -49,7 +53,6 @@ cd +2         # second earliest (same as cd ++)
 cd ,          # go to most-visited directory
 cd ,2         # second most-visited (same as cd ,,)
 cd ,,,        # third most-visited (same as cd ,3)
-```
 
 cd ..         # up one level (as per usual)
 cd ...        # up two levels (same as cd ..2)
