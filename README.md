@@ -10,7 +10,9 @@ Supports **Bash**, **Zsh**, **Fish**, **PowerShell**, and **Windows CMD**. Runs 
 
 ## Quick Start
 
-Build from source or grab a pre-built Linux or MacOS binary from the [Releases].  Then add the initialization code to your shell config file (e.g. `~/.bashrc`, `~/.zshrc`, etc.) as shown below.
+Build from source or grab a pre-built Linux or MacOS binary from the [Releases](https://github.com/m6z/cd-deluxe/releases/latest) page.
+
+Then add the initialization code to your shell config file (e.g. `~/.bashrc`, `~/.zshrc`, etc.) as shown below.
 
 ```bash
 # One-time shell setup (add to ~/.bashrc, ~/.zshrc, etc.)
@@ -40,7 +42,7 @@ The default direction when not specified is backward (`-`).  But you can switch 
 
 ---
 
-### By count or repetition
+## By count or repetition
 
 ```
 cd -          # go to previous directory (per usual)
@@ -61,7 +63,7 @@ cd ....       # up three levels (same as cd ..3)
 
 ---
 
-### The common listing includes visit counts
+## The common listing includes visit counts
 
 ```
 $ cd -l ,
@@ -74,7 +76,7 @@ The above indicates that `/home/mike/projects/cd-deluxe` is the most-visited dir
 
 To simply jump to the most-visited directory, type `cd ,`.  To visit the second most-visited, type `cd ,2` or `cd ,,`.  And so on.
 
-For listing only, all of the following are equivalent:
+For listing the most commonly visited directories (without changing directory), all of the following are equivalent:
 
 ```
 cd -l ,                   # list common history
@@ -104,22 +106,23 @@ Dot expansion also works as part of a path argument: `cd .../foo` expands to `..
 
 ---
 
-### Change to the directory of an existing file
+## Change to the directory of an existing file
 
 ```
 cd /home/mike/projects/cd-deluxe/CMakeLists.txt → /home/mike/projects/cd-deluxe
 ```
 
-The approach here is that if you `cd` to a file, you probably meant to `cd` to its directory.  This is especially useful when pasting in a path from an editor or file explorer into a terminal session.
+The logic here is that if you `cd` to a file, you probably meant to `cd` to its directory.  This is especially useful when pasting in a path from an editor or file explorer into a terminal session.
 
 ---
 
-### Regex filtering
+## Regex filtering
 
 Add a pattern to narrow the match:
 
 ```
-cd ee         # directory in history whose path contains "ee"
+cd aa         # directory in history whose path contains "aa"
+cd ^bb        # directory in history starting with "bb"
 cd cc$        # directory in history ending with "cc"
 cd end/       # directory in history whose final component ends with "end"
 cd , src      # most-visited directory containing "src"
@@ -131,7 +134,7 @@ Patterns are standard C++ regex (so `^`, `$`, `.*`, `[...]`, etc. all work).  No
 
 ---
 
-### List before jumping
+## List before jumping
 
 Use `-l` or `--list` to list the history in the current direction without changing directories:
 
@@ -153,7 +156,7 @@ cd -l , src   # list entries containing "src" organized by visit count
 
 ---
 
-### Fuzzy find (fzf)
+## Fuzzy find (fzf)
 
 ```
 cd -f         # pipe default listing of directories visited through fzf and then change to selection
@@ -212,7 +215,7 @@ cd --dc             # most-visited directory
 Set default options in `CDD_OPTIONS` to apply them to every invocation:
 
 ```bash
-export CDD_OPTIONS="--ignore-case --max=20"
+export CDD_OPTIONS="--ignore-case --max=8"
 ```
 
 Tip: set `CDD_OPTIONS=--direction=,` to change the `cd` default direction to the common (most-visited) directories.
@@ -221,30 +224,30 @@ Tip: set `CDD_OPTIONS=--direction=,` to change the `cd` default direction to the
 
 ## Shell setup details
 
-### Bash
+## Bash
 ```bash
 eval "$(PATH_TO_BINARY/cd-deluxe --init)"          # add to ~/.bashrc
 ```
 
-### Zsh
+## Zsh
 ```zsh
 source <(PATH_TO_BINARY/cd-deluxe --init)          # add to ~/.zshrc
 ```
 
-### Fish
+## Fish
 ```fish
 PATH_TO_BINARY/cd-deluxe --init | source           # add to ~/.config/fish/config.fish
 ```
 
 For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  See Releases section in github, and then follow the instructions displayed by the installer.
 
-### PowerShell
+## PowerShell
 ```powershell
 cd-deluxe --init powershell         # generates cdd.ps1 in current directory
 . .\cdd.ps1                         # dot-source it (add to $PROFILE)
 ```
 
-### Windows CMD
+## Windows CMD
 ```bat
 cd-deluxe --init cmd                # generates cdd.cmd in current directory
 doskey cd=PATH_TO_INSTALL\cdd.cmd $*
@@ -267,23 +270,22 @@ Requires a C++20 compiler and CMake 3.20+. Dependencies (Catch2, cxxopts) are fe
 
 | Option | Description |
 |--------|-------------|
-| `--direction=DIR` | Set direction: `-`, `+`, `,`, `..` or `b`, `f`, `c`, `u` |
+| `-d DIR, --direction=DIR` | Set direction: `-`, `+`, `,`, `..` or `b`, `f`, `c`, `u` |
 | `--db / --df / --dc / --du` | Shorthand direction flags |
-| `--list` | List without changing directory |
-| `--all` | Show full history (no limit) |
-| `--max=N` | Maximum history entries (default 10) |
+| `-l, --list` | List without changing directory |
+| `-m N, --max=N` | Maximum history entries (default 10) |
 | `--max-backwards=N` | Maximum backwards history entries (overrides `--max`) |
 | `--max-forwards=N` | Maximum forwards history entries (overrides `--max`) |
 | `--max-common=N` | Maximum common history entries (overrides `--max`) |
 | `--max-upwards=N` | Maximum upwards history entries (overrides `--max`) |
 | `-a, --all` | Show all history (no limit) |
 | `-i, --ignore-case` | Ignore case when comparing paths |
-| `--init [SHELL]` | Generate shell initialization code (optionally specify shell) |
 | `-h, --help` | Show help message |
 | `-v, --version` | Show version |
 | `--del ENTRY` | Delete an entry from history |
 | `--reset` | Reset history (clear all entries) |
 | `--gc` | Garbage collect history (remove duplicates) |
+| `--init [SHELL]` | Generate shell initialization code (optionally specify shell) |
 
 Note: most options can be set via the `CDD_OPTIONS` environment variable for persistent defaults.  For example, `export CDD_OPTIONS="--ignore-case --direction=c"` to set pattern matching to be case insensitive and the default direction to be "common" (most-visited).
 
