@@ -27,8 +27,8 @@ along with Cd Deluxe.  If not, see <http://www.gnu.org/licenses/>.
 //----------------------------------------------------------------------
 
 #include <string>
-#include <tlhelp32.h>
 #include <windows.h>
+#include <tlhelp32.h>
 
 std::string get_parent_process_name()
 {
