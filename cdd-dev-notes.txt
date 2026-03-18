@@ -1,3 +1,8 @@
+IMPORTANT NOTE: this file is for random personal notes and should not be considered a formal
+specification or documentation.  It is intended to capture ideas and thoughts during the development
+process.  Most of it is likely to be outdated, irrelevant and or incorrect.
+----------------------------------------------------------------------------------------------------
+
 Three vectors:
     history of directories visited
         in reverse order: minus ('-')
@@ -161,3 +166,19 @@ Need to remove
 cleanup precompiled headers
 
 review missing tests
+
+#----------------------------------------------------------------------
+To apply a tag and trigger the workflow:
+
+# 1. Make sure you're on the right branch and it's up to date
+git checkout main
+git pull origin main
+
+# 2. Create an annotated tag (recommended for releases)
+git tag -a v1.0.0 -m "Release version 1.0.0"
+
+# 3. Push the tag to trigger the workflow
+git push origin v1.0.0
+
+# 4. Verify the tag was pushed
+git ls-remote --tags origin
