@@ -25,10 +25,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # NSIS is required on Windows to build the installer
+      # NSIS is required on Windows to build the installer.
+      # After installing, its directory is added to GITHUB_PATH so that
+      # CMake's find_program can locate makensis.exe in the next step.
       - name: Install NSIS (Windows)
         if: matrix.os == 'windows-latest'
-        run: choco install nsis --yes
+        shell: pwsh
+        run: |
+          choco install nsis --yes
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files (x86)\NSIS"
 
       # Multi-config generators (MSVC) ignore CMAKE_BUILD_TYPE; use
       # CMAKE_CONFIGURATION_TYPES instead to avoid a spurious CMake warning.
