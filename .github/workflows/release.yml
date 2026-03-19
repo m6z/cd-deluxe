@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # get all history for build number calc in cmake
 
       # NSIS is required on Windows to build the installer.
       # After installing, its directory is added to GITHUB_PATH so that
@@ -32,8 +34,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          choco install nsis --yes --verbose
-          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files (x86)\NSIS"
+          choco install nsis --yes
 
       # Multi-config generators (MSVC) ignore CMAKE_BUILD_TYPE; use
       # CMAKE_CONFIGURATION_TYPES instead to avoid a spurious CMake warning.
@@ -99,6 +100,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
