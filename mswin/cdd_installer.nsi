@@ -227,12 +227,12 @@ Section "CddInstaller (required)"
 
   ; Sample cmd.exe shell
   IntCmp $RunCddShell 0 cdd_shell_end
-  ExecShell "" "$INSTDIR\cdd shell.lnk"
+  ExecShell "" "explorer.exe" "$INSTDIR\cdd shell.lnk"
   cdd_shell_end:
 
   ; Sample PowerShell shell
   IntCmp $RunCddPowershell 0 cdd_powershell_end
-  ExecShell "" "$INSTDIR\cdd powershell.lnk"
+  ExecShell "" "explorer.exe" "$INSTDIR\cdd powershell.lnk"
   cdd_powershell_end:
 
 SectionEnd

@@ -245,6 +245,9 @@ For Windows CMD and PowerShell there is an installer which sets up the necessary
 ```powershell
 cd-deluxe --init powershell         # generates cdd.ps1 in current directory
 . .\cdd.ps1                         # dot-source it (add to $PROFILE)
+
+# To optionally override the built-in 'cd' command after dot-sourcing the above:
+Set-Alias -Name cd -Value cdd -Option AllScope -Scope Global
 ```
 
 ## Windows CMD
