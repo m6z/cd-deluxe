@@ -2,7 +2,7 @@
 
 A supercharged `cd` replacement for the command line. Navigate your directory history by recency, frequency, or position — with regex filtering and fuzzy-find integration as options.
 
-It has a goal of being lightweight and fast, with a simple interface and minimal setup.  It runs completely from the directory so it doesn't require external databases or file storage. Built in C++20.
+It has a goal of being lightweight and fast, with a simple interface and minimal setup.  It runs completely from the directory stack so it doesn't require external databases or file storage. Built in C++20 for speed.
 
 Supports **Bash**, **Zsh**, **Fish**, **PowerShell**, and **Windows CMD**. Runs on Linux, macOS, and Windows.
 
