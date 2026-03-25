@@ -175,10 +175,10 @@ git checkout main
 git pull origin main
 
 # 2. Create an annotated tag (recommended for releases)
-git tag -a v1.0.0 -m "Release version 1.0.0"
+git tag -a v2.0.6 -m "added tag 2.0.6"
 
 # 3. Push the tag to trigger the workflow
-git push origin v1.0.0
+git push origin v2.0.6
 
 # 4. Verify the tag was pushed
 git ls-remote --tags origin
