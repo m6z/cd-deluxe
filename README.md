@@ -2,7 +2,7 @@
 
 A supercharged `cd` replacement for the command line. Navigate your directory history by recency, frequency, or position — with regex filtering and fuzzy-find integration as options.
 
-It has a goal of being lightweight and fast, with a simple interface and minimal setup.  It runs completely from the directory so it doesn't require external databases or file storage.
+It has a goal of being lightweight and fast, with a simple interface and minimal setup.  It runs completely from the directory so it doesn't require external databases or file storage. Built in C++20.
 
 Supports **Bash**, **Zsh**, **Fish**, **PowerShell**, and **Windows CMD**. Runs on Linux, macOS, and Windows.
 
@@ -10,28 +10,28 @@ Supports **Bash**, **Zsh**, **Fish**, **PowerShell**, and **Windows CMD**. Runs 
 
 | Command | Description |
 |---------|-------------|
-| cd -          |   Change to previous directory. As per typical Unix Shell but now available for Windows cmd.exe. |
-| cd --         |   Change to the second to last directory |
-| cd ---        |   Change the third previous directory, same as `cd -3` |
-| cd -4         |   And then the fourth - can use a negative number instead of a series of dashes |
-| cd +1         |   Change to the first directory visitied. Positive numbers are relative to the starting directory |
-| cd +2         |   Change to the second directory visited |
-| cd +++        |   Change to the third visited, and so on |
-| cd ,          |   A comma means to change to the "the most common directory". Comma = "Common" |
-| cd ,,         |   Change to the second most commonly visited directory |
-| cd ,3         |   Change to the third most visited |
-| cd ...        |   Change to the grandparent directory. Same as `cd ../..` |
-| cd ..4        |   Change to the great-great-grandparent directory. Same as `cd ../../../..` |
-| cd abc        |   Change to the most recent directory in history whose path contains "abc". Regex also works, so `cd ^abc` would match the most recent directory starting with "abc", for example. See regex section below for more details. |
-| cd + def      |   Change to the earliest directory in history whose path contains "def". The `+` forces the search to be in the forward direction (oldest first) instead of the default backward direction (most recent first). |
-| cd , ghi      |   Change to the most commonly visited directory whose path contains "ghi". The `,` forces the search to be in the common direction instead of the default backward direction. |
-| cd .. jkl     |   Change to the nearest parent directory whose path contains "jkl". The `..` forces the search to be in the upward direction instead of the default backward direction. |
-| cd -l         |   List the directory history in the current direction (default backward) without changing directories |
-| cd -l abc     |   List the directory history for entries containing "abc" |
-| cd -l + def   |   List the directory history in the forward direction (oldest first) for entries containing "def" |
-| cd -l , ghi   |   List the common (most-visited) directories containing "ghi" |
-| cd -f         |   Pipe the directory history in the current direction through fzf and then change to the selected entry |
-| cd cpp20/main/main.cpp |   When the argument is a file, change to its directory |
+| `cd -`          |   Change to previous directory. As per typical Unix Shell but now available for Windows cmd.exe. |
+| `cd --`         |   Change to the second to last directory |
+| `cd ---`        |   Change the third previous directory, same as `cd -3` |
+| `cd -4`         |   And then the fourth - can use a negative number instead of a series of dashes |
+| `cd +1`         |   Change to the first directory visitied. Positive numbers are relative to the starting directory |
+| `cd +2`         |   Change to the second directory visited |
+| `cd +++`        |   Change to the third visited, and so on |
+| `cd ,`          |   A comma means to change to the "the most common directory". Comma = "Common" |
+| `cd ,,`         |   Change to the second most commonly visited directory |
+| `cd ,3`         |   Change to the third most visited |
+| `cd ...`        |   Change to the grandparent directory. Same as `cd ../..` |
+| `cd ..4`        |   Change to the great-great-grandparent directory. Same as `cd ../../../..` |
+| `cd abc`        |   Change to the most recent directory in history whose path contains "abc". Regex also works, so `cd ^abc` would match the most recent directory starting with "abc". See regex section below for more details. |
+| `cd + def`      |   Change to the earliest directory in history whose path contains "def". The `+` forces the search to be in the forward direction (oldest first) instead of the default backward direction (most recent first). |
+| `cd , ghi`      |   Change to the most commonly visited directory whose path contains "ghi". The `,` forces the search to be in the common direction instead of the default backward direction. |
+| `cd .. jkl`     |   Change to the nearest parent directory whose path contains "jkl". The `..` forces the search to be in the upward direction instead of the default backward direction. |
+| `cd -l`         |   List the directory history in the current direction (default backward) without changing directories |
+| `cd -l abc`     |   List the directory history for entries containing "abc" |
+| `cd -l + def`   |   List the directory history in the forward direction (oldest first) for entries containing "def" |
+| `cd -l , ghi`   |   List the common (most-visited) directories containing "ghi" |
+| `cd -f`         |   Pipe the directory history in the current direction through fzf and then change to the selected entry |
+| `cd cpp20/main/main.cpp` |   When the argument is a file, change to its directory |
 
 # Details
 
@@ -110,7 +110,8 @@ Add a pattern to narrow the match:
 cd aa         # directory in history whose path contains "aa"
 cd ^bb        # directory in history starting with "bb"
 cd cc$        # directory in history ending with "cc"
-cd end/       # directory in history whose final component ends with "end" (note: this is not standard regex but a cd-deluxe extension for convenience)
+cd end/       # directory in history whose final component ends with "end".
+              # Note: trailing slash is not standard regex but a cd-deluxe extension for convenience.
 cd , src      # most-visited directory containing "src"
 cd + projects # earliest directory containing "projects"
 cd .. work    # nearest parent directory matching "work"
@@ -215,7 +216,7 @@ source <(PATH_TO_BINARY/cd-deluxe --init)          # add to ~/.zshrc
 PATH_TO_BINARY/cd-deluxe --init | source           # add to ~/.config/fish/config.fish
 ```
 
-For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  See Releases section in github, and then follow the instructions displayed by the installer.
+For Windows CMD and PowerShell there is an installer which sets up the necessary scripts.  Follow any instructions displayed by the installer.
 
 ### PowerShell
 ```powershell
