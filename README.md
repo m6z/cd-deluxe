@@ -299,7 +299,7 @@ cmake --build build --config Release --target installer
 | `-a, --all` | Show all history (no limit) |
 | `-i, --ignore-case` | Ignore case when comparing paths |
 | `-h, --help` | Show help message |
-| `-v, --version` | Show the version string |
+| `-v, --version` | Show the executable version string |
 | `--del ENTRY` | Delete an entry from history |
 | `--reset` | Reset history (clear all entries) |
 | `--gc` | Garbage collect history (remove duplicates) |
