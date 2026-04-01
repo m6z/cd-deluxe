@@ -40,3 +40,6 @@ Debug/
 Release/
 build*/
 Testing/
+
+# Claude Code personal settings (overrides project settings)
+.claude/settings.local.json
