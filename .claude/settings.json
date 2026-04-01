@@ -9,5 +9,8 @@
       "Bash(rg:*)",
       "Bash(python3:*)"
     ]
+  },
+  "git": {
+    "coAuthor": false
   }
 }
